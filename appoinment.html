@@ -144,17 +144,17 @@
     <div class="container-fluid py-5">
         <div class="container">
             <div class="row g-5">
+                <!-- Left Side: Content Section -->
                 <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.1s">
                     <h1 class="display-6 mb-4">We Ensure You Will Always Get The Best Result</h1>
-                    <p>Welcome to Biotech Laboratory, your trusted partner in advanced laboratory diagnostics and testing. Located on Veyangoda/Niwala/Baduragoda Road, Sri Lanka, we are committed to delivering accurate and reliable results with cutting-edge technology and expert professionals. At Biotech Laboratory, we prioritize precision, quality, and customer care, ensuring that every test is handled with the utmost accuracy and confidentiality..</p>
-                    <p class="mb-4">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur tellus augue, iaculis id elit eget, ultrices pulvinar tortor.</p>
+                    <p>At Biotech Laboratory, we prioritize precision, quality, and customer care, ensuring that every test is handled with the utmost accuracy and confidentiality.</p>
                     <div class="d-flex align-items-start wow fadeIn" data-wow-delay="0.3s">
                         <div class="icon-box-primary">
                             <i class="bi bi-geo-alt text-dark fs-1"></i>
                         </div>
                         <div class="ms-3">
-                            <h5>Office Address</h5>
-                            <span>117A,Negombo Road ,Veyangoda.</span>
+                            <h5>Lab Address</h5>
+                            <span>117A, Negombo Road, Veyangoda</span>
                         </div>
                     </div>
                     <hr>
@@ -163,59 +163,89 @@
                             <i class="bi bi-clock text-dark fs-1"></i>
                         </div>
                         <div class="ms-3">
-                            <h5>Office Time</h5>
-                            <span>Mon-Sat 6.30am-7pm, Sun 6.30am-4pm</span>
+                            <h5>Open Time</h5>
+                            <span>Mon-Sat 6.30am-7pm, Sun Closed</span>
                         </div>
                     </div>
                 </div>
+    
+                <!-- Right Side: Form Section -->
                 <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.5s">
-                    <h2 class="mb-4">Online Appoinment</h2>
-                    <div class="row g-3">
-                        <div class="col-sm-6">
-                            <div class="form-floating">
-                                <input type="text" class="form-control" id="name" placeholder="Your Name">
-                                <label for="name">Your Name</label>
+                    <h2 class="mb-4">Online Appointment</h2>
+                    <form id="appointment-form" onsubmit="sendToWhatsApp(event)">
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control" id="name" placeholder="Your Name" required>
+                                    <label for="name">Your Name</label>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-floating">
+                                    <input type="email" class="form-control" id="mail" placeholder="Your Email" required>
+                                    <label for="mail">Your Email</label>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control" id="mobile" placeholder="Your Mobile" required>
+                                    <label for="mobile">Your Mobile</label>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-floating">
+                                    <select class="form-select" id="service" required>
+                                        <option selected>ECG</option>
+                                        <option value="BLOOD Tests">BLOOD Tests</option>
+                                        <option value="URINE Tests">URINE Tests</option>
+                                        <option value="FBC Tests">FBC Tests</option>
+                                    </select>
+                                    <label for="service">Choose A Service</label>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-floating">
+                                    <textarea class="form-control" placeholder="Leave a message here" id="message"
+                                        style="height: 130px" required></textarea>
+                                    <label for="message">Message</label>
+                                </div>
+                            </div>
+                            <div class="col-12 text-center">
+                                <button class="btn btn-primary w-100 py-3" type="submit">Submit Now</button>
                             </div>
                         </div>
-                        <div class="col-sm-6">
-                            <div class="form-floating">
-                                <input type="email" class="form-control" id="mail" placeholder="Your Email">
-                                <label for="mail">Your Email</label>
-                            </div>
-                        </div>
-                        <div class="col-sm-6">
-                            <div class="form-floating">
-                                <input type="text" class="form-control" id="mobile" placeholder="Your Mobile">
-                                <label for="mobile">Your Mobile</label>
-                            </div>
-                        </div>
-                        <div class="col-sm-6">
-                            <div class="form-floating">
-                                <select class="form-select" id="service">
-                                    <option selected>ECG</option>
-                                    <option value="">BLOOD Tests</option>
-                                    <option value="">URINE Tests</option>
-                                    <option value="">FBC Tests</option>
-                                </select>
-                                <label for="service">Choose A Service</label>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="form-floating">
-                                <textarea class="form-control" placeholder="Leave a message here" id="message"
-                                    style="height: 130px"></textarea>
-                                <label for="message">Message</label>
-                            </div>
-                        </div>
-                        <div class="col-12 text-center">
-                            <button class="btn btn-primary w-100 py-3" type="submit">Submit Now</button>
-                        </div>
-                    </div>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
-    <!-- Appoinment Start -->
+    
+    <script>
+    function sendToWhatsApp(event) {
+        event.preventDefault(); // Prevent form from submitting traditionally
+    
+        // Get form data
+        var name = document.getElementById("name").value;
+        var email = document.getElementById("mail").value;
+        var mobile = document.getElementById("mobile").value;
+        var service = document.getElementById("service").value;
+        var message = document.getElementById("message").value;
+    
+        // Build the WhatsApp message
+        var whatsappMessage = `*Appointment Request*\n\nName: ${name}\nEmail: ${email}\nMobile: ${mobile}\nService: ${service}\nMessage: ${message}`;
+    
+        // Encode the message to be URL safe
+        var encodedMessage = encodeURIComponent(whatsappMessage);
+    
+        // Create the WhatsApp URL
+        var whatsappURL = `https://wa.me/94773523913?text=${encodedMessage}`;
+    
+        // Automatically open the WhatsApp chat
+        window.location.href = whatsappURL;
+    }
+    </script>
+    
+    <!-- Appoinment Stop -->
 
 
     <!-- Footer Start -->
