@@ -1,6 +1,7 @@
 {
-  "name": "MyWebSite",
-  "short_name": "MySite",
+  "name": "Biotech Veyangoda",
+  "short_name": "Biotech",
+  "start_url": "/index",
   "icons": [
     {
       "src": "/lab/web-app-manifest-192x192.png",
