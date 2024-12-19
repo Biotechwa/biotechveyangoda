@@ -150,31 +150,39 @@
         <!-- Report Collection Section -->
         <div class="container my-5 py-5">
             <div class="text-center mb-5">
-                <h1 class="display-5 fw-bold text-primary">BIOTECH REPORT SYSTEM</h1>
-                <p class="lead text-muted">Enter Your Bill details</p>
+                <h1 class="display-4 fw-bold text-primary">BIOTECH REPORT SYSTEM</h1>
+                <p class="fs-5 text-muted">Seamlessly manage and collect your reports</p>
             </div>
             <div class="row justify-content-center">
                 <div class="col-lg-6">
-                    <div class="bg-light rounded p-4 shadow">
-                        <form onsubmit="collectReport(); return false;">
-                            <div class="mb-3">
-                                <label for="vgSelection" class="form-label">Report Type</label>
-                                <select id="vgSelection" class="form-select">
+                    <div class="bg-white rounded p-5 shadow-sm border">
+                        <form id="reportForm">
+                            <div class="mb-4">
+                                <label for="vgSelection" class="form-label fw-semibold">Report Type</label>
+                                <select id="vgSelection" class="form-select form-select-lg" required>
                                     <option value="VG">VG</option>
                                     <option value="BR">BR</option>
                                     <option value="NI">NI</option>
                                 </select>
                             </div>
-                            <div class="mb-3">
-                                <label for="vgNum" class="form-label">Report Number</label>
-                                <input type="number" id="vgNum" class="form-control" placeholder="Enter report number (e.g., 1)" maxlength="10">
+                            <div class="mb-4">
+                                <label for="vgNum" class="form-label fw-semibold">Report Number</label>
+                                <input type="number" id="vgNum" class="form-control form-control-lg" placeholder="Enter report number (e.g., 1)" maxlength="10" required>
                             </div>
-                            <div class="mb-3">
-                                <label for="date" class="form-label">Report Date</label>
-                                <input type="date" id="date" class="form-control">
+                            <div class="mb-4">
+                                <label for="date" class="form-label fw-semibold">Report Date</label>
+                                <input type="date" id="date" class="form-control form-control-lg" required>
+                            </div>
+                            <div class="mb-4">
+                                <label for="billName" class="form-label fw-semibold">Bill Name</label>
+                                <input type="text" id="billName" class="form-control form-control-lg" placeholder="Enter bill name" required>
+                            </div>
+                            <div class="mb-4">
+                                <label for="whatsappNum" class="form-label fw-semibold">WhatsApp Number</label>
+                                <input type="tel" id="whatsappNum" class="form-control form-control-lg" placeholder="Enter WhatsApp number" required>
                             </div>
                             <div class="text-center">
-                                <button type="submit" class="btn btn-primary w-100 py-2">Collect Report</button>
+                                <button type="submit" class="btn btn-primary btn-lg w-100">Collect Report</button>
                             </div>
                         </form>
                     </div>
@@ -182,23 +190,24 @@
             </div>
         </div>
     
-
         <script>
-            function collectReport() {
+            document.getElementById('reportForm').addEventListener('submit', function(event) {
+                event.preventDefault();
+    
                 const vgSelection = document.getElementById('vgSelection').value;
                 const vgNum = document.getElementById('vgNum').value.trim();
                 const date = document.getElementById('date').value;
+                const billName = document.getElementById('billName').value.trim();
+                const whatsappNum = document.getElementById('whatsappNum').value.trim();
     
-                if (!vgNum || vgNum.includes(" ") || !date) {
-                    alert("Please fill all fields correctly.");
-                    return;
+                if (vgNum && date && billName && whatsappNum) {
+                    const link = `http://amlws.appexsl.com/report/7/${vgSelection}${vgNum}/${date}?billName=${encodeURIComponent(billName)}&whatsappNum=${encodeURIComponent(whatsappNum)}`;
+                    window.open(link, '_blank');
                 }
-    
-                const link = `http://amlws.appexsl.com/report/7/${vgSelection}${vgNum}/${date}`;
-                window.open(link, '_blank');
-            }
+            });
         </script>
     </body>
+    
     
     <!-- 404 End -->
         
