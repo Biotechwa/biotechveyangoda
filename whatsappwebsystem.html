@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BIOTECH REPORT WHATSAPP SYSTEM</title>
+    <style>
+        body {
+            background-image: url('img/12.jpg');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            display: flex;
+            gap: 20px;
+            background-color: rgba(255, 255, 255, 0.85);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .form-section {
+            max-width: 350px;
+            width: 100%;
+        }
+
+        .preview-section {
+            max-width: 350px;
+            width: 100%;
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+            font-size: 18px; /* Increase font size */
+            height: 300px; /* Set a fixed height */
+            overflow-y: auto; /* Enable scrolling if content exceeds height */
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        input, button, select, textarea {
+            padding: 8px;
+            margin-top: 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        .row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .phone-row, .date-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .phone-prefix, .date-prefix {
+            padding: 8px;
+            background-color: #e0e0e0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .phone-number, #date {
+            flex: 1;
+        }
+
+        .send-button {
+            background-color: #25D366;
+            color: white;
+            font-size: 18px;
+            padding: 10px;
+            border-radius: 5px;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .send-button:hover {
+            background-color: #1eaa58;
+        }
+
+        footer {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .small-wa-button {
+            background-color: #25D366;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 10px;
+        }
+
+        footer span {
+            font-size: 10px;
+            color: white; /* Set text color to white */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="form-section">
+            <h1>BIOTECH REPORT WHATSAPP SYSTEM</h1>
+            <div class="row">
+                <select id="vgSelection">
+                    <option value="VG">VG</option>
+                    <option value="BR">BR</option>
+                    <option value="NI">NI</option>
+                </select>
+                <input type="number" id="vgNum" placeholder="Enter number (e.g., 1)" maxlength="10">
+            </div>
+            <div class="date-row">
+                <input type="date" id="date">
+            </div>
+            <div class="phone-row">
+                <div class="phone-prefix">94</div>
+                <input type="text" id="phoneNum" class="phone-number" placeholder="Enter 9-digit phone number" maxlength="9" oninput="validatePhoneNum(this)">
+            </div>
+            <button class="send-button" onclick="sendWhatsApp()">Send on WhatsApp</button>
+        </div>
+
+        <div class="preview-section">
+            <textarea id="messagePreview" rows="12" style="width: 100%;" readonly></textarea>
+        </div>
+    </div>
+
+    <footer>
+        <a href="https://wa.me/94767810623" class="small-wa-button" target="_blank">Chat with me</a>
+        <span>Developed By Theekshana</span>
+    </footer>
+
+    <script>
+        document.getElementById('vgSelection').addEventListener('input', updatePreview);
+        document.getElementById('vgNum').addEventListener('input', updatePreview);
+        document.getElementById('date').addEventListener('input', updatePreview);
+        document.getElementById('phoneNum').addEventListener('input', updatePreview);
+
+        function validatePhoneNum(input) {
+            input.value = input.value.replace(/[^0-9]/g, '').slice(0, 9);
+        }
+
+        function updatePreview() {
+            const vgSelection = document.getElementById('vgSelection').value;
+            const vgNum = document.getElementById('vgNum').value.trim();
+            const date = document.getElementById('date').value;
+            const phoneNum = document.getElementById('phoneNum').value;
+
+            if (!vgNum || vgNum.includes(" ")) {
+                document.getElementById('messagePreview').value = "Please enter a valid number.";
+                return;
+            }
+            if (!date || phoneNum.length !== 9) {
+                document.getElementById('messagePreview').value = "Please enter a valid date and 9-digit phone number.";
+                return;
+            }
+
+            const link = `https://amlws.appexsl.com/report/7/${vgSelection}${vgNum}/${date}`;
+            const message = `*Biotech Medical Laboratory Online Report*\n\n \n\n👤 *Patient ID:* (${vgSelection}${vgNum})\n\n📅 *Date:* ${date}\n\n●Click the link below to view and download the online report.\n\n(ඔබට පහලින් ලින්ක් එකක් දිස් නොවුනහොත් කරුණාකර අපගේ WHATSAPP NUMBER එක සේව් කරගන්න.)\n\n 👇\n🔗${link}\n\n \n\n𝙁𝙧𝙤𝙢 - 𝘽𝙄𝙊𝙏𝙀𝘾𝙃 𝙇𝘼𝘽𝙊𝙍𝘼𝙏𝙊𝙍𝙔`;
+            document.getElementById('messagePreview').value = message;
+        }
+
+        function sendWhatsApp() {
+            const phoneNum = "94" + document.getElementById('phoneNum').value;
+            const message = document.getElementById('messagePreview').value;
+
+            if (message.trim() === "Please enter a valid date and 9-digit phone number." || message.trim() === "Please enter a valid number.") {
+                alert("Please fill all required fields correctly.");
+                return;
+            }
+
+            const encodedMessage = encodeURIComponent(message);
+            const whatsappWebUrl = `https://web.whatsapp.com/send?phone=${phoneNum}&text=${encodedMessage}`;
+            window.open(whatsappWebUrl, '_blank');
+        }
+
+        updatePreview();  // Initial preview
+    </script>
+</body>
+</html>
