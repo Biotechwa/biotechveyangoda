@@ -109,7 +109,7 @@
     <div class="login-container">
         <h1>BIOTECH Laboratory</h1>
         <p>Outsiders are not allowed to log in through this web page!</p>
-        <form id="loginForm" action="biotechmedicallaboratorywhatsappsystemloginsucesspageandyoucancollectwhatsapp" method="POST">
+        <form id="loginForm">
             <div class="input-group">
                 <label for="username">Username</label>
                 <input type="text" id="username" name="username" placeholder="Enter your username" autocomplete="username" required>
@@ -118,18 +118,31 @@
                 <label for="password">Password</label>
                 <input type="password" id="password" name="password" placeholder="Enter your password" autocomplete="current-password" required>
             </div>
-            <button class="login-button" type="submit">Login</button>
+            <button class="login-button" type="button" onclick="login()">Login</button>
         </form>
-        <div class="error-message" id="error">Invalid username or password!</div>
+        <div class="error-message" id="error">Invalid username or password!!!!!</div>
     </div>
 
-
-
-
     <script>
+        function login() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const error = document.getElementById('error');
+
+            // Validate username and password
+            if (username === 'admin_btlab' && password === 'admin_btlab') {
+                // Redirect to a new page on success
+                window.location.href = 'biotechmedicallaboratorywhatsappsystemloginsucesspageandyoucancollectwhatsapp'; // Replace with your desired page
+            } else {
+                // Show error message
+                error.style.display = 'block';
+            }
+        }
+
+        // Optional: Handle pressing "Enter" to submit form
         document.getElementById('username').addEventListener('keypress', function (event) {
             if (event.key === 'Enter') {
-                event.preventDefault(); // Prevent form submission
+                event.preventDefault();
                 document.getElementById('password').focus();
             }
         });
@@ -137,20 +150,7 @@
         document.getElementById('password').addEventListener('keypress', function (event) {
             if (event.key === 'Enter') {
                 event.preventDefault();
-                document.getElementById('loginForm').submit();
-            }
-        });
-
-        document.getElementById('loginForm').addEventListener('submit', function (event) {
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value.trim();
-            const error = document.getElementById('error');
-
-            if (username === 'admin_btlab' && password === 'admin_btlab') {
-                // Allow form submission
-            } else {
-                event.preventDefault(); // Prevent submission if credentials are wrong
-                error.style.display = 'block';
+                login();
             }
         });
     </script>
