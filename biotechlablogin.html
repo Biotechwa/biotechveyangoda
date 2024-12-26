@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BIOTECH LOGIN</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-image: url('img/12.jpg');
+            background-size: cover;
+            background-position: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Roboto', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-container {
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        h1 {
+            font-size: 30px;
+            color: #333;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        p {
+            font-size: 14px;
+            color: #3b0000;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-group label {
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            border-color: #25D366;
+        }
+
+        .login-button {
+            background-color: #25D366;
+            color: #fff;
+            font-size: 18px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            padding: 12px;
+            width: 100%;
+        }
+
+        .login-button:hover {
+            background-color: #1da954;
+        }
+
+        .error-message {
+            color: red;
+            font-size: 14px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        footer {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #333;
+        }
+
+        footer a {
+            color: #25D366;
+            text-decoration: none;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h1>BIOTECH Laboratory</h1>
+        <p>Outsiders are not allowed to log in through this web page!</p>
+        <form id="loginForm" action="fjsfdvkvskfvavfcgFW&BSHDHFVHFDVFSVDFGwsvf%vdsaflsdgfjggfjsagfgjagfag,%vfhdsfgdgfgfUEDGFGFFGgegfgfdujygfjgsgfg%fhgfwegfuygwgfuygewyfyewgygfegwguy!gfygSAYFGLWGFDGFGFGFGFDSGFYGTF#GFGWAGFFGGFGLUEWG" method="POST">
+            <div class="input-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" placeholder="Enter your username" autocomplete="username" required>
+            </div>
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Enter your password" autocomplete="current-password" required>
+            </div>
+            <button class="login-button" type="submit">Login</button>
+        </form>
+        <div class="error-message" id="error">Invalid username or password!</div>
+    </div>
+
+
+
+
+    <script>
+        document.getElementById('username').addEventListener('keypress', function (event) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevent form submission
+                document.getElementById('password').focus();
+            }
+        });
+
+        document.getElementById('password').addEventListener('keypress', function (event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                document.getElementById('loginForm').submit();
+            }
+        });
+
+        document.getElementById('loginForm').addEventListener('submit', function (event) {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const error = document.getElementById('error');
+
+            if (username === 'admin_btlab' && password === 'admin_btlab') {
+                // Allow form submission
+            } else {
+                event.preventDefault(); // Prevent submission if credentials are wrong
+                error.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
