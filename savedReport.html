@@ -35,8 +35,9 @@
                     <th>Report Number</th>
                     <th>Report Date</th>
                     <th>Bill Name</th>
+                    <th>WhatsApp Number</th> <!-- ✅ WhatsApp Column Added -->
                     <th>Entry Date</th>
-                    <th>Action</th> <!-- New column for delete button -->
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody id="reportTableBody"></tbody>
@@ -90,6 +91,7 @@
                         <td>${report.reportNumber}</td>
                         <td>${report.reportDate}</td>
                         <td>${report.billName}</td>
+                        <td>${report.whatsappNum}</td> <!-- ✅ WhatsApp Number Displayed -->
                         <td>${report.entryDate}</td>
                         <td><button class="deleteBtn" onclick="deleteReport(${index})">🗑 Delete</button></td>
                     </tr>`;
@@ -97,7 +99,7 @@
                 });
                 document.getElementById('reportTable').style.display = 'table';
             } else {
-                reportTableBody.innerHTML = "<tr><td colspan='6'>No reports saved yet.</td></tr>";
+                reportTableBody.innerHTML = "<tr><td colspan='7'>No reports saved yet.</td></tr>";
             }
         }
 
