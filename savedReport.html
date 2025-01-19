@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saved Reports - Secure Access</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; padding: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; display: none; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #007bff; color: white; }
+        .hidden { display: none; }
+        #loginBox { text-align: center; margin-top: 50px; }
+        #clearDataBtn { margin-top: 20px; background-color: red; color: white; border: none; padding: 10px 20px; cursor: pointer; }
+        #clearDataBtn:hover { background-color: darkred; }
+        .deleteBtn { background-color: red; color: white; border: none; padding: 5px 10px; cursor: pointer; }
+        .deleteBtn:hover { background-color: darkred; }
+    </style>
+</head>
+<body>
+
+    <div id="loginBox">
+        <h2>Access to this web page is for laboratory only.</h2>
+        <input type="password" id="passwordInput" placeholder="Enter Password">
+        <button onclick="checkPassword()">Laboratory Login</button>
+        <p id="errorMsg" style="color: red; display: none;">Incorrect password. Try again!</p>
+    </div>
+
+    <div id="reportSection" class="hidden">
+        <h1>Saved Reports</h1>
+        <table id="reportTable">
+            <thead>
+                <tr>
+                    <th>Report Type</th>
+                    <th>Report Number</th>
+                    <th>Report Date</th>
+                    <th>Bill Name</th>
+                    <th>Entry Date</th>
+                    <th>Action</th> <!-- New column for delete button -->
+                </tr>
+            </thead>
+            <tbody id="reportTableBody"></tbody>
+        </table>
+
+        <button id="clearDataBtn" onclick="clearReports()">🗑 Clear All Reports</button>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            document.getElementById('passwordInput').focus(); // Auto-focus input field
+
+            document.getElementById('passwordInput').addEventListener('keypress', function(event) {
+                if (event.key === "Enter") {
+                    checkPassword();
+                }
+            });
+
+            // Check if the user has already logged in before
+            if (localStorage.getItem("authenticated") === "true") {
+                document.getElementById('loginBox').style.display = 'none';
+                document.getElementById('reportSection').classList.remove('hidden');
+                loadReports();
+            }
+        });
+
+        function checkPassword() {
+            const enteredPassword = document.getElementById('passwordInput').value;
+            const correctPassword = "12987654321"; // Change this to your desired password
+
+            if (enteredPassword === correctPassword) {
+                localStorage.setItem("authenticated", "true"); // Save login session
+                document.getElementById('loginBox').style.display = 'none';
+                document.getElementById('reportSection').classList.remove('hidden');
+                loadReports();
+            } else {
+                document.getElementById('errorMsg').style.display = 'block';
+            }
+        }
+
+        function loadReports() {
+            const reports = JSON.parse(localStorage.getItem('savedReports')) || [];
+            const reportTableBody = document.getElementById('reportTableBody');
+
+            reportTableBody.innerHTML = ""; // Clear table before adding new rows
+
+            if (reports.length > 0) {
+                reports.forEach((report, index) => {
+                    const row = `<tr>
+                        <td>${report.reportType}</td>
+                        <td>${report.reportNumber}</td>
+                        <td>${report.reportDate}</td>
+                        <td>${report.billName}</td>
+                        <td>${report.entryDate}</td>
+                        <td><button class="deleteBtn" onclick="deleteReport(${index})">🗑 Delete</button></td>
+                    </tr>`;
+                    reportTableBody.innerHTML += row;
+                });
+                document.getElementById('reportTable').style.display = 'table';
+            } else {
+                reportTableBody.innerHTML = "<tr><td colspan='6'>No reports saved yet.</td></tr>";
+            }
+        }
+
+        function deleteReport(index) {
+            if (confirm("⚠ Are you sure you want to delete this report? This cannot be undone!")) {
+                let reports = JSON.parse(localStorage.getItem('savedReports')) || [];
+                reports.splice(index, 1); // Remove the selected report
+                localStorage.setItem('savedReports', JSON.stringify(reports)); // Save updated reports
+                loadReports(); // Refresh table
+            }
+        }
+
+        function clearReports() {
+            if (confirm("⚠ Are you sure you want to delete all saved reports? This cannot be undone!")) {
+                localStorage.removeItem('savedReports'); // Delete all reports from localStorage
+                loadReports(); // Refresh table
+            }
+        }
+    </script>
+
+</body>
+</html>

@@ -207,6 +207,28 @@
                     window.open(link, '_blank');
                 }
             });
+            document.getElementById('reportForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        const reportData = {
+            reportType: document.getElementById('vgSelection').value,
+            reportNumber: document.getElementById('vgNum').value.trim(),
+            reportDate: document.getElementById('date').value,
+            billName: document.getElementById('billName').value.trim(),
+            whatsappNumber: document.getElementById('whatsappNum').value.trim(),
+            entryDate: new Date().toLocaleString() // Saves the time and date of entry
+        };
+
+        // Retrieve previous data from localStorage
+        let reports = JSON.parse(localStorage.getItem('savedReports')) || [];
+        reports.push(reportData);
+
+        // Save updated data back to localStorage
+        localStorage.setItem('savedReports', JSON.stringify(reports));
+
+        // Redirect to the saved reports page
+        window.location.href = 'savedReport.html';
+    });
         </script>
     </body>
     
