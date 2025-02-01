@@ -59,6 +59,35 @@
     height: 48px;
 }
 
+.btn-professional {
+    background-color: #007bff; /* Professional blue */
+    color: white;
+    border: none;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Clean, modern font */
+    font-size: 16px; /* Optimal font size */
+    font-weight: 600; /* Semi-bold for better readability */
+    padding: 12px 30px; /* Comfortable padding */
+    border-radius: 6px; /* Subtle rounded corners */
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none; /* Remove underline */
+    display: inline-block;
+    transition: all 0.3s ease; /* Smooth transition */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  }
+  
+  .btn-professional:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* Slightly larger shadow on hover */
+    transform: translateY(-1px); /* Slight lift effect */
+  }
+  
+  .btn-professional:active {
+    background-color: #004080; /* Even darker blue on click */
+    transform: translateY(0); /* Reset lift effect */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Reset shadow */
+  }
+
 .btn-square,
 .btn-sm-square,
 .btn-lg-square {
