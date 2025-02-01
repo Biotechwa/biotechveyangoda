@@ -174,13 +174,21 @@
                                 <input type="date" id="date" class="form-control form-control-lg" required>
                             </div>
                             <div class="mb-4">
-                                <label for="billName" class="form-label fw-semibold">Bill Name</label>
-                                <input type="text" id="billName" class="form-control form-control-lg" placeholder="Enter bill name" required>
-                            </div>
-                            <div class="mb-4">
-                                <label for="whatsappNum" class="form-label fw-semibold">WhatsApp Number</label>
-                                <input type="number" id="whatsappNum" class="form-control form-control-lg" placeholder="Enter WhatsApp number" required>
-                            </div>
+    <label for="billName" class="form-label fw-semibold">Bill Name</label>
+    <input type="text" id="billName" class="form-control form-control-lg" placeholder="Enter bill name" required pattern="^[A-Za-z]+\.[A-Za-z]+$|^[A-Za-z]+ [A-Za-z]+$" title="Please enter a valid name">
+    <div class="invalid-feedback">
+        Please enter a valid bill name(with .
+    </div>
+</div>
+
+                          <div class="mb-4">
+    <label for="whatsappNum" class="form-label fw-semibold">WhatsApp Number</label>
+    <input type="tel" id="whatsappNum" class="form-control form-control-lg" placeholder="Enter WhatsApp number" required pattern="^0\d{9}$" maxlength="10" title="WhatsApp number must be 10 digits and start with 0">
+    <div class="invalid-feedback">
+        Please enter a valid WhatsApp number.
+    </div>
+</div>
+
                             <div class="text-center">
                                 <button type="submit" class="btn btn-primary btn-lg w-100">Collect Report</button>
                             </div>
@@ -193,42 +201,24 @@
         </div>
     
         <script>
-            document.getElementById('reportForm').addEventListener('submit', function(event) {
-                event.preventDefault();
-    
-                const vgSelection = document.getElementById('vgSelection').value;
-                const vgNum = document.getElementById('vgNum').value.trim();
-                const date = document.getElementById('date').value;
-                const billName = document.getElementById('billName').value.trim();
-                const whatsappNum = document.getElementById('whatsappNum').value.trim();
-    
-                if (vgNum && date && billName && whatsappNum) {
-                    const link = `http://amlws.appexsl.com/report/7/${vgSelection}${vgNum}/${date}?billName=${encodeURIComponent(billName)}&whatsappNum=${encodeURIComponent(whatsappNum)}`;
-                    window.open(link, '_blank');
-                }
-            });
-            document.getElementById('reportForm').addEventListener('submit', function(event) {
-        event.preventDefault();
+           document.getElementById('reportForm').addEventListener('submit', function(event) {
+    event.preventDefault();
 
-        const reportData = {
-            reportType: document.getElementById('vgSelection').value,
-            reportNumber: document.getElementById('vgNum').value.trim(),
-            reportDate: document.getElementById('date').value,
-            billName: document.getElementById('billName').value.trim(),
-            whatsappNumber: document.getElementById('whatsappNum').value.trim(),
-            entryDate: new Date().toLocaleString() // Saves the time and date of entry
-        };
+    // Clear local storage
+    localStorage.removeItem('savedReports');
 
-        // Retrieve previous data from localStorage
-        let reports = JSON.parse(localStorage.getItem('savedReports')) || [];
-        reports.push(reportData);
+    const vgSelection = document.getElementById('vgSelection').value;
+    const vgNum = document.getElementById('vgNum').value.trim();
+    const date = document.getElementById('date').value;
+    const billName = document.getElementById('billName').value.trim();
+    const whatsappNum = document.getElementById('whatsappNum').value.trim();
 
-        // Save updated data back to localStorage
-        localStorage.setItem('savedReports', JSON.stringify(reports));
+    if (vgNum && date && billName && whatsappNum) {
+        const link = `http://amlws.appexsl.com/report/7/${vgSelection}${vgNum}/${date}?billName=${encodeURIComponent(billName)}&whatsappNum=${encodeURIComponent(whatsappNum)}`;
+        window.location.href = link;
+    }
+});
 
-        // Redirect to the saved reports page
-        window.location.href = 'savedReport';
-    });
         </script>
     </body>
     
