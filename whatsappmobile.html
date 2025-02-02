@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BIOTECH REPORT WHATSAPP SYSTEM</title>
+    <style>
+        body {
+            background-image: url('img/12.jpg');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            padding: 10px;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        input, button, select, textarea {
+            width: 100%;
+            padding: 10px;
+            margin-top: 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        .phone-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .phone-prefix {
+            padding: 10px;
+            background-color: #e0e0e0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .send-button {
+            background-color: #25D366;
+            color: white;
+            font-size: 18px;
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .send-button:hover {
+            background-color: #1eaa58;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>BIOTECH REPORT WHATSAPP SYSTEM</h1>
+        <select id="vgSelection">
+            <option value="VG">VG</option>
+            <option value="BR">BR</option>
+            <option value="NI">NI</option>
+        </select>
+        <input type="number" id="vgNum" placeholder="Enter number (e.g., 1)">
+        <input type="date" id="date">
+        <div class="phone-row">
+            <div class="phone-prefix">+94</div>
+            <input type="text" id="phoneNum" placeholder="Enter 9-digit phone number" maxlength="9" oninput="validatePhoneNum(this)">
+        </div>
+        <textarea id="messagePreview" rows="5" readonly></textarea>
+        <button class="send-button" onclick="sendWhatsApp()">Send on WhatsApp</button>
+    </div>
+
+    <script>
+        function validatePhoneNum(input) {
+            input.value = input.value.replace(/[^0-9]/g, '').slice(0, 9);
+        }
+
+        function updatePreview() {
+            const vgSelection = document.getElementById('vgSelection').value;
+            const vgNum = document.getElementById('vgNum').value.trim();
+            const date = document.getElementById('date').value;
+            const phoneNum = document.getElementById('phoneNum').value;
+
+            if (!vgNum || vgNum.includes(" ")) {
+                document.getElementById('messagePreview').value = "Please enter a valid number.";
+                return;
+            }
+            if (!date || phoneNum.length !== 9) {
+                document.getElementById('messagePreview').value = "Please enter a valid date and 9-digit phone number.";
+                return;
+            }
+
+            const link = `https://amlws.appexsl.com/report/7/${vgSelection}${vgNum}/${date}`;
+            const message = `*Biotech Medical Laboratory Online Report*\n\n👤 *Patient ID:* (${vgSelection}${vgNum})\n\n📅 *Date:* ${date}\n\nClick below to view/download:\n🔗 ${link}\n\nFrom - BIOTECH LABORATORY`;
+            document.getElementById('messagePreview').value = message;
+        }
+
+        function sendWhatsApp() {
+            const phoneNum = "94" + document.getElementById('phoneNum').value;
+            const message = document.getElementById('messagePreview').value;
+
+            if (message.includes("Please enter")) {
+                alert("Please fill all required fields correctly.");
+                return;
+            }
+
+            const encodedMessage = encodeURIComponent(message);
+            const whatsappUrl = `https://api.whatsapp.com/send?phone=${phoneNum}&text=${encodedMessage}`;
+            window.open(whatsappUrl, '_blank');
+        }
+
+        document.getElementById('vgSelection').addEventListener('input', updatePreview);
+        document.getElementById('vgNum').addEventListener('input', updatePreview);
+        document.getElementById('date').addEventListener('input', updatePreview);
+        document.getElementById('phoneNum').addEventListener('input', updatePreview);
+
+        updatePreview();
+    </script>
+</body>
+</html>
