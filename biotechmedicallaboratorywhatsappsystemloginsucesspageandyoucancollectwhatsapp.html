@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BIOTECH REPORT WHATSAPP SYSTEM</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css">
     <style>
         body {
             background-image: url('img/12.jpg');
@@ -39,9 +40,9 @@
             padding: 15px;
             border-radius: 8px;
             box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-            font-size: 18px; /* Increase font size */
-            height: 300px; /* Set a fixed height */
-            overflow-y: auto; /* Enable scrolling if content exceeds height */
+            font-size: 18px;
+            height: 300px;
+            overflow-y: auto;
         }
 
         h1 {
@@ -65,23 +66,15 @@
             gap: 10px;
         }
 
-        .phone-row, .date-row {
+        .date-row, .phone-row {
             display: flex;
-            align-items: center;
             gap: 10px;
-            margin-top: 8px;
+            margin-top: 12px;  /* Increased space between form elements */
         }
 
-        .phone-prefix, .date-prefix {
+        .date-row input, .phone-row input {
+            width: 100%;  /* Ensures the input fields expand to fill the container */
             padding: 8px;
-            background-color: #e0e0e0;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 16px;
-        }
-
-        .phone-number, #date {
-            flex: 1;
         }
 
         .send-button {
@@ -118,7 +111,7 @@
 
         footer span {
             font-size: 10px;
-            color: white; /* Set text color to white */
+            color: white;
         }
     </style>
 </head>
@@ -138,8 +131,8 @@
                 <input type="date" id="date">
             </div>
             <div class="phone-row">
-                <div class="phone-prefix">94</div>
-                <input type="text" id="phoneNum" class="phone-number" placeholder="Enter 9-digit phone number" maxlength="9" oninput="validatePhoneNum(this)">
+                <!-- Phone number input with country code selector -->
+                <input type="tel" id="phoneNum" placeholder="767810623" style="width: 100%;" maxlength="9">
             </div>
             <button class="send-button" onclick="sendWhatsApp()">Send on WhatsApp</button>
         </div>
@@ -154,41 +147,59 @@
         <span>Developed By Theekshana</span>
     </footer>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
     <script>
+        const phoneInput = document.getElementById('phoneNum');
+        const iti = window.intlTelInput(phoneInput, {
+            initialCountry: "lk", // Set default country to Sri Lanka
+            utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js"
+        });
+
+        phoneInput.addEventListener('input', function () {
+            let phoneValue = this.value;
+
+            // Remove leading 0 if present
+            if (phoneValue.startsWith('0')) {
+                phoneValue = phoneValue.substring(1);
+            }
+
+            // Ensure the phone number is a 9-digit number
+            phoneValue = phoneValue.replace(/\D/g, ''); // Remove non-digit characters
+            if (phoneValue.length > 9) {
+                phoneValue = phoneValue.substring(0, 9); // Trim to 9 digits
+            }
+
+            // Update the input field with the new value
+            this.value = phoneValue;
+
+            updatePreview();  // Update preview when the phone number is entered or changed
+        });
+
         document.getElementById('vgSelection').addEventListener('input', updatePreview);
         document.getElementById('vgNum').addEventListener('input', updatePreview);
         document.getElementById('date').addEventListener('input', updatePreview);
-        document.getElementById('phoneNum').addEventListener('input', updatePreview);
-
-        function validatePhoneNum(input) {
-            input.value = input.value.replace(/[^0-9]/g, '').slice(0, 9);
-        }
 
         function updatePreview() {
             const vgSelection = document.getElementById('vgSelection').value;
             const vgNum = document.getElementById('vgNum').value.trim();
             const date = document.getElementById('date').value;
-            const phoneNum = document.getElementById('phoneNum').value;
+            const phoneNum = iti.getNumber();  // Get full phone number including country code
 
-            if (!vgNum || vgNum.includes(" ")) {
-                document.getElementById('messagePreview').value = "Please enter a valid number.";
-                return;
+            // Only update preview if all fields are completed correctly
+            if (phoneNum.length >= 12 && vgNum && date) {  // Check if phone number is valid
+                const link = `https://amlws.appexsl.com/report/7/${vgSelection}${vgNum}/${date}`;
+                const message = `*Biotech Medical Laboratory Online Report*\n\n \n\n👤 *Patient ID:* (${vgSelection}${vgNum})\n\n📅 *Date:* ${date}\n\n●Click the link below to view and download the online report.\n\n*(ඔබට පහලින් ලින්ක් එකක් දිස් නොවුනහොත් කරුණාකර අපගේ WHATSAPP NUMBER එක සේව් කරගන්න.)*\n\n  👇\n🔗${link}\n\n \n\n𝙁𝙧𝙤𝙢 - 𝘽𝙄𝙊𝙏𝙀𝘾𝙃 𝙇𝘼𝘽𝙊𝙍𝘼𝙏𝙊𝙍𝙔`;
+                document.getElementById('messagePreview').value = message;
+            } else {
+                document.getElementById('messagePreview').value = "Please enter a valid phone number (9 digits), date, and number.";
             }
-            if (!date || phoneNum.length !== 9) {
-                document.getElementById('messagePreview').value = "Please enter a valid date and 9-digit phone number.";
-                return;
-            }
-
-            const link = `https://amlws.appexsl.com/report/7/${vgSelection}${vgNum}/${date}`;
-            const message = `*Biotech Medical Laboratory Online Report*\n\n \n\n👤 *Patient ID:* (${vgSelection}${vgNum})\n\n📅 *Date:* ${date}\n\n●Click the link below to view and download the online report.\n\n*(ඔබට පහලින් ලින්ක් එකක් දිස් නොවුනහොත් කරුණාකර අපගේ WHATSAPP NUMBER එක සේව් කරගන්න.)*\n\n  👇\n🔗${link}\n\n \n\n𝙁𝙧𝙤𝙢 - 𝘽𝙄𝙊𝙏𝙀𝘾𝙃 𝙇𝘼𝘽𝙊𝙍𝘼𝙏𝙊𝙍𝙔`;
-            document.getElementById('messagePreview').value = message;
         }
 
         function sendWhatsApp() {
-            const phoneNum = "94" + document.getElementById('phoneNum').value;
+            const phoneNum = iti.getNumber();  // Get full phone number with country code
             const message = document.getElementById('messagePreview').value;
 
-            if (message.trim() === "Please enter a valid date and 9-digit phone number." || message.trim() === "Please enter a valid number.") {
+            if (message.trim() === "Please enter a valid phone number (9 digits), date, and number.") {
                 alert("Please fill all required fields correctly.");
                 return;
             }
