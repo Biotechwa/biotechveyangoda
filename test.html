@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extract VG Number & Date</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.0.2/tesseract.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h2 {
+            margin-bottom: 10px;
+        }
+        #output {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Upload Invoice Image</h2>
+    <input type="file" id="imageUpload" accept="image/*">
+    <button onclick="extractText()">Extract & Open Report</button>
+
+    <p id="output"></p>
+
+    <script>
+        function extractText() {
+            const imageInput = document.getElementById("imageUpload");
+
+            // Check if an image is uploaded
+            if (imageInput.files.length === 0) {
+                alert("Please upload an image first.");
+                return;
+            }
+
+            const imageFile = imageInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function (event) {
+                const imgData = event.target.result;
+
+                // Display processing message
+                document.getElementById("output").innerHTML = "Processing image...";
+
+                // Use Tesseract.js to extract text from the image
+                Tesseract.recognize(
+                    imgData,
+                    'eng',
+                    { logger: m => console.log(m) }
+                ).then(({ data: { text } }) => {
+                    console.log("Extracted Text: ", text);
+
+                    // Extract VG Number (Sample Number)
+                    const vgNumMatch = text.match(/(?:patient:\s*)?(\b(VG|NI|BR)\d{1,3}\b)/i);
+                    const vgNum = vgNumMatch ? vgNumMatch[0].replace(/(?:patient:\s*)?/i, '') : null;
+
+                    // Extract Date (formatted to YYYY-MM-DD)
+                    const dateMatch = text.match(/Date\s*[-:]?\s*(\d{2})\/(\d{2})\/(\d{4})/);
+                    const date = dateMatch ? `${dateMatch[3]}-${dateMatch[2]}-${dateMatch[1]}` : null;
+
+                    // Open the report URL in a new tab
+                    if (vgNum && date) {
+                        const reportUrl = `https://amlws.appexsl.com/report/7/${vgNum}/${date}`;
+                        window.open(reportUrl, "_blank");
+                    } else {
+                        document.getElementById("output").innerHTML = "Failed to extract VG Number or Date.";
+                    }
+                }).catch(error => {
+                    console.error("Error during OCR:", error);
+                    document.getElementById("output").innerHTML = "An error occurred during text extraction.";
+                });
+            };
+
+            // Read the uploaded image file
+            reader.readAsDataURL(imageFile);
+        }
+    </script>
+
+</body>
+</html>
