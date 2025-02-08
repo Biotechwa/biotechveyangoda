@@ -66,16 +66,19 @@
                     console.log("Extracted Text: ", text);
 
                     // Extract VG Number (Sample Number)
-                    const vgNumMatch = text.match(/(?:patient:\s*)?(\b(VG|NI|BR)\d{1,3}\b)/i);
-                    const vgNum = vgNumMatch ? vgNumMatch[0].replace(/(?:patient:\s*)?/i, '') : null;
+                    const vgNumMatch = text.match(/(VG|NI|BR)\d{1,3}/i);
+                    const vgNum = vgNumMatch ? vgNumMatch[0] : null;
 
                     // Extract Date (formatted to YYYY-MM-DD)
-                    const dateMatch = text.match(/Date\s*[-:]?\s*(\d{2})\/(\d{2})\/(\d{4})/);
+                    const dateMatch = text.match(/(\d{2})\/(\d{2})\/(\d{4})/);
                     const date = dateMatch ? `${dateMatch[3]}-${dateMatch[2]}-${dateMatch[1]}` : null;
 
-                    // Open the report URL in a new tab
+                    // Validate extracted data
                     if (vgNum && date) {
                         const reportUrl = `https://amlws.appexsl.com/report/7/${vgNum}/${date}`;
+                        document.getElementById("output").innerHTML = `Report URL: <a href="${reportUrl}" target="_blank">${reportUrl}</a>`;
+                        
+                        // Automatically open the report URL in a new tab
                         window.open(reportUrl, "_blank");
                     } else {
                         document.getElementById("output").innerHTML = "Failed to extract VG Number or Date.";
