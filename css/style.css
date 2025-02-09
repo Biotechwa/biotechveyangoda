@@ -62,27 +62,49 @@
 .btn-professional {
     background-color: #3671f0b6; /* Default blue color */
     color: white; /* Text color */
-    padding: 20px 35px; /* Increase padding to make the button bigger */
-    font-size: 20px; /* Adjust font size */
-    border: rgb(2, 38, 117); /* Remove default border */
+    padding: 15px 30px; /* Optimized padding for responsiveness */
+    font-size: 18px; /* Adjust font size */
+    border: none; /* Remove default border */
     border-radius: 8px; /* Rounded corners */
     cursor: pointer; /* Pointer cursor on hover */
     transition: all 0.3s ease; /* Smooth transition for hover and active states */
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); /* Add shadow */
-    transform: scale(1); /* Default scale */
-  }
-  
-  .btn-professional:hover {
+    display: inline-block; /* Prevent stretching */
+    text-align: center; /* Ensure text is centered */
+    max-width: 100%; /* Avoid overflow */
+    white-space: nowrap; /* Prevent text wrapping */
+    position: relative; /* Ensure proper positioning */
+    z-index: 10; /* Keep it above overlapping elements */
+}
+
+.btn-professional:hover {
     background-color: #0ae4d988; /* Slightly darker blue on hover */
     box-shadow: 0 6px 8px rgba(0, 0, 0, 0.39); /* Increase shadow on hover */
     transform: scale(1.05); /* Slightly enlarge the button on hover */
-  }
-  
-  .btn-professional:active {
+}
+
+.btn-professional:active {
     background-color: #2a1a8a; /* Even darker blue on click */
     transform: scale(0.95); /* Slightly shrink the button on click */
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Reduce shadow on click */
-  }
+}
+
+/* Responsive Design for Small Screens */
+@media screen and (max-width: 768px) {
+    .btn-professional {
+        font-size: 16px; /* Reduce size for mobile */
+        padding: 12px 25px; /* Adjust padding */
+    }
+}
+
+/* Responsive Design for Extra Small Screens */
+@media screen and (max-width: 480px) {
+    .btn-professional {
+        font-size: 14px;
+        padding: 10px 20px;
+    }
+}
+
 .btn-square,
 .btn-sm-square,
 .btn-lg-square {
