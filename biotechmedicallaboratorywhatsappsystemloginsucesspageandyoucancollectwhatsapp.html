@@ -314,10 +314,12 @@
         // Initialize Firebase
         let app, db;
         let isFirebaseConnected = false;
+        let iti = null; // Phone input reference
 
         try {
             app = initializeApp(firebaseConfig);
             db = getFirestore(app);
+            console.log('Firebase initialized successfully');
             testConnection();
         } catch (error) {
             console.error('Firebase initialization failed:', error);
@@ -332,6 +334,7 @@
                 await getDocs(testQuery);
                 isFirebaseConnected = true;
                 updateStatus('online', 'Cloud Connected');
+                console.log('Firebase connection successful');
                 displaySentItems();
             } catch (error) {
                 console.error('Firebase connection test failed:', error);
@@ -356,47 +359,62 @@
         // Phone input setup
         function setupPhoneInput() {
             const phoneInput = document.getElementById('phoneNum');
-            const iti = window.intlTelInput(phoneInput, {
-                initialCountry: "lk",
-                utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js"
-            });
+            
+            if (phoneInput && window.intlTelInput) {
+                iti = window.intlTelInput(phoneInput, {
+                    initialCountry: "lk",
+                    utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js"
+                });
 
-            phoneInput.addEventListener('input', function () {
-                let phoneValue = this.value;
+                phoneInput.addEventListener('input', function () {
+                    let phoneValue = this.value;
 
-                if (phoneValue.startsWith('0')) {
-                    phoneValue = phoneValue.substring(1);
-                }
+                    if (phoneValue.startsWith('0')) {
+                        phoneValue = phoneValue.substring(1);
+                    }
 
-                phoneValue = phoneValue.replace(/\D/g, '');
-                if (phoneValue.length > 9) {
-                    phoneValue = phoneValue.substring(0, 9);
-                }
+                    phoneValue = phoneValue.replace(/\D/g, '');
+                    if (phoneValue.length > 9) {
+                        phoneValue = phoneValue.substring(0, 9);
+                    }
 
-                this.value = phoneValue;
-                updatePreview();
-            });
+                    this.value = phoneValue;
+                    updatePreview();
+                });
 
-            // Store iti globally so other functions can access it
-            window.iti = iti;
+                console.log('Phone input initialized');
+            } else {
+                console.error('Phone input or intlTelInput not available');
+            }
 
-            document.getElementById('vgSelection').addEventListener('input', updatePreview);
-            document.getElementById('vgNum').addEventListener('input', updatePreview);
-            document.getElementById('date').addEventListener('input', updatePreview);
+            // Setup other event listeners
+            const vgSelection = document.getElementById('vgSelection');
+            const vgNum = document.getElementById('vgNum');
+            const dateInput = document.getElementById('date');
+
+            if (vgSelection) vgSelection.addEventListener('input', updatePreview);
+            if (vgNum) vgNum.addEventListener('input', updatePreview);
+            if (dateInput) dateInput.addEventListener('input', updatePreview);
+
+            console.log('Event listeners setup complete');
         }
 
         function updatePreview() {
-            const vgSelection = document.getElementById('vgSelection').value;
-            const vgNum = document.getElementById('vgNum').value.trim();
-            const date = document.getElementById('date').value;
-            const phoneNum = window.iti ? window.iti.getNumber() : '';
+            const vgSelection = document.getElementById('vgSelection')?.value || '';
+            const vgNum = document.getElementById('vgNum')?.value?.trim() || '';
+            const date = document.getElementById('date')?.value || '';
+            const phoneNum = iti ? iti.getNumber() : '';
+
+            console.log('Updating preview:', { vgSelection, vgNum, date, phoneNum });
 
             if (phoneNum.length >= 12 && vgNum && date) {
                 const link = `https://amlws.appexsl.com/report/7/${vgSelection}${vgNum}/${date}`;
                 const message = `*Biotech Medical Laboratory Online Report*\n\n \n\n👤 *Patient ID:* (${vgSelection}${vgNum})\n\n📅 *Date:* ${date}\n\n●Click the link below to view and download the online report.\n\n*(ඔබට පහලින් ලින්ක් එකක් දිස් නොවුනහොත් කරුණාකර අපගේ WHATSAPP NUMBER එක සේව් කරගන්න.)*\n\n  👇\n🔗${link}\n\n \n\n𝙁𝙧𝙤𝙢 - 𝘽𝙄𝙊𝙏𝙀𝘾𝙃 𝙇𝘼𝘽𝙊𝙍𝘼𝙏𝙊𝙍𝙔`;
                 document.getElementById('messagePreview').value = message;
+                console.log('Preview updated with message');
             } else {
                 document.getElementById('messagePreview').value = "Please enter a valid phone number (9 digits), date, and number.";
+                console.log('Preview updated with placeholder');
             }
         }
 
@@ -526,13 +544,13 @@
 
         // Send WhatsApp message
         function sendWhatsApp() {
-            const phoneNum = window.iti ? window.iti.getNumber() : '';
+            const phoneNum = iti ? iti.getNumber() : '';
             const message = document.getElementById('messagePreview').value;
             const vgSelection = document.getElementById('vgSelection').value;
             const vgNum = document.getElementById('vgNum').value.trim();
             const date = document.getElementById('date').value;
 
-            if (message.trim() === "Please enter a valid phone number (9 digits), date, and number.") {
+            if (message.trim() === "Please enter a valid phone number (9 digits), date, and number." || !message.trim()) {
                 alert("Please fill all required fields correctly.");
                 return;
             }
@@ -548,19 +566,19 @@
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
-            // Setup phone input and event listeners
-            setupPhoneInput();
-            // Initial preview update
-            updatePreview();
+            console.log('DOM loaded, initializing...');
+            
+            // Setup phone input and event listeners with a small delay
+            setTimeout(() => {
+                setupPhoneInput();
+                updatePreview();
+                console.log('Initialization complete');
+            }, 100);
         });
 
-        // Make functions available globally
-        window.updatePreview = updatePreview;
+        // Make functions available globally for onclick handlers
         window.sendWhatsApp = sendWhatsApp;
         window.clearSentItems = clearSentItems;
-        window.addSentItem = addSentItem;
-        window.displaySentItems = displaySentItems;
-        window.getDeviceId = getDeviceId;
 
     </script>
 </body>
