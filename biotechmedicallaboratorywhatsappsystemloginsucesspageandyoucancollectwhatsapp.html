@@ -343,17 +343,63 @@
             }
         }
 
-        // Update status indicator
-        function updateStatus(status, message) {
-            const indicator = document.getElementById('statusIndicator');
-            indicator.className = `status-indicator status-${status}`;
-            indicator.textContent = `⚡ ${message}`;
+        // Save current form state to cloud
+        async function saveFormState() {
+            const vgSelection = document.getElementById('vgSelection')?.value || '';
+            const vgNum = document.getElementById('vgNum')?.value?.trim() || '';
+            const date = document.getElementById('date')?.value || '';
+            const phoneNum = iti ? iti.getNumber() : '';
+
+            const formState = {
+                vgSelection,
+                vgNum,
+                date,
+                phoneNum: document.getElementById('phoneNum')?.value || '', // Save raw phone number
+                timestamp: Date.now(),
+                deviceId: getDeviceId()
+            };
+
+            try {
+                if (isFirebaseConnected && db) {
+                    // Save current form state to Firebase
+                    await addDoc(collection(db, 'biotechFormState'), formState);
+                    console.log('Form state saved to cloud');
+                }
+            } catch (error) {
+                console.error('Error saving form state:', error);
+            }
         }
 
-        // Fallback to localStorage when Firebase is unavailable
-        function fallbackToLocalStorage() {
-            isFirebaseConnected = false;
-            displaySentItems();
+        // Load latest form state from cloud
+        async function loadFormState() {
+            try {
+                if (isFirebaseConnected && db) {
+                    const q = query(
+                        collection(db, 'biotechFormState'), 
+                        orderBy('timestamp', 'desc'), 
+                        limit(1)
+                    );
+                    const snapshot = await getDocs(q);
+                    
+                    if (!snapshot.empty) {
+                        const latestState = snapshot.docs[0].data();
+                        
+                        // Set form values
+                        document.getElementById('vgSelection').value = latestState.vgSelection || 'BN';
+                        document.getElementById('vgNum').value = latestState.vgNum || '';
+                        document.getElementById('date').value = latestState.date || '';
+                        document.getElementById('phoneNum').value = latestState.phoneNum || '';
+
+                        // Update preview
+                        updatePreview();
+                        console.log('Form state loaded from cloud:', latestState);
+                        return true;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading form state:', error);
+            }
+            return false;
         }
 
         // Phone input setup
