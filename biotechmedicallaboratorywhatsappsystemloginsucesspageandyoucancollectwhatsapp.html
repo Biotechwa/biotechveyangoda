@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BIOTECH REPORT WHATSAPP SYSTEM</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css">
+    
+    <!-- Firebase SDK v9+ (Modern) -->
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js"></script>
+    
     <style>
         body {
             background-image: url('img/12.jpg');
@@ -156,6 +161,40 @@
             background-color: #1eaa58;
         }
 
+        .status-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .status-online {
+            background-color: #25D366;
+        }
+
+        .status-offline {
+            background-color: #ff4444;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #25D366;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         footer {
             position: fixed;
             bottom: 20px;
@@ -178,9 +217,39 @@
             font-size: 10px;
             color: white;
         }
+
+        .config-section {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 10px;
+        }
+
+        .config-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 10px;
+        }
     </style>
 </head>
 <body>
+    <!-- Status Indicator -->
+    <div id="statusIndicator" class="status-indicator status-offline">
+        ⚡ Connecting...
+    </div>
+
+    <!-- Configuration Section -->
+    <div class="config-section">
+        <div style="color: #28a745; font-weight: bold;">✅ Firebase Ready</div>
+    </div>
+
     <div class="container">
         <div class="form-section">
             <h1>BIOTECH REPORT WHATSAPP SYSTEM</h1>
@@ -189,7 +258,7 @@
                     <option value="BN">BN</option>
                     <option value="VG">VG</option>
                     <option value="NI">NI</option>
-                   <option value="BR">BR</option>
+                    <option value="BR">BR</option>
                 </select>
                 <input type="number" id="vgNum" placeholder="Enter number (e.g., 1)" maxlength="10">
             </div>
@@ -211,17 +280,80 @@
                 <span class="daily-items-title">Daily Sent Items</span>
                 <button class="clear-button" onclick="clearSentItems()">Clear</button>
             </div>
-            <div id="sentItemsList"></div>
+            <div id="sentItemsList">
+                <div style="text-align: center; color: #999; font-size: 12px; margin-top: 20px;">
+                    <div class="loading"></div> Loading...
+                </div>
+            </div>
         </div>
     </div>
 
     <footer>
         <a href="https://wa.me/94767810623" class="small-wa-button" target="_blank">Chat with me</a>
-        <span>Developed By Theekshana</span>
+        <span>Developed By Theekshana | Cloud Storage</span>
     </footer>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
-    <script>
+    
+    <script type="module">
+        // Import Firebase functions
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js';
+        import { getFirestore, collection, addDoc, query, orderBy, limit, getDocs, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js';
+
+        // Firebase Configuration (Your actual config)
+        const firebaseConfig = {
+            apiKey: "AIzaSyBsrbFf8XuUgyPCEEfb8bYNQXS0NVED6gM",
+            authDomain: "biotech-system.firebaseapp.com",
+            projectId: "biotech-system",
+            storageBucket: "biotech-system.firebasestorage.app",
+            messagingSenderId: "375710943981",
+            appId: "1:375710943981:web:99c3ac37d80aa1931b1ae4",
+            measurementId: "G-H6MWERPB4S"
+        };
+
+        // Initialize Firebase
+        let app, db;
+        let isFirebaseConnected = false;
+
+        try {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            testConnection();
+        } catch (error) {
+            console.error('Firebase initialization failed:', error);
+            updateStatus('offline', 'Connection Failed');
+            fallbackToLocalStorage();
+        }
+
+        // Test Firebase connection
+        async function testConnection() {
+            try {
+                const testQuery = query(collection(db, 'biotechSentItems'), limit(1));
+                await getDocs(testQuery);
+                isFirebaseConnected = true;
+                updateStatus('online', 'Cloud Connected');
+                displaySentItems();
+            } catch (error) {
+                console.error('Firebase connection test failed:', error);
+                updateStatus('offline', 'Connection Failed');
+                fallbackToLocalStorage();
+            }
+        }
+
+        // Update status indicator
+        function updateStatus(status, message) {
+            const indicator = document.getElementById('statusIndicator');
+            indicator.className = `status-indicator status-${status}`;
+            indicator.textContent = `⚡ ${message}`;
+        }
+
+        // Fallback to localStorage when Firebase is unavailable
+        function fallbackToLocalStorage() {
+            isFirebaseConnected = false;
+            displaySentItems();
+        }
+
+        // Phone input setup
         const phoneInput = document.getElementById('phoneNum');
         const iti = window.intlTelInput(phoneInput, {
             initialCountry: "lk",
@@ -263,8 +395,8 @@
             }
         }
 
-        function addSentItem(vgSelection, vgNum, date) {
-            const sentItems = JSON.parse(localStorage.getItem('biotechSentItems') || '[]');
+        // Add sent item to cloud or localStorage
+        async function addSentItem(vgSelection, vgNum, date) {
             const now = new Date();
             const sendTime = now.toLocaleTimeString('en-US', { 
                 hour: '2-digit', 
@@ -276,43 +408,118 @@
                 id: `${vgSelection}${vgNum}`,
                 date: date,
                 sendTime: sendTime,
-                timestamp: now.getTime()
+                timestamp: now.getTime(),
+                deviceId: getDeviceId()
             };
 
-            sentItems.unshift(newItem);
-            localStorage.setItem('biotechSentItems', JSON.stringify(sentItems));
-            displaySentItems();
+            try {
+                if (isFirebaseConnected && db) {
+                    // Save to Firebase using v9+ SDK
+                    await addDoc(collection(db, 'biotechSentItems'), newItem);
+                    console.log('Item saved to cloud');
+                } else {
+                    // Fallback to localStorage
+                    const sentItems = JSON.parse(localStorage.getItem('biotechSentItems') || '[]');
+                    sentItems.unshift(newItem);
+                    localStorage.setItem('biotechSentItems', JSON.stringify(sentItems));
+                    console.log('Item saved to localStorage');
+                }
+                displaySentItems();
+            } catch (error) {
+                console.error('Error saving item:', error);
+                // Fallback to localStorage on error
+                const sentItems = JSON.parse(localStorage.getItem('biotechSentItems') || '[]');
+                sentItems.unshift(newItem);
+                localStorage.setItem('biotechSentItems', JSON.stringify(sentItems));
+                displaySentItems();
+            }
         }
 
-        function displaySentItems() {
-            const sentItems = JSON.parse(localStorage.getItem('biotechSentItems') || '[]');
+        // Get simple device identifier
+        function getDeviceId() {
+            let deviceId = localStorage.getItem('deviceId');
+            if (!deviceId) {
+                deviceId = 'device_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('deviceId', deviceId);
+            }
+            return deviceId;
+        }
+
+        // Display sent items from cloud or localStorage
+        async function displaySentItems() {
             const sentItemsList = document.getElementById('sentItemsList');
             
-            if (sentItems.length === 0) {
-                sentItemsList.innerHTML = '<div style="text-align: center; color: #999; font-size: 12px; margin-top: 20px;">No items sent today</div>';
-                return;
-            }
+            try {
+                let sentItems = [];
 
-            sentItemsList.innerHTML = sentItems.map(item => `
-                <div class="sent-item">
-                    <div class="sent-item-id">${item.id}</div>
-                    <div class="sent-item-date">${item.date}</div>
-                    <div class="sent-item-time">${item.sendTime}</div>
-                </div>
-            `).join('');
+                if (isFirebaseConnected && db) {
+                    // Get from Firebase using v9+ SDK
+                    const q = query(
+                        collection(db, 'biotechSentItems'), 
+                        orderBy('timestamp', 'desc'), 
+                        limit(50)
+                    );
+                    const snapshot = await getDocs(q);
+                    
+                    sentItems = snapshot.docs.map(doc => ({
+                        ...doc.data(),
+                        docId: doc.id
+                    }));
+                } else {
+                    // Get from localStorage
+                    sentItems = JSON.parse(localStorage.getItem('biotechSentItems') || '[]');
+                }
+
+                if (sentItems.length === 0) {
+                    sentItemsList.innerHTML = '<div style="text-align: center; color: #999; font-size: 12px; margin-top: 20px;">No items sent today</div>';
+                    return;
+                }
+
+                sentItemsList.innerHTML = sentItems.map(item => `
+                    <div class="sent-item">
+                        <div class="sent-item-id">${item.id}</div>
+                        <div class="sent-item-date">${item.date}</div>
+                        <div class="sent-item-time">${item.sendTime}</div>
+                    </div>
+                `).join('');
+
+            } catch (error) {
+                console.error('Error loading items:', error);
+                sentItemsList.innerHTML = '<div style="text-align: center; color: #ff4444; font-size: 12px; margin-top: 20px;">Error loading items</div>';
+            }
         }
 
-        function clearSentItems() {
+        // Clear sent items
+        async function clearSentItems() {
             const password = prompt("Enter password to clear sent items:");
             if (password === "129876") {
-                localStorage.removeItem('biotechSentItems');
-                displaySentItems();
-                alert("Sent items cleared successfully!");
+                try {
+                    if (isFirebaseConnected && db) {
+                        // Clear from Firebase using v9+ SDK
+                        const q = query(collection(db, 'biotechSentItems'));
+                        const snapshot = await getDocs(q);
+                        
+                        const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
+                        await Promise.all(deletePromises);
+                        
+                        console.log('Cloud data cleared');
+                    } else {
+                        // Clear localStorage
+                        localStorage.removeItem('biotechSentItems');
+                    }
+                    
+                    displaySentItems();
+                    alert("Sent items cleared successfully!");
+                } catch (error) {
+                    console.error('Error clearing items:', error);
+                    alert("Error clearing items. Please try again.");
+                }
             } else if (password !== null) {
                 alert("Incorrect password!");
             }
         }
 
+        // Send WhatsApp message
         function sendWhatsApp() {
             const phoneNum = iti.getNumber();
             const message = document.getElementById('messagePreview').value;
@@ -334,13 +541,20 @@
             window.open(whatsappWebUrl, '_blank');
         }
 
-        // Load sent items on page load
+        // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
-            displaySentItems();
+            // Firebase is already initialized above
+            updatePreview();
         });
 
-        updatePreview();
+        // Make functions available globally
+        window.updatePreview = updatePreview;
+        window.sendWhatsApp = sendWhatsApp;
+        window.clearSentItems = clearSentItems;
+        window.addSentItem = addSentItem;
+        window.displaySentItems = displaySentItems;
+        window.getDeviceId = getDeviceId;
+
     </script>
 </body>
 </html>
-
