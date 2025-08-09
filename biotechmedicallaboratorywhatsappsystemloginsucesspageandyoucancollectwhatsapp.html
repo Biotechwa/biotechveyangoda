@@ -45,6 +45,71 @@
             overflow-y: auto;
         }
 
+        .daily-items-section {
+            max-width: 250px;
+            width: 100%;
+            background-color: #f0f8ff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+            height: 300px;
+            overflow-y: auto;
+        }
+
+        .daily-items-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .daily-items-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .clear-button {
+            background-color: #ff4444;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 10px;
+            cursor: pointer;
+        }
+
+        .clear-button:hover {
+            background-color: #cc0000;
+        }
+
+        .sent-item {
+            background-color: white;
+            margin-bottom: 8px;
+            padding: 8px;
+            border-radius: 5px;
+            border-left: 3px solid #25D366;
+            font-size: 12px;
+        }
+
+        .sent-item-id {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .sent-item-date {
+            color: #666;
+            font-size: 11px;
+        }
+
+        .sent-item-time {
+            color: #888;
+            font-size: 10px;
+            font-style: italic;
+        }
+
         h1 {
             font-size: 24px;
             color: #333;
@@ -69,11 +134,11 @@
         .date-row, .phone-row {
             display: flex;
             gap: 10px;
-            margin-top: 12px;  /* Increased space between form elements */
+            margin-top: 12px;
         }
 
         .date-row input, .phone-row input {
-            width: 100%;  /* Ensures the input fields expand to fill the container */
+            width: 100%;
             padding: 8px;
         }
 
@@ -132,14 +197,21 @@
                 <input type="date" id="date">
             </div>
             <div class="phone-row">
-                <!-- Phone number input with country code selector -->
                 <input type="tel" id="phoneNum" placeholder="767810623" style="width: 100%;" maxlength="9">
             </div>
             <button class="send-button" onclick="sendWhatsApp()">Send on WhatsApp</button>
         </div>
 
         <div class="preview-section">
-            <textarea id="messagePreview" rows="12" style="width: 100%;" readonly></textarea>
+            <textarea id="messagePreview" rows="20" style="width: 108%;" readonly></textarea>
+        </div>
+
+        <div class="daily-items-section">
+            <div class="daily-items-header">
+                <span class="daily-items-title">Daily Sent Items</span>
+                <button class="clear-button" onclick="clearSentItems()">Clear</button>
+            </div>
+            <div id="sentItemsList"></div>
         </div>
     </div>
 
@@ -152,28 +224,24 @@
     <script>
         const phoneInput = document.getElementById('phoneNum');
         const iti = window.intlTelInput(phoneInput, {
-            initialCountry: "lk", // Set default country to Sri Lanka
+            initialCountry: "lk",
             utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js"
         });
 
         phoneInput.addEventListener('input', function () {
             let phoneValue = this.value;
 
-            // Remove leading 0 if present
             if (phoneValue.startsWith('0')) {
                 phoneValue = phoneValue.substring(1);
             }
 
-            // Ensure the phone number is a 9-digit number
-            phoneValue = phoneValue.replace(/\D/g, ''); // Remove non-digit characters
+            phoneValue = phoneValue.replace(/\D/g, '');
             if (phoneValue.length > 9) {
-                phoneValue = phoneValue.substring(0, 9); // Trim to 9 digits
+                phoneValue = phoneValue.substring(0, 9);
             }
 
-            // Update the input field with the new value
             this.value = phoneValue;
-
-            updatePreview();  // Update preview when the phone number is entered or changed
+            updatePreview();
         });
 
         document.getElementById('vgSelection').addEventListener('input', updatePreview);
@@ -184,10 +252,9 @@
             const vgSelection = document.getElementById('vgSelection').value;
             const vgNum = document.getElementById('vgNum').value.trim();
             const date = document.getElementById('date').value;
-            const phoneNum = iti.getNumber();  // Get full phone number including country code
+            const phoneNum = iti.getNumber();
 
-            // Only update preview if all fields are completed correctly
-            if (phoneNum.length >= 12 && vgNum && date) {  // Check if phone number is valid
+            if (phoneNum.length >= 12 && vgNum && date) {
                 const link = `https://amlws.appexsl.com/report/7/${vgSelection}${vgNum}/${date}`;
                 const message = `*Biotech Medical Laboratory Online Report*\n\n \n\n👤 *Patient ID:* (${vgSelection}${vgNum})\n\n📅 *Date:* ${date}\n\n●Click the link below to view and download the online report.\n\n*(ඔබට පහලින් ලින්ක් එකක් දිස් නොවුනහොත් කරුණාකර අපගේ WHATSAPP NUMBER එක සේව් කරගන්න.)*\n\n  👇\n🔗${link}\n\n \n\n𝙁𝙧𝙤𝙢 - 𝘽𝙄𝙊𝙏𝙀𝘾𝙃 𝙇𝘼𝘽𝙊𝙍𝘼𝙏𝙊𝙍𝙔`;
                 document.getElementById('messagePreview').value = message;
@@ -196,9 +263,62 @@
             }
         }
 
+        function addSentItem(vgSelection, vgNum, date) {
+            const sentItems = JSON.parse(localStorage.getItem('biotechSentItems') || '[]');
+            const now = new Date();
+            const sendTime = now.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit' 
+            });
+
+            const newItem = {
+                id: `${vgSelection}${vgNum}`,
+                date: date,
+                sendTime: sendTime,
+                timestamp: now.getTime()
+            };
+
+            sentItems.unshift(newItem);
+            localStorage.setItem('biotechSentItems', JSON.stringify(sentItems));
+            displaySentItems();
+        }
+
+        function displaySentItems() {
+            const sentItems = JSON.parse(localStorage.getItem('biotechSentItems') || '[]');
+            const sentItemsList = document.getElementById('sentItemsList');
+            
+            if (sentItems.length === 0) {
+                sentItemsList.innerHTML = '<div style="text-align: center; color: #999; font-size: 12px; margin-top: 20px;">No items sent today</div>';
+                return;
+            }
+
+            sentItemsList.innerHTML = sentItems.map(item => `
+                <div class="sent-item">
+                    <div class="sent-item-id">${item.id}</div>
+                    <div class="sent-item-date">${item.date}</div>
+                    <div class="sent-item-time">${item.sendTime}</div>
+                </div>
+            `).join('');
+        }
+
+        function clearSentItems() {
+            const password = prompt("Enter password to clear sent items:");
+            if (password === "129876") {
+                localStorage.removeItem('biotechSentItems');
+                displaySentItems();
+                alert("Sent items cleared successfully!");
+            } else if (password !== null) {
+                alert("Incorrect password!");
+            }
+        }
+
         function sendWhatsApp() {
-            const phoneNum = iti.getNumber();  // Get full phone number with country code
+            const phoneNum = iti.getNumber();
             const message = document.getElementById('messagePreview').value;
+            const vgSelection = document.getElementById('vgSelection').value;
+            const vgNum = document.getElementById('vgNum').value.trim();
+            const date = document.getElementById('date').value;
 
             if (message.trim() === "Please enter a valid phone number (9 digits), date, and number.") {
                 alert("Please fill all required fields correctly.");
@@ -207,12 +327,19 @@
 
             const encodedMessage = encodeURIComponent(message);
             const whatsappWebUrl = `https://web.whatsapp.com/send?phone=${phoneNum}&text=${encodedMessage}`;
+            
+            // Add to sent items before opening WhatsApp
+            addSentItem(vgSelection, vgNum, date);
+            
             window.open(whatsappWebUrl, '_blank');
         }
 
-        updatePreview();  // Initial preview
+        // Load sent items on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            displaySentItems();
+        });
+
+        updatePreview();
     </script>
 </body>
 </html>
-
-
