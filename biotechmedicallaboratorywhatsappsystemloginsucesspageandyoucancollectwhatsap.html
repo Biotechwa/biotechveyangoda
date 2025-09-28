@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BIOTECH REPORT WHATSAPP SYSTEM</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css">
-    
     <style>
+        /* CSS is unchanged */
         body { background-image: url('img/12.jpg'); background-size: cover; background-position: center; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: Arial, sans-serif; }
         .container { display: flex; gap: 20px; background-color: rgba(255, 255, 255, 0.85); padding: 20px; border-radius: 8px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2); }
         .form-section, .preview-section { max-width: 350px; width: 100%; }
@@ -35,30 +35,16 @@
         <div class="form-section">
             <h1>BIOTECH REPORT WHATSAPP SYSTEM</h1>
             <div class="row">
-                <select id="vgSelection">
-                    <option value="BN">BN</option>
-                    <option value="VG">VG</option>
-                    <option value="NI">NI</option>
-                    <option value="BR">BR</option>
-                </select>
+                <select id="vgSelection"><option value="BN">BN</option><option value="VG">VG</option><option value="NI">NI</option><option value="BR">BR</option></select>
                 <input type="number" id="vgNum" placeholder="Enter number (e.g., 1)">
             </div>
-            <div class="date-row">
-                <input type="date" id="date">
-            </div>
-            <div class="phone-row">
-                <input type="tel" id="phoneNum" placeholder="767810623">
-            </div>
+            <div class="date-row"><input type="date" id="date"></div>
+            <div class="phone-row"><input type="tel" id="phoneNum" placeholder="767810623"></div>
             <button class="send-button" onclick="sendWhatsApp()">Send on WhatsApp</button>
         </div>
-        <div class="preview-section">
-            <textarea id="messagePreview" readonly></textarea>
-        </div>
+        <div class="preview-section"><textarea id="messagePreview" readonly></textarea></div>
         <div class="daily-items-section">
-            <div class="daily-items-header">
-                <span class="daily-items-title">Daily Sent Items</span>
-                <button class="clear-button" onclick="clearSentItems()">Clear</button>
-            </div>
+            <div class="daily-items-header"><span class="daily-items-title">Daily Sent Items</span><button class="clear-button" onclick="clearSentItems()">Clear</button></div>
             <div id="sentItemsList"></div>
         </div>
     </div>
@@ -68,21 +54,24 @@
     </footer>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
-    
     <script>
         let iti = null;
 
         function updatePreview() {
             const vgSelection = document.getElementById('vgSelection').value;
             const vgNum = document.getElementById('vgNum').value.trim();
-            const patientId = `${vgSelection}${vgNum}`;
             const date = document.getElementById('date').value;
-            const phoneNum = iti ? iti.getNumber() : '';
-
+            
             if (iti && iti.isValidNumber() && vgNum && date) {
-                // *** THIS IS THE IMPORTANT CHANGE ***
-                // It now creates a link to your preview page with the ID and date
-                const link = `https://biotechveyangoda.lk/report-preview.html?id=${patientId}&date=${date}`;
+                const patientId = `${vgSelection}${vgNum}`;
+                // 1. Combine the real ID and date into one string
+                const originalData = `${patientId}|${date}`;
+                
+                // 2. Encode the data into a random-looking string (Base64)
+                const encodedData = btoa(originalData);
+
+                // 3. Create the new link with the encoded data
+                const link = `https://your-website.com/preview.html?data=${encodedData}`;
 
                 const message = `*Biotech Medical Laboratory Online Report*\n\n \n\n👤 *Patient ID:* (${patientId})\n\n📅 *Date:* ${date}\n\n●Click the link below to view and download the online report.\n\n*(ඔබට පහලින් ලින්ක් එකක් දිස් නොවුනහොත් කරුණාකර අපගේ WHATSAPP NUMBER එක සේව් කරගන්න.)*\n\n  👇\n🔗${link}\n\n \n\n𝙁𝙧𝙤𝙢 - 𝘽𝙄𝙊𝙏𝙀𝘾𝙃 𝙇𝘼𝘽𝙊𝙍𝘼𝙏𝙊𝙍𝙔`;
                 document.getElementById('messagePreview').value = message;
@@ -90,81 +79,13 @@
                 document.getElementById('messagePreview').value = "Please fill all fields correctly.";
             }
         }
-
-        function addSentItem(vgSelection, vgNum, date) {
-            const now = new Date();
-            const newItem = {
-                id: `${vgSelection}${vgNum}`,
-                date: date,
-                sendTime: now.toLocaleTimeString('en-US'),
-                timestamp: now.getTime()
-            };
-            const sentItems = JSON.parse(localStorage.getItem('biotechSentItems') || '[]');
-            sentItems.unshift(newItem);
-            localStorage.setItem('biotechSentItems', JSON.stringify(sentItems));
-            displaySentItems();
-        }
-
-        function displaySentItems() {
-            const sentItemsList = document.getElementById('sentItemsList');
-            const sentItems = JSON.parse(localStorage.getItem('biotechSentItems') || '[]');
-            if (sentItems.length === 0) {
-                sentItemsList.innerHTML = '<div style="text-align: center; color: #999; font-size: 12px; margin-top: 20px;">No items sent today</div>';
-                return;
-            }
-            sentItemsList.innerHTML = sentItems.map(item => `
-                <div class="sent-item"><div class="sent-item-id">${item.id}</div><div class="sent-item-date">${item.date}</div><div class="sent-item-time">${item.sendTime}</div></div>
-            `).join('');
-        }
-
-        function clearSentItems() {
-            const password = prompt("Enter password to clear sent items:");
-            if (password === "129876") {
-                localStorage.removeItem('biotechSentItems');
-                displaySentItems();
-                alert("Sent items cleared successfully!");
-            } else if (password !== null) {
-                alert("Incorrect password!");
-            }
-        }
-
-        function sendWhatsApp() {
-            if (!iti || !iti.isValidNumber()) {
-                alert("Please enter a valid phone number.");
-                return;
-            }
-            const phoneNum = iti.getNumber();
-            const message = document.getElementById('messagePreview').value;
-            if (message.includes("Please fill all fields correctly.")) {
-                alert("Please fill all required fields correctly before sending.");
-                return;
-            }
-            const vgSelection = document.getElementById('vgSelection').value;
-            const vgNum = document.getElementById('vgNum').value.trim();
-            const date = document.getElementById('date').value;
-            addSentItem(vgSelection, vgNum, date);
-            const encodedMessage = encodeURIComponent(message);
-            const whatsappWebUrl = `https://web.whatsapp.com/send?phone=${phoneNum}&text=${encodedMessage}`;
-            window.open(whatsappWebUrl, '_blank');
-        }
         
-        document.addEventListener('DOMContentLoaded', function() {
-            const phoneInput = document.getElementById('phoneNum');
-            iti = window.intlTelInput(phoneInput, {
-                initialCountry: "lk",
-                separateDialCode: true,
-                utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js"
-            });
-            document.getElementById('vgSelection').addEventListener('input', updatePreview);
-            document.getElementById('vgNum').addEventListener('input', updatePreview);
-            document.getElementById('date').addEventListener('input', updatePreview);
-            phoneInput.addEventListener('countrychange', updatePreview);
-            phoneInput.addEventListener('input', updatePreview);
-            displaySentItems();
-            updatePreview();
-        });
+        // Other functions (sendWhatsApp, addSentItem, etc.) are unchanged
+        function addSentItem(vgSelection, vgNum, date){const now=new Date;const newItem={id:`${vgSelection}${vgNum}`,date:date,sendTime:now.toLocaleTimeString("en-US"),timestamp:now.getTime()};const sentItems=JSON.parse(localStorage.getItem("biotechSentItems")||"[]");sentItems.unshift(newItem);localStorage.setItem("biotechSentItems",JSON.stringify(sentItems));displaySentItems()}
+        function displaySentItems(){const sentItemsList=document.getElementById("sentItemsList");const sentItems=JSON.parse(localStorage.getItem("biotechSentItems")||"[]");if(sentItems.length===0){sentItemsList.innerHTML='<div style="text-align: center; color: #999; font-size: 12px; margin-top: 20px;">No items sent today</div>';return}sentItemsList.innerHTML=sentItems.map(item=>`<div class="sent-item"><div class="sent-item-id">${item.id}</div><div class="sent-item-date">${item.date}</div><div class="sent-item-time">${item.sendTime}</div></div>`).join("")}
+        function clearSentItems(){const password=prompt("Enter password to clear sent items:");if(password==="129876"){localStorage.removeItem("biotechSentItems");displaySentItems();alert("Sent items cleared successfully!")}else if(password!==null){alert("Incorrect password!")}}
+        function sendWhatsApp(){if(!iti||!iti.isValidNumber()){alert("Please enter a valid phone number.");return}const phoneNum=iti.getNumber();const message=document.getElementById("messagePreview").value;if(message.includes("Please fill all fields correctly.")){alert("Please fill all required fields correctly before sending.");return}const vgSelection=document.getElementById("vgSelection").value;const vgNum=document.getElementById("vgNum").value.trim();const date=document.getElementById("date").value;addSentItem(vgSelection,vgNum,date);const encodedMessage=encodeURIComponent(message);const whatsappWebUrl=`https://web.whatsapp.com/send?phone=${phoneNum}&text=${encodedMessage}`;window.open(whatsappWebUrl,"_blank")}
+        document.addEventListener("DOMContentLoaded",function(){const phoneInput=document.getElementById("phoneNum");iti=window.intlTelInput(phoneInput,{initialCountry:"lk",separateDialCode:!0,utilsScript:"https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js"});document.getElementById("vgSelection").addEventListener("input",updatePreview);document.getElementById("vgNum").addEventListener("input",updatePreview);document.getElementById("date").addEventListener("input",updatePreview);phoneInput.addEventListener("countrychange",updatePreview);phoneInput.addEventListener("input",updatePreview);displaySentItems();updatePreview()});
     </script>
 </body>
 </html>
-
-
