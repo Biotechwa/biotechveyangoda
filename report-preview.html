@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biotech Report - Private Access</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+        .content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 90%;
+        }
+        h1 {
+            color: #25D366;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        p {
+            font-size: 16px;
+            color: #555;
+            line-height: 1.5;
+        }
+        strong {
+            color: #333;
+        }
+        .report-link-container {
+            margin-top: 25px;
+            padding: 15px;
+            border: 2px dashed #ddd;
+            border-radius: 5px;
+        }
+        #reportLink {
+            background-color: #25D366;
+            color: white;
+            padding: 12px 25px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 18px;
+            font-weight: bold;
+            display: inline-block;
+            transition: background-color 0.3s;
+        }
+        #reportLink:hover {
+            background-color: #1eaa58;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="content">
+        <h1>Biotech Medical Laboratory - Report Access</h1>
+        <p>You have successfully accessed your report preview. Please confirm your details before proceeding to the final download link.</p>
+        
+        <p><strong>Patient ID:</strong> <span id="patientIdDisplay">Loading...</span></p>
+        <p><strong>Date:</strong> <span id="dateDisplay">Loading...</span></p>
+
+        <div class="report-link-container">
+            <a id="reportLink" href="#" target="_blank">View and Download Report</a>
+        </div>
+        
+        <p style="margin-top: 20px; font-size: 12px; color: #999;">The report will open in a new window.</p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const params = new URLSearchParams(window.location.search);
+            const patientId = params.get('id');
+            const date = params.get('date');
+
+            const idDisplay = document.getElementById('patientIdDisplay');
+            const dateDisplay = document.getElementById('dateDisplay');
+            const reportLink = document.getElementById('reportLink');
+            
+            // Check if both parameters are present and non-empty
+            if (patientId && date) {
+                // Display the details on the page
+                idDisplay.textContent = patientId;
+                dateDisplay.textContent = date;
+
+                // Dynamically construct the final, private link
+                // The '7' in the path seems to be a static part of the original URL
+                const finalReportLink = `https://amlws.appexsl.com/report/7/${patientId}/${date}`;
+                
+                // Set the href for the button
+                reportLink.href = finalReportLink;
+                
+            } else {
+                // Handle missing/invalid parameters
+                idDisplay.textContent = "Error";
+                dateDisplay.textContent = "Error";
+                reportLink.textContent = "Invalid Link";
+                reportLink.style.backgroundColor = '#cc0000';
+                reportLink.href = '#';
+                reportLink.onclick = (e) => e.preventDefault();
+                alert("Error: Report parameters are missing.");
+            }
+        });
+    </script>
+
+</body>
+</html>
