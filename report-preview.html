@@ -5,61 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Biotech Report - Private Access</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            text-align: center;
-        }
-        .content {
-            background-color: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            max-width: 400px;
-            width: 90%;
-        }
-        h1 {
-            color: #25D366;
-            margin-bottom: 20px;
-            font-size: 24px;
-        }
-        p {
-            font-size: 16px;
-            color: #555;
-            line-height: 1.5;
-        }
-        strong {
-            color: #333;
-        }
-        .report-link-container {
-            margin-top: 25px;
-            padding: 15px;
-            border: 2px dashed #ddd;
-            border-radius: 5px;
-        }
-        #reportLink {
-            background-color: #25D366;
-            color: white;
-            padding: 12px 25px;
-            text-decoration: none;
-            border-radius: 5px;
-            font-size: 18px;
-            font-weight: bold;
-            display: inline-block;
-            transition: background-color 0.3s;
-        }
-        #reportLink:hover {
-            background-color: #1eaa58;
-        }
+        body { font-family: Arial, sans-serif; background-color: #f0f0f0; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; text-align: center; }
+        .content { background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); max-width: 400px; width: 90%; }
+        h1 { color: #25D366; margin-bottom: 20px; font-size: 24px; }
+        p { font-size: 16px; color: #555; line-height: 1.5; }
+        strong { color: #333; }
+        .report-link-container { margin-top: 25px; padding: 15px; border: 2px dashed #ddd; border-radius: 5px; }
+        #reportLink { background-color: #25D366; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-size: 18px; font-weight: bold; display: inline-block; transition: background-color 0.3s; }
+        #reportLink:hover { background-color: #1eaa58; }
     </style>
 </head>
 <body>
-
     <div class="content">
         <h1>Biotech Medical Laboratory - Report Access</h1>
         <p>You have successfully accessed your report preview. Please confirm your details before proceeding to the final download link.</p>
@@ -76,39 +32,44 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const params = new URLSearchParams(window.location.search);
-            const patientId = params.get('id');
-            const date = params.get('date');
+            try {
+                // 1. Get the encoded data from the URL
+                const params = new URLSearchParams(window.location.search);
+                const encodedData = params.get('data');
 
-            const idDisplay = document.getElementById('patientIdDisplay');
-            const dateDisplay = document.getElementById('dateDisplay');
-            const reportLink = document.getElementById('reportLink');
-            
-            // Check if both parameters are present and non-empty
-            if (patientId && date) {
-                // Display the details on the page
-                idDisplay.textContent = patientId;
-                dateDisplay.textContent = date;
+                // 2. Decode the data from Base64 back to the original text
+                const originalData = atob(encodedData); // e.g., "BN123|2025-09-28"
 
-                // Dynamically construct the final, private link
-                // The '7' in the path seems to be a static part of the original URL
-                const finalReportLink = `https://amlws.appexsl.com/report/7/${patientId}/${date}`;
+                // 3. Split the text to get the ID and date
+                const [patientId, date] = originalData.split('|');
+
+                const idDisplay = document.getElementById('patientIdDisplay');
+                const dateDisplay = document.getElementById('dateDisplay');
+                const reportLink = document.getElementById('reportLink');
                 
-                // Set the href for the button
-                reportLink.href = finalReportLink;
-                
-            } else {
-                // Handle missing/invalid parameters
-                idDisplay.textContent = "Error";
-                dateDisplay.textContent = "Error";
+                if (patientId && date) {
+                    // Display the real details for the patient to see
+                    idDisplay.textContent = patientId;
+                    dateDisplay.textContent = date;
+
+                    // Construct the final, original link to the report
+                    const finalReportLink = `https://amlws.appexsl.com/report/7/${patientId}/${date}`;
+                    reportLink.href = finalReportLink;
+                } else {
+                    throw new Error("Invalid data format after decoding.");
+                }
+            } catch (error) {
+                // This will run if the link is broken or tampered with
+                document.getElementById('patientIdDisplay').textContent = "Error";
+                document.getElementById('dateDisplay').textContent = "Invalid Link";
+                const reportLink = document.getElementById('reportLink');
                 reportLink.textContent = "Invalid Link";
                 reportLink.style.backgroundColor = '#cc0000';
                 reportLink.href = '#';
                 reportLink.onclick = (e) => e.preventDefault();
-                alert("Error: Report parameters are missing.");
+                alert("Error: The report link is invalid or has expired.");
             }
         });
     </script>
-
 </body>
 </html>
