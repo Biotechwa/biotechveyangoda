@@ -6,250 +6,31 @@
     <title>BIOTECH REPORT WHATSAPP SYSTEM</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css">
     
-    <!-- Firebase SDK v9+ (Modern) -->
-    <script type="module" src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js"></script>
-    <script type="module" src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js"></script>
-    
     <style>
-        body {
-            background-image: url('img/12.jpg');
-            background-size: cover;
-            background-position: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-            font-family: Arial, sans-serif;
-        }
-
-        .container {
-            display: flex;
-            gap: 20px;
-            background-color: rgba(255, 255, 255, 0.85);
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        .form-section {
-            max-width: 350px;
-            width: 100%;
-        }
-
-        .preview-section {
-            max-width: 350px;
-            width: 100%;
-            background-color: #f5f5f5;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-            font-size: 18px;
-            height: 300px;
-            overflow-y: auto;
-        }
-
-        .daily-items-section {
-            max-width: 250px;
-            width: 100%;
-            background-color: #f0f8ff;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-            height: 300px;
-            overflow-y: auto;
-        }
-
-        .daily-items-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-            padding-bottom: 5px;
-            border-bottom: 2px solid #ddd;
-        }
-
-        .daily-items-title {
-            font-size: 14px;
-            font-weight: bold;
-            color: #333;
-        }
-
-        .clear-button {
-            background-color: #ff4444;
-            color: white;
-            border: none;
-            padding: 4px 8px;
-            border-radius: 3px;
-            font-size: 10px;
-            cursor: pointer;
-        }
-
-        .clear-button:hover {
-            background-color: #cc0000;
-        }
-
-        .sent-item {
-            background-color: white;
-            margin-bottom: 8px;
-            padding: 8px;
-            border-radius: 5px;
-            border-left: 3px solid #25D366;
-            font-size: 12px;
-        }
-
-        .sent-item-id {
-            font-weight: bold;
-            color: #333;
-        }
-
-        .sent-item-date {
-            color: #666;
-            font-size: 11px;
-        }
-
-        .sent-item-time {
-            color: #888;
-            font-size: 10px;
-            font-style: italic;
-        }
-
-        h1 {
-            font-size: 24px;
-            color: #333;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        input, button, select, textarea {
-            padding: 8px;
-            margin-top: 8px;
-            border-radius: 4px;
-            border: 1px solid #ccc;
-            font-size: 16px;
-            box-sizing: border-box;
-        }
-
-        .row {
-            display: flex;
-            gap: 10px;
-        }
-
-        .date-row, .phone-row {
-            display: flex;
-            gap: 10px;
-            margin-top: 12px;
-        }
-
-        .date-row input, .phone-row input {
-            width: 100%;
-            padding: 8px;
-        }
-
-        .send-button {
-            background-color: #25D366;
-            color: white;
-            font-size: 18px;
-            padding: 10px;
-            border-radius: 5px;
-            width: 100%;
-            margin-top: 10px;
-        }
-
-        .send-button:hover {
-            background-color: #1eaa58;
-        }
-
-        .status-indicator {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-            color: white;
-        }
-
-        .status-online {
-            background-color: #25D366;
-        }
-
-        .status-offline {
-            background-color: #ff4444;
-        }
-
-        .loading {
-            display: inline-block;
-            width: 12px;
-            height: 12px;
-            border: 2px solid #f3f3f3;
-            border-top: 2px solid #25D366;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        footer {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .small-wa-button {
-            background-color: #25D366;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 5px;
-            text-decoration: none;
-            font-size: 10px;
-        }
-
-        footer span {
-            font-size: 10px;
-            color: white;
-        }
-
-        .config-section {
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 10px;
-            border-radius: 5px;
-            font-size: 10px;
-        }
-
-        .config-button {
-            background: #007bff;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 3px;
-            cursor: pointer;
-            font-size: 10px;
-        }
+        body { background-image: url('img/12.jpg'); background-size: cover; background-position: center; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: Arial, sans-serif; }
+        .container { display: flex; gap: 20px; background-color: rgba(255, 255, 255, 0.85); padding: 20px; border-radius: 8px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2); }
+        .form-section, .preview-section { max-width: 350px; width: 100%; }
+        .preview-section textarea { width: 100%; height: 300px; padding: 15px; border-radius: 8px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2); font-size: 16px; background-color: #f5f5f5; }
+        .daily-items-section { max-width: 250px; width: 100%; background-color: #f0f8ff; padding: 15px; border-radius: 8px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2); height: 332px; overflow-y: auto; }
+        .daily-items-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 2px solid #ddd; }
+        .daily-items-title { font-size: 14px; font-weight: bold; color: #333; }
+        .clear-button { background-color: #ff4444; color: white; border: none; padding: 4px 8px; border-radius: 3px; font-size: 10px; cursor: pointer; }
+        .clear-button:hover { background-color: #cc0000; }
+        .sent-item { background-color: white; margin-bottom: 8px; padding: 8px; border-radius: 5px; border-left: 3px solid #25D366; font-size: 12px; }
+        .sent-item-id { font-weight: bold; color: #333; }
+        .sent-item-date { color: #666; font-size: 11px; }
+        .sent-item-time { color: #888; font-size: 10px; font-style: italic; }
+        h1 { font-size: 24px; color: #333; margin-bottom: 20px; text-align: center; }
+        input, button, select, textarea { width: 100%; padding: 8px; margin-top: 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box; }
+        .row, .date-row, .phone-row { display: flex; gap: 10px; margin-top: 12px; }
+        .send-button { background-color: #25D366; color: white; font-size: 18px; padding: 10px; border-radius: 5px; margin-top: 20px; cursor: pointer; }
+        .send-button:hover { background-color: #1eaa58; }
+        footer { position: fixed; bottom: 20px; right: 20px; display: flex; gap: 10px; align-items: center; }
+        .small-wa-button { background-color: #25D366; color: white; padding: 5px 10px; border-radius: 5px; text-decoration: none; font-size: 10px; }
+        footer span { font-size: 10px; color: white; }
     </style>
 </head>
 <body>
-    <!-- Status Indicator -->
-    <div id="statusIndicator" class="status-indicator status-offline">
-        ⚡ Connecting...
-    </div>
-
-    <!-- Configuration Section -->
-    <div class="config-section">
-        <div style="color: #28a745; font-weight: bold;">✅ Firebase Ready</div>
-    </div>
-
     <div class="container">
         <div class="form-section">
             <h1>BIOTECH REPORT WHATSAPP SYSTEM</h1>
@@ -260,372 +41,128 @@
                     <option value="NI">NI</option>
                     <option value="BR">BR</option>
                 </select>
-                <input type="number" id="vgNum" placeholder="Enter number (e.g., 1)" maxlength="10">
+                <input type="number" id="vgNum" placeholder="Enter number (e.g., 1)">
             </div>
             <div class="date-row">
                 <input type="date" id="date">
             </div>
             <div class="phone-row">
-                <input type="tel" id="phoneNum" placeholder="767810623" style="width: 100%;" maxlength="9">
+                <input type="tel" id="phoneNum" placeholder="767810623">
             </div>
             <button class="send-button" onclick="sendWhatsApp()">Send on WhatsApp</button>
         </div>
-
         <div class="preview-section">
-            <textarea id="messagePreview" rows="20" style="width: 108%;" readonly></textarea>
+            <textarea id="messagePreview" readonly></textarea>
         </div>
-
         <div class="daily-items-section">
             <div class="daily-items-header">
                 <span class="daily-items-title">Daily Sent Items</span>
                 <button class="clear-button" onclick="clearSentItems()">Clear</button>
             </div>
-            <div id="sentItemsList">
-                <div style="text-align: center; color: #999; font-size: 12px; margin-top: 20px;">
-                    <div class="loading"></div> Loading...
-                </div>
-            </div>
+            <div id="sentItemsList"></div>
         </div>
     </div>
-
     <footer>
         <a href="https://wa.me/94767810623" class="small-wa-button" target="_blank">Chat with me</a>
-        <span>Developed By Theekshana | Cloud Storage</span>
+        <span>Developed By Theekshana</span>
     </footer>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
     
-    <script type="module">
-        // Import Firebase functions
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js';
-        import { getFirestore, collection, addDoc, query, orderBy, limit, getDocs, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js';
-
-        // Firebase Configuration (Your actual config)
-        const firebaseConfig = {
-            apiKey: "AIzaSyBsrbFf8XuUgyPCEEfb8bYNQXS0NVED6gM",
-            authDomain: "biotech-system.firebaseapp.com",
-            projectId: "biotech-system",
-            storageBucket: "biotech-system.firebasestorage.app",
-            messagingSenderId: "375710943981",
-            appId: "1:375710943981:web:99c3ac37d80aa1931b1ae4",
-            measurementId: "G-H6MWERPB4S"
-        };
-
-        // Initialize Firebase
-        let app, db;
-        let isFirebaseConnected = false;
-        let iti = null; // Phone input reference
-
-        try {
-            app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            console.log('Firebase initialized successfully');
-            testConnection();
-        } catch (error) {
-            console.error('Firebase initialization failed:', error);
-            updateStatus('offline', 'Connection Failed');
-            fallbackToLocalStorage();
-        }
-
-        // Test Firebase connection
-        async function testConnection() {
-            try {
-                const testQuery = query(collection(db, 'biotechSentItems'), limit(1));
-                await getDocs(testQuery);
-                isFirebaseConnected = true;
-                updateStatus('online', 'Cloud Connected');
-                console.log('Firebase connection successful');
-                displaySentItems();
-            } catch (error) {
-                console.error('Firebase connection test failed:', error);
-                updateStatus('offline', 'Connection Failed');
-                fallbackToLocalStorage();
-            }
-        }
-
-        // Save current form state to cloud
-        async function saveFormState() {
-            const vgSelection = document.getElementById('vgSelection')?.value || '';
-            const vgNum = document.getElementById('vgNum')?.value?.trim() || '';
-            const date = document.getElementById('date')?.value || '';
-            const phoneNum = iti ? iti.getNumber() : '';
-
-            const formState = {
-                vgSelection,
-                vgNum,
-                date,
-                phoneNum: document.getElementById('phoneNum')?.value || '', // Save raw phone number
-                timestamp: Date.now(),
-                deviceId: getDeviceId()
-            };
-
-            try {
-                if (isFirebaseConnected && db) {
-                    // Save current form state to Firebase
-                    await addDoc(collection(db, 'biotechFormState'), formState);
-                    console.log('Form state saved to cloud');
-                }
-            } catch (error) {
-                console.error('Error saving form state:', error);
-            }
-        }
-
-        // Load latest form state from cloud
-        async function loadFormState() {
-            try {
-                if (isFirebaseConnected && db) {
-                    const q = query(
-                        collection(db, 'biotechFormState'), 
-                        orderBy('timestamp', 'desc'), 
-                        limit(1)
-                    );
-                    const snapshot = await getDocs(q);
-                    
-                    if (!snapshot.empty) {
-                        const latestState = snapshot.docs[0].data();
-                        
-                        // Set form values
-                        document.getElementById('vgSelection').value = latestState.vgSelection || 'BN';
-                        document.getElementById('vgNum').value = latestState.vgNum || '';
-                        document.getElementById('date').value = latestState.date || '';
-                        document.getElementById('phoneNum').value = latestState.phoneNum || '';
-
-                        // Update preview
-                        updatePreview();
-                        console.log('Form state loaded from cloud:', latestState);
-                        return true;
-                    }
-                }
-            } catch (error) {
-                console.error('Error loading form state:', error);
-            }
-            return false;
-        }
-
-        // Phone input setup
-        function setupPhoneInput() {
-            const phoneInput = document.getElementById('phoneNum');
-            
-            if (phoneInput && window.intlTelInput) {
-                iti = window.intlTelInput(phoneInput, {
-                    initialCountry: "lk",
-                    utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js"
-                });
-
-                phoneInput.addEventListener('input', function () {
-                    let phoneValue = this.value;
-
-                    if (phoneValue.startsWith('0')) {
-                        phoneValue = phoneValue.substring(1);
-                    }
-
-                    phoneValue = phoneValue.replace(/\D/g, '');
-                    if (phoneValue.length > 9) {
-                        phoneValue = phoneValue.substring(0, 9);
-                    }
-
-                    this.value = phoneValue;
-                    updatePreview();
-                });
-
-                console.log('Phone input initialized');
-            } else {
-                console.error('Phone input or intlTelInput not available');
-            }
-
-            // Setup other event listeners
-            const vgSelection = document.getElementById('vgSelection');
-            const vgNum = document.getElementById('vgNum');
-            const dateInput = document.getElementById('date');
-
-            if (vgSelection) vgSelection.addEventListener('input', updatePreview);
-            if (vgNum) vgNum.addEventListener('input', updatePreview);
-            if (dateInput) dateInput.addEventListener('input', updatePreview);
-
-            console.log('Event listeners setup complete');
-        }
+    <script>
+        let iti = null;
 
         function updatePreview() {
-            const vgSelection = document.getElementById('vgSelection')?.value || '';
-            const vgNum = document.getElementById('vgNum')?.value?.trim() || '';
-            const date = document.getElementById('date')?.value || '';
+            const vgSelection = document.getElementById('vgSelection').value;
+            const vgNum = document.getElementById('vgNum').value.trim();
+            const patientId = `${vgSelection}${vgNum}`;
+            const date = document.getElementById('date').value;
             const phoneNum = iti ? iti.getNumber() : '';
 
-            console.log('Updating preview:', { vgSelection, vgNum, date, phoneNum });
+            if (iti && iti.isValidNumber() && vgNum && date) {
+                // *** THIS IS THE IMPORTANT CHANGE ***
+                // It now creates a link to your preview page with the ID and date
+                const link = `https://your-website.com/preview.html?id=${patientId}&date=${date}`;
 
-            if (phoneNum.length >= 12 && vgNum && date) {
-                const link = `https://amlws.appexsl.com/report/7/${vgSelection}${vgNum}/${date}`;
-                const message = `*Biotech Medical Laboratory Online Report*\n\n \n\n👤 *Patient ID:* (${vgSelection}${vgNum})\n\n📅 *Date:* ${date}\n\n●Click the link below to view and download the online report.\n\n*(ඔබට පහලින් ලින්ක් එකක් දිස් නොවුනහොත් කරුණාකර අපගේ WHATSAPP NUMBER එක සේව් කරගන්න.)*\n\n  👇\n🔗${link}\n\n \n\n𝙁𝙧𝙤𝙢 - 𝘽𝙄𝙊𝙏𝙀𝘾𝙃 𝙇𝘼𝘽𝙊𝙍𝘼𝙏𝙊𝙍𝙔`;
+                const message = `*Biotech Medical Laboratory Online Report*\n\n \n\n👤 *Patient ID:* (${patientId})\n\n📅 *Date:* ${date}\n\n●Click the link below to view and download the online report.\n\n*(ඔබට පහලින් ලින්ක් එකක් දිස් නොවුනහොත් කරුණාකර අපගේ WHATSAPP NUMBER එක සේව් කරගන්න.)*\n\n  👇\n🔗${link}\n\n \n\n𝙁𝙧𝙤𝙢 - 𝘽𝙄𝙊𝙏𝙀𝘾𝙃 𝙇𝘼𝘽𝙊𝙍𝘼𝙏𝙊𝙍𝙔`;
                 document.getElementById('messagePreview').value = message;
-                console.log('Preview updated with message');
             } else {
-                document.getElementById('messagePreview').value = "Please enter a valid phone number (9 digits), date, and number.";
-                console.log('Preview updated with placeholder');
+                document.getElementById('messagePreview').value = "Please fill all fields correctly.";
             }
         }
 
-        // Add sent item to cloud or localStorage
-        async function addSentItem(vgSelection, vgNum, date) {
+        function addSentItem(vgSelection, vgNum, date) {
             const now = new Date();
-            const sendTime = now.toLocaleTimeString('en-US', { 
-                hour: '2-digit', 
-                minute: '2-digit', 
-                second: '2-digit' 
-            });
-
             const newItem = {
                 id: `${vgSelection}${vgNum}`,
                 date: date,
-                sendTime: sendTime,
-                timestamp: now.getTime(),
-                deviceId: getDeviceId()
+                sendTime: now.toLocaleTimeString('en-US'),
+                timestamp: now.getTime()
             };
-
-            try {
-                if (isFirebaseConnected && db) {
-                    // Save to Firebase using v9+ SDK
-                    await addDoc(collection(db, 'biotechSentItems'), newItem);
-                    console.log('Item saved to cloud');
-                } else {
-                    // Fallback to localStorage
-                    const sentItems = JSON.parse(localStorage.getItem('biotechSentItems') || '[]');
-                    sentItems.unshift(newItem);
-                    localStorage.setItem('biotechSentItems', JSON.stringify(sentItems));
-                    console.log('Item saved to localStorage');
-                }
-                displaySentItems();
-            } catch (error) {
-                console.error('Error saving item:', error);
-                // Fallback to localStorage on error
-                const sentItems = JSON.parse(localStorage.getItem('biotechSentItems') || '[]');
-                sentItems.unshift(newItem);
-                localStorage.setItem('biotechSentItems', JSON.stringify(sentItems));
-                displaySentItems();
-            }
+            const sentItems = JSON.parse(localStorage.getItem('biotechSentItems') || '[]');
+            sentItems.unshift(newItem);
+            localStorage.setItem('biotechSentItems', JSON.stringify(sentItems));
+            displaySentItems();
         }
 
-        // Get simple device identifier
-        function getDeviceId() {
-            let deviceId = localStorage.getItem('deviceId');
-            if (!deviceId) {
-                deviceId = 'device_' + Math.random().toString(36).substr(2, 9);
-                localStorage.setItem('deviceId', deviceId);
-            }
-            return deviceId;
-        }
-
-        // Display sent items from cloud or localStorage
-        async function displaySentItems() {
+        function displaySentItems() {
             const sentItemsList = document.getElementById('sentItemsList');
-            
-            try {
-                let sentItems = [];
-
-                if (isFirebaseConnected && db) {
-                    // Get from Firebase using v9+ SDK
-                    const q = query(
-                        collection(db, 'biotechSentItems'), 
-                        orderBy('timestamp', 'desc'), 
-                        limit(50)
-                    );
-                    const snapshot = await getDocs(q);
-                    
-                    sentItems = snapshot.docs.map(doc => ({
-                        ...doc.data(),
-                        docId: doc.id
-                    }));
-                } else {
-                    // Get from localStorage
-                    sentItems = JSON.parse(localStorage.getItem('biotechSentItems') || '[]');
-                }
-
-                if (sentItems.length === 0) {
-                    sentItemsList.innerHTML = '<div style="text-align: center; color: #999; font-size: 12px; margin-top: 20px;">No items sent today</div>';
-                    return;
-                }
-
-                sentItemsList.innerHTML = sentItems.map(item => `
-                    <div class="sent-item">
-                        <div class="sent-item-id">${item.id}</div>
-                        <div class="sent-item-date">${item.date}</div>
-                        <div class="sent-item-time">${item.sendTime}</div>
-                    </div>
-                `).join('');
-
-            } catch (error) {
-                console.error('Error loading items:', error);
-                sentItemsList.innerHTML = '<div style="text-align: center; color: #ff4444; font-size: 12px; margin-top: 20px;">Error loading items</div>';
+            const sentItems = JSON.parse(localStorage.getItem('biotechSentItems') || '[]');
+            if (sentItems.length === 0) {
+                sentItemsList.innerHTML = '<div style="text-align: center; color: #999; font-size: 12px; margin-top: 20px;">No items sent today</div>';
+                return;
             }
+            sentItemsList.innerHTML = sentItems.map(item => `
+                <div class="sent-item"><div class="sent-item-id">${item.id}</div><div class="sent-item-date">${item.date}</div><div class="sent-item-time">${item.sendTime}</div></div>
+            `).join('');
         }
 
-        // Clear sent items
-        async function clearSentItems() {
+        function clearSentItems() {
             const password = prompt("Enter password to clear sent items:");
             if (password === "129876") {
-                try {
-                    if (isFirebaseConnected && db) {
-                        // Clear from Firebase using v9+ SDK
-                        const q = query(collection(db, 'biotechSentItems'));
-                        const snapshot = await getDocs(q);
-                        
-                        const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
-                        await Promise.all(deletePromises);
-                        
-                        console.log('Cloud data cleared');
-                    } else {
-                        // Clear localStorage
-                        localStorage.removeItem('biotechSentItems');
-                    }
-                    
-                    displaySentItems();
-                    alert("Sent items cleared successfully!");
-                } catch (error) {
-                    console.error('Error clearing items:', error);
-                    alert("Error clearing items. Please try again.");
-                }
+                localStorage.removeItem('biotechSentItems');
+                displaySentItems();
+                alert("Sent items cleared successfully!");
             } else if (password !== null) {
                 alert("Incorrect password!");
             }
         }
 
-        // Send WhatsApp message
         function sendWhatsApp() {
-            const phoneNum = iti ? iti.getNumber() : '';
+            if (!iti || !iti.isValidNumber()) {
+                alert("Please enter a valid phone number.");
+                return;
+            }
+            const phoneNum = iti.getNumber();
             const message = document.getElementById('messagePreview').value;
+            if (message.includes("Please fill all fields correctly.")) {
+                alert("Please fill all required fields correctly before sending.");
+                return;
+            }
             const vgSelection = document.getElementById('vgSelection').value;
             const vgNum = document.getElementById('vgNum').value.trim();
             const date = document.getElementById('date').value;
-
-            if (message.trim() === "Please enter a valid phone number (9 digits), date, and number." || !message.trim()) {
-                alert("Please fill all required fields correctly.");
-                return;
-            }
-
+            addSentItem(vgSelection, vgNum, date);
             const encodedMessage = encodeURIComponent(message);
             const whatsappWebUrl = `https://web.whatsapp.com/send?phone=${phoneNum}&text=${encodedMessage}`;
-            
-            // Add to sent items before opening WhatsApp
-            addSentItem(vgSelection, vgNum, date);
-            
             window.open(whatsappWebUrl, '_blank');
         }
-
-        // Initialize on page load
+        
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM loaded, initializing...');
-            
-            // Setup phone input and event listeners with a small delay
-            setTimeout(() => {
-                setupPhoneInput();
-                updatePreview();
-                console.log('Initialization complete');
-            }, 100);
+            const phoneInput = document.getElementById('phoneNum');
+            iti = window.intlTelInput(phoneInput, {
+                initialCountry: "lk",
+                separateDialCode: true,
+                utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js"
+            });
+            document.getElementById('vgSelection').addEventListener('input', updatePreview);
+            document.getElementById('vgNum').addEventListener('input', updatePreview);
+            document.getElementById('date').addEventListener('input', updatePreview);
+            phoneInput.addEventListener('countrychange', updatePreview);
+            phoneInput.addEventListener('input', updatePreview);
+            displaySentItems();
+            updatePreview();
         });
-
-        // Make functions available globally for onclick handlers
-        window.sendWhatsApp = sendWhatsApp;
-        window.clearSentItems = clearSentItems;
-
     </script>
 </body>
 </html>
