@@ -4,72 +4,192 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Biotech Report - Private Access</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f0f0f0; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; text-align: center; }
-        .content { background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); max-width: 400px; width: 90%; }
-        h1 { color: #25D366; margin-bottom: 20px; font-size: 24px; }
-        p { font-size: 16px; color: #555; line-height: 1.5; }
-        strong { color: #333; }
-        .report-link-container { margin-top: 25px; padding: 15px; border: 2px dashed #ddd; border-radius: 5px; }
-        #reportLink { background-color: #25D366; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-size: 18px; font-weight: bold; display: inline-block; transition: background-color 0.3s; }
-        #reportLink:hover { background-color: #1eaa58; }
+        :root {
+            --primary-color: #007BFF; /* A professional blue */
+            --success-color: #28a745; /* A clear green */
+            --light-gray: #f8f9fa;
+            --dark-gray: #343a40;
+            --text-color: #555;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--light-gray);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            text-align: center;
+            color: var(--text-color);
+        }
+
+        .card {
+            background-color: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            max-width: 450px;
+            width: 90%;
+            border-top: 5px solid var(--primary-color);
+            animation: fadeIn 0.8s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 20px;
+            color: var(--primary-color);
+        }
+
+        h1 {
+            color: var(--dark-gray);
+            margin-bottom: 15px;
+            font-size: 26px;
+            font-weight: 600;
+        }
+
+        p {
+            font-size: 16px;
+            line-height: 1.6;
+            margin: 10px 0;
+        }
+
+        .details-container {
+            margin: 30px 0;
+            text-align: left;
+            padding: 20px;
+            background-color: #fdfdfd;
+            border: 1px solid #eee;
+            border-radius: 8px;
+        }
+
+        .details-container p {
+            display: flex;
+            justify-content: space-between;
+            font-size: 15px;
+        }
+
+        strong {
+            color: var(--dark-gray);
+            font-weight: 600;
+        }
+
+        #reportLink {
+            background-color: var(--success-color);
+            color: white;
+            padding: 14px 30px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            display: inline-block;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.2);
+        }
+
+        #reportLink:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 20px rgba(40, 167, 69, 0.3);
+        }
+        
+        #reportLink.invalid {
+            background-color: #dc3545; /* Red for error */
+            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.2);
+            cursor: not-allowed;
+        }
+        
+        .footer-text {
+             margin-top: 30px; 
+             font-size: 12px; 
+             color: #aaa;
+        }
+
     </style>
 </head>
 <body>
-    <div class="content">
-        <h1>Biotech Medical Laboratory - Report Access</h1>
-        <p>You have successfully accessed your report preview. Please confirm your details before proceeding to the final download link.</p>
-        
-        <p><strong>Patient ID:</strong> <span id="patientIdDisplay">Loading...</span></p>
-        <p><strong>Date:</strong> <span id="dateDisplay">Loading...</span></p>
 
-        <div class="report-link-container">
-            <a id="reportLink" href="#" target="_blank">View and Download Report</a>
+    <div class="card">
+        <svg class="logo" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M8.5 2.132a.5.5 0 0 0-.924-.353l-4 7.5A.5.5 0 0 0 4 10h8a.5.5 0 0 0 .424-1.221l-4-7.5ZM8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16ZM4.5 11.5a.5.5 0 0 1 0-1h7a.5.5 0 0 1 0 1h-7Z"/>
+        </svg>
+
+        <h1>Report Access Portal</h1>
+        <p>Your laboratory report is ready. Please confirm the details below before proceeding.</p>
+        
+        <div class="details-container">
+            <p><strong>Patient ID:</strong> <span id="patientIdDisplay">Loading...</span></p>
+            <p><strong>Report Date:</strong> <span id="dateDisplay">Loading...</span></p>
         </div>
         
-        <p style="margin-top: 20px; font-size: 12px; color: #999;">The report will open in a new window.</p>
+        <a id="reportLink" href="#">View and Download Report</a>
+        
+        <p class="footer-text">Biotech Medical Laboratory</p>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const idDisplay = document.getElementById('patientIdDisplay');
+            const dateDisplay = document.getElementById('dateDisplay');
+            const reportLink = document.getElementById('reportLink');
+
             try {
-                // 1. Get the encoded data from the URL
                 const params = new URLSearchParams(window.location.search);
                 const encodedData = params.get('data');
 
-                // 2. Decode the data from Base64 back to the original text
-                const originalData = atob(encodedData); // e.g., "BN123|2025-09-28"
+                if (!encodedData) {
+                    throw new Error("No data found in URL.");
+                }
 
-                // 3. Split the text to get the ID and date
+                // Decode the data from Base64
+                const originalData = atob(encodedData); 
+                
+                // Split the text to get the ID and date
                 const [patientId, date] = originalData.split('|');
 
-                const idDisplay = document.getElementById('patientIdDisplay');
-                const dateDisplay = document.getElementById('dateDisplay');
-                const reportLink = document.getElementById('reportLink');
-                
                 if (patientId && date) {
-                    // Display the real details for the patient to see
+                    // Display the details on the page
                     idDisplay.textContent = patientId;
                     dateDisplay.textContent = date;
 
-                    // Construct the final, original link to the report
+                    // Construct the final report link
                     const finalReportLink = `https://amlws.appexsl.com/report/7/${patientId}/${date}`;
+                    
+                    // Set the href for the button
                     reportLink.href = finalReportLink;
                 } else {
                     throw new Error("Invalid data format after decoding.");
                 }
             } catch (error) {
-                // This will run if the link is broken or tampered with
-                document.getElementById('patientIdDisplay').textContent = "Error";
-                document.getElementById('dateDisplay').textContent = "Invalid Link";
-                const reportLink = document.getElementById('reportLink');
+                console.error("Link Error:", error.message);
+                // Handle missing/invalid parameters
+                idDisplay.textContent = "Error";
+                dateDisplay.textContent = "Invalid Link";
                 reportLink.textContent = "Invalid Link";
-                reportLink.style.backgroundColor = '#cc0000';
+                reportLink.classList.add('invalid');
                 reportLink.href = '#';
                 reportLink.onclick = (e) => e.preventDefault();
                 alert("Error: The report link is invalid or has expired.");
             }
         });
     </script>
+
 </body>
 </html>
