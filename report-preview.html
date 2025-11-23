@@ -5,13 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Biotech Laboratory | Report Portal</title>
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
@@ -41,19 +38,14 @@
 </head>
 <body class="bg-gradient-to-br from-teal-50 to-blue-50 min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden">
 
-    <!-- Decorative Background Elements -->
     <div class="absolute top-0 left-0 w-64 h-64 bg-teal-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
     <div class="absolute bottom-0 right-0 w-64 h-64 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
 
-    <!-- Main Card -->
     <div class="glass-effect w-full max-w-md rounded-3xl shadow-2xl overflow-hidden border border-white/50 relative z-10 transition-all duration-300 hover:shadow-teal-200/50">
         
-        <!-- Header / Logo Section -->
         <div class="bg-gradient-to-r from-teal-600 to-blue-600 p-8 text-center relative overflow-hidden">
-            <!-- Background Pattern -->
             <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 20px 20px;"></div>
             
-            <!-- Animated Microscope Icon -->
             <div class="relative inline-block mb-4">
                 <div class="absolute inset-0 bg-white rounded-full opacity-20 animate-pulse-slow"></div>
                 <div class="relative bg-white text-teal-600 w-20 h-20 rounded-full flex items-center justify-center shadow-lg mx-auto animate-float">
@@ -61,20 +53,17 @@
                 </div>
             </div>
             
-            <h1 class="text-white font-bold text-2xl tracking-wide relative z-10">BIOTECH LABS</h1>
+            <h1 class="text-white font-bold text-2xl tracking-wide relative z-10">BIOTECH LABORATORY</h1>
             <p class="text-teal-100 text-sm font-light tracking-wider relative z-10 uppercase">Online Report Portal</p>
         </div>
 
-        <!-- Content Body -->
         <div class="p-8">
             
-            <!-- Loading State -->
             <div id="loading" class="text-center py-8">
                 <i class="fa-solid fa-circle-notch fa-spin text-4xl text-teal-500 mb-4"></i>
                 <p class="text-gray-500 font-medium">Securely fetching details...</p>
             </div>
 
-            <!-- Error State -->
             <div id="errorCard" class="hidden text-center py-6">
                 <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
                     <i class="fa-solid fa-link-slash text-red-500 text-2xl"></i>
@@ -86,7 +75,6 @@
                 </a>
             </div>
 
-            <!-- Success State -->
             <div id="reportDetails" class="hidden animate-fade-in-up">
                 
                 <div class="text-center mb-6">
@@ -95,7 +83,6 @@
                     </span>
                 </div>
 
-                <!-- Patient Info Box -->
                 <div class="bg-gray-50 rounded-xl p-5 border border-gray-100 mb-6 relative overflow-hidden group">
                     <div class="absolute top-0 left-0 w-1 h-full bg-teal-500 group-hover:h-full transition-all"></div>
                     
@@ -110,8 +97,7 @@
                     </div>
                 </div>
 
-                <!-- Main Action Button -->
-                <a id="downloadBtn" href="#" target="_blank" class="block w-full group relative overflow-hidden bg-teal-600 hover:bg-teal-700 text-white rounded-xl shadow-lg shadow-teal-200 transition-all duration-300 transform hover:-translate-y-1">
+                <a id="downloadBtn" href="#" class="block w-full group relative overflow-hidden bg-teal-600 hover:bg-teal-700 text-white rounded-xl shadow-lg shadow-teal-200 transition-all duration-300 transform hover:-translate-y-1">
                     <div class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer"></div>
                     <div class="py-4 px-6 flex items-center justify-center gap-3">
                         <i class="fa-solid fa-file-pdf text-2xl group-hover:scale-110 transition-transform"></i>
@@ -126,7 +112,6 @@
 
         </div>
 
-        <!-- Footer / Help Section -->
         <div class="bg-gray-50 border-t border-gray-100 p-6">
             <div class="flex flex-col items-center justify-center text-center">
                 <p class="text-gray-500 text-sm mb-3">Having trouble opening the report?</p>
@@ -183,7 +168,7 @@
                         idDisplay.textContent = patientId;
                         dateDisplay.textContent = date;
                         
-                        // 3. Construct the Specific URL format you requested
+                        // 3. Construct the Specific URL format
                         // Format: https://amlws.appexsl.com/report/7/{ID}/{Date}
                         const finalLink = `https://amlws.appexsl.com/report/7/${patientId}/${date}`;
                         downloadBtn.href = finalLink;
@@ -204,4 +189,3 @@
     </script>
 </body>
 </html>
-
