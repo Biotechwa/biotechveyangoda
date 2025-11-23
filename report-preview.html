@@ -3,193 +3,204 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Biotech Report - Private Access</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <title>Biotech Laboratory | Report Portal</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
-        :root {
-            --primary-color: #007BFF; /* A professional blue */
-            --success-color: #28a745; /* A clear green */
-            --light-gray: #f8f9fa;
-            --dark-gray: #343a40;
-            --text-color: #555;
-        }
-
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: var(--light-gray);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            text-align: center;
-            color: var(--text-color);
-        }
-
-        .card {
-            background-color: white;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-            max-width: 450px;
-            width: 90%;
-            border-top: 5px solid var(--primary-color);
-            animation: fadeIn 0.8s ease-in-out;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .logo {
-            width: 60px;
-            height: 60px;
-            margin: 0 auto 20px;
-            color: var(--primary-color);
-        }
-
-        h1 {
-            color: var(--dark-gray);
-            margin-bottom: 15px;
-            font-size: 26px;
-            font-weight: 600;
-        }
-
-        p {
-            font-size: 16px;
-            line-height: 1.6;
-            margin: 10px 0;
-        }
-
-        .details-container {
-            margin: 30px 0;
-            text-align: left;
-            padding: 20px;
-            background-color: #fdfdfd;
-            border: 1px solid #eee;
-            border-radius: 8px;
-        }
-
-        .details-container p {
-            display: flex;
-            justify-content: space-between;
-            font-size: 15px;
-        }
-
-        strong {
-            color: var(--dark-gray);
-            font-weight: 600;
-        }
-
-        #reportLink {
-            background-color: var(--success-color);
-            color: white;
-            padding: 14px 30px;
-            text-decoration: none;
-            border-radius: 8px;
-            font-size: 18px;
-            font-weight: 600;
-            display: inline-block;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            border: none;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.2);
-        }
-
-        #reportLink:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 7px 20px rgba(40, 167, 69, 0.3);
+        body { font-family: 'Poppins', sans-serif; }
+        
+        /* Custom Animations */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
         }
         
-        #reportLink.invalid {
-            background-color: #dc3545; /* Red for error */
-            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.2);
-            cursor: not-allowed;
-        }
-        
-        .footer-text {
-             margin-top: 30px; 
-             font-size: 12px; 
-             color: #aaa;
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(13, 148, 136, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 20px rgba(13, 148, 136, 0); }
+            100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(13, 148, 136, 0); }
         }
 
+        .animate-float { animation: float 3s ease-in-out infinite; }
+        .animate-pulse-slow { animation: pulse-ring 2s infinite; }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
     </style>
 </head>
-<body>
+<body class="bg-gradient-to-br from-teal-50 to-blue-50 min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden">
 
-    <div class="card">
-        <svg class="logo" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
-          <path d="M8.5 2.132a.5.5 0 0 0-.924-.353l-4 7.5A.5.5 0 0 0 4 10h8a.5.5 0 0 0 .424-1.221l-4-7.5ZM8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16ZM4.5 11.5a.5.5 0 0 1 0-1h7a.5.5 0 0 1 0 1h-7Z"/>
-        </svg>
+    <!-- Decorative Background Elements -->
+    <div class="absolute top-0 left-0 w-64 h-64 bg-teal-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
+    <div class="absolute bottom-0 right-0 w-64 h-64 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
 
-        <h1>Report Access Portal</h1>
-        <p>Your laboratory report is ready. Please confirm the details below before proceeding.</p>
+    <!-- Main Card -->
+    <div class="glass-effect w-full max-w-md rounded-3xl shadow-2xl overflow-hidden border border-white/50 relative z-10 transition-all duration-300 hover:shadow-teal-200/50">
         
-        <div class="details-container">
-            <p><strong>Patient ID:</strong> <span id="patientIdDisplay">Loading...</span></p>
-            <p><strong>Report Date:</strong> <span id="dateDisplay">Loading...</span></p>
+        <!-- Header / Logo Section -->
+        <div class="bg-gradient-to-r from-teal-600 to-blue-600 p-8 text-center relative overflow-hidden">
+            <!-- Background Pattern -->
+            <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 20px 20px;"></div>
+            
+            <!-- Animated Microscope Icon -->
+            <div class="relative inline-block mb-4">
+                <div class="absolute inset-0 bg-white rounded-full opacity-20 animate-pulse-slow"></div>
+                <div class="relative bg-white text-teal-600 w-20 h-20 rounded-full flex items-center justify-center shadow-lg mx-auto animate-float">
+                    <i class="fa-solid fa-microscope text-4xl"></i>
+                </div>
+            </div>
+            
+            <h1 class="text-white font-bold text-2xl tracking-wide relative z-10">BIOTECH LABS</h1>
+            <p class="text-teal-100 text-sm font-light tracking-wider relative z-10 uppercase">Online Report Portal</p>
         </div>
-        
-        <a id="reportLink" href="#">View and Download Report</a>
-        
-        <p class="footer-text">Biotech Medical Laboratory</p>
+
+        <!-- Content Body -->
+        <div class="p-8">
+            
+            <!-- Loading State -->
+            <div id="loading" class="text-center py-8">
+                <i class="fa-solid fa-circle-notch fa-spin text-4xl text-teal-500 mb-4"></i>
+                <p class="text-gray-500 font-medium">Securely fetching details...</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="errorCard" class="hidden text-center py-6">
+                <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fa-solid fa-link-slash text-red-500 text-2xl"></i>
+                </div>
+                <h3 class="text-gray-800 font-bold text-lg mb-2">Link Expired or Invalid</h3>
+                <p class="text-gray-500 text-sm mb-6">We couldn't find a report associated with this link.</p>
+                <a href="https://wa.me/94773524143" class="inline-flex items-center text-teal-600 font-semibold hover:underline">
+                    Contact Support <i class="fa-solid fa-arrow-right ml-2"></i>
+                </a>
+            </div>
+
+            <!-- Success State -->
+            <div id="reportDetails" class="hidden animate-fade-in-up">
+                
+                <div class="text-center mb-6">
+                    <span class="bg-green-100 text-green-700 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wide border border-green-200">
+                        <i class="fa-solid fa-check-circle mr-1"></i> Ready for Download
+                    </span>
+                </div>
+
+                <!-- Patient Info Box -->
+                <div class="bg-gray-50 rounded-xl p-5 border border-gray-100 mb-6 relative overflow-hidden group">
+                    <div class="absolute top-0 left-0 w-1 h-full bg-teal-500 group-hover:h-full transition-all"></div>
+                    
+                    <div class="flex justify-between items-center mb-3 border-b border-gray-200 pb-3">
+                        <span class="text-gray-500 text-sm font-medium"><i class="fa-regular fa-id-card mr-2 text-teal-500"></i>Patient ID</span>
+                        <span id="patientIdDisplay" class="font-mono font-bold text-gray-800 text-lg">---</span>
+                    </div>
+                    
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-500 text-sm font-medium"><i class="fa-regular fa-calendar mr-2 text-teal-500"></i>Date</span>
+                        <span id="dateDisplay" class="font-semibold text-gray-800">---</span>
+                    </div>
+                </div>
+
+                <!-- Main Action Button -->
+                <a id="downloadBtn" href="#" target="_blank" class="block w-full group relative overflow-hidden bg-teal-600 hover:bg-teal-700 text-white rounded-xl shadow-lg shadow-teal-200 transition-all duration-300 transform hover:-translate-y-1">
+                    <div class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer"></div>
+                    <div class="py-4 px-6 flex items-center justify-center gap-3">
+                        <i class="fa-solid fa-file-pdf text-2xl group-hover:scale-110 transition-transform"></i>
+                        <div class="text-left">
+                            <span class="block text-xs text-teal-100 font-light">Click here to</span>
+                            <span class="block font-bold text-lg leading-none">View Report</span>
+                        </div>
+                    </div>
+                </a>
+
+            </div>
+
+        </div>
+
+        <!-- Footer / Help Section -->
+        <div class="bg-gray-50 border-t border-gray-100 p-6">
+            <div class="flex flex-col items-center justify-center text-center">
+                <p class="text-gray-500 text-sm mb-3">Having trouble opening the report?</p>
+                
+                <a href="https://wa.me/94773524143" target="_blank" class="flex items-center gap-2 bg-white border border-green-500 text-green-600 px-5 py-2 rounded-full font-medium hover:bg-green-50 transition-colors shadow-sm w-full justify-center">
+                    <i class="fa-brands fa-whatsapp text-xl"></i>
+                    <span>Chat on WhatsApp: <strong>077 352 4143</strong></span>
+                </a>
+            </div>
+            <p class="text-center text-gray-300 text-[10px] mt-4 uppercase tracking-widest">Powered by Biotech</p>
+        </div>
     </div>
 
+    <style>
+        /* Shimmer Effect for Button */
+        @keyframes shimmer {
+            100% { transform: translateX(100%); }
+        }
+        .group-hover\:animate-shimmer:hover {
+            animation: shimmer 1.5s infinite;
+        }
+        
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-up { animation: fadeInUp 0.5s ease-out forwards; }
+    </style>
+
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener("DOMContentLoaded", function() {
+            const loadingEl = document.getElementById('loading');
+            const errorEl = document.getElementById('errorCard');
+            const detailsEl = document.getElementById('reportDetails');
+            
             const idDisplay = document.getElementById('patientIdDisplay');
             const dateDisplay = document.getElementById('dateDisplay');
-            const reportLink = document.getElementById('reportLink');
+            const downloadBtn = document.getElementById('downloadBtn');
 
-            try {
-                const params = new URLSearchParams(window.location.search);
-                const encodedData = params.get('data');
+            // Simulate a professional delay for checking
+            setTimeout(() => {
+                try {
+                    const params = new URLSearchParams(window.location.search);
+                    const encodedData = params.get('data');
 
-                if (!encodedData) {
-                    throw new Error("No data found in URL.");
+                    if (!encodedData) throw new Error("No Data");
+
+                    // 1. Decode Logic
+                    const decodedString = atob(encodedData);
+                    const [patientId, date] = decodedString.split('|');
+
+                    if (patientId && date) {
+                        // 2. Set UI Elements
+                        idDisplay.textContent = patientId;
+                        dateDisplay.textContent = date;
+                        
+                        // 3. Construct the Specific URL format you requested
+                        // Format: https://amlws.appexsl.com/report/7/{ID}/{Date}
+                        const finalLink = `https://amlws.appexsl.com/report/7/${patientId}/${date}`;
+                        downloadBtn.href = finalLink;
+
+                        // Switch Views
+                        loadingEl.classList.add('hidden');
+                        detailsEl.classList.remove('hidden');
+                    } else {
+                        throw new Error("Invalid Format");
+                    }
+                } catch (e) {
+                    console.error(e);
+                    loadingEl.classList.add('hidden');
+                    errorEl.classList.remove('hidden');
                 }
-
-                // Decode the data from Base64
-                const originalData = atob(encodedData); 
-                
-                // Split the text to get the ID and date
-                const [patientId, date] = originalData.split('|');
-
-                if (patientId && date) {
-                    // Display the details on the page
-                    idDisplay.textContent = patientId;
-                    dateDisplay.textContent = date;
-
-                    // Construct the final report link
-                    const finalReportLink = `https://amlws.appexsl.com/report/7/${patientId}/${date}`;
-                    
-                    // Set the href for the button
-                    reportLink.href = finalReportLink;
-                } else {
-                    throw new Error("Invalid data format after decoding.");
-                }
-            } catch (error) {
-                console.error("Link Error:", error.message);
-                // Handle missing/invalid parameters
-                idDisplay.textContent = "Error";
-                dateDisplay.textContent = "Invalid Link";
-                reportLink.textContent = "Invalid Link";
-                reportLink.classList.add('invalid');
-                reportLink.href = '#';
-                reportLink.onclick = (e) => e.preventDefault();
-                alert("Error: The report link is invalid or has expired.");
-            }
+            }, 800);
         });
     </script>
-
 </body>
 </html>
