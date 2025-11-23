@@ -3,90 +3,154 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BIOTECH REPORT WHATSAPP SYSTEM</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css">
+    <title>System Upgrade In Progress</title>
     <style>
-        /* CSS is unchanged */
-        body { background-image: url('img/12.jpg'); background-size: cover; background-position: center; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: Arial, sans-serif; }
-        .container { display: flex; gap: 20px; background-color: rgba(255, 255, 255, 0.85); padding: 20px; border-radius: 8px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2); }
-        .form-section, .preview-section { max-width: 350px; width: 100%; }
-        .preview-section textarea { width: 100%; height: 300px; padding: 15px; border-radius: 8px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2); font-size: 16px; background-color: #f5f5f5; }
-        .daily-items-section { max-width: 250px; width: 100%; background-color: #f0f8ff; padding: 15px; border-radius: 8px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2); height: 332px; overflow-y: auto; }
-        .daily-items-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 2px solid #ddd; }
-        .daily-items-title { font-size: 14px; font-weight: bold; color: #333; }
-        .clear-button { background-color: #ff4444; color: white; border: none; padding: 4px 8px; border-radius: 3px; font-size: 10px; cursor: pointer; }
-        .clear-button:hover { background-color: #cc0000; }
-        .sent-item { background-color: white; margin-bottom: 8px; padding: 8px; border-radius: 5px; border-left: 3px solid #25D366; font-size: 12px; }
-        .sent-item-id { font-weight: bold; color: #333; }
-        .sent-item-date { color: #666; font-size: 11px; }
-        .sent-item-time { color: #888; font-size: 10px; font-style: italic; }
-        h1 { font-size: 24px; color: #333; margin-bottom: 20px; text-align: center; }
-        input, button, select, textarea { width: 100%; padding: 8px; margin-top: 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box; }
-        .row, .date-row, .phone-row { display: flex; gap: 10px; margin-top: 12px; }
-        .send-button { background-color: #25D366; color: white; font-size: 18px; padding: 10px; border-radius: 5px; margin-top: 20px; cursor: pointer; }
-        .send-button:hover { background-color: #1eaa58; }
-        footer { position: fixed; bottom: 20px; right: 20px; display: flex; gap: 10px; align-items: center; }
-        .small-wa-button { background-color: #25D366; color: white; padding: 5px 10px; border-radius: 5px; text-decoration: none; font-size: 10px; }
-        footer span { font-size: 10px; color: white; }
+        /* --- CSS Styles --- */
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            background-color: #0a0a0a; /* Deep dark background */
+            color: #00ffcc; /* Cyberpunk Cyan */
+            font-family: 'Courier New', Courier, monospace; /* Tech font */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            perspective: 1000px; /* Essential for 3D effect */
+        }
+
+        .container {
+            text-align: center;
+            transition: transform 0.1s ease-out; /* Smooth mouse movement */
+            will-change: transform;
+        }
+
+        /* The Glowing Ring Animation */
+        .loader-ring {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 4px solid transparent;
+            border-top-color: #00ffcc;
+            border-bottom-color: #00ffcc;
+            margin: 0 auto 30px auto;
+            animation: spin 2s linear infinite;
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.5);
+        }
+
+        .loader-ring::before {
+            content: "";
+            position: absolute;
+            top: 10px; left: 10px; right: 10px; bottom: 10px;
+            border-radius: 50%;
+            border: 4px solid transparent;
+            border-left-color: #ff0055; /* Contrast Red */
+            border-right-color: #ff0055;
+            animation: spin-reverse 3s linear infinite;
+        }
+
+        .loader-ring::after {
+            content: "";
+            position: absolute;
+            top: 25px; left: 25px; right: 25px; bottom: 25px;
+            border-radius: 50%;
+            border: 4px solid transparent;
+            border-top-color: #fff;
+            animation: spin 1.5s linear infinite;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            letter-spacing: 4px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px rgba(0, 255, 204, 0.8);
+        }
+
+        p {
+            font-size: 1.2rem;
+            color: #aaaaaa;
+        }
+
+        .progress {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #fff;
+            margin-top: 20px;
+        }
+
+        /* Animations */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes spin-reverse {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(-360deg); }
+        }
+
+        /* Background Particles (Optional visual noise) */
+        .bg-grid {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 255, 204, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 204, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: -1;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="form-section">
-            <h1>BIOTECH REPORT WHATSAPP SYSTEM</h1>
-            <div class="row">
-                <select id="vgSelection"><option value="BN">BN</option><option value="VG">VG</option><option value="NI">NI</option><option value="BR">BR</option></select>
-                <input type="number" id="vgNum" placeholder="Enter number (e.g., 1)">
-            </div>
-            <div class="date-row"><input type="date" id="date"></div>
-            <div class="phone-row"><input type="tel" id="phoneNum" placeholder="767810623"></div>
-            <button class="send-button" onclick="sendWhatsApp()">Send on WhatsApp</button>
-        </div>
-        <div class="preview-section"><textarea id="messagePreview" readonly></textarea></div>
-        <div class="daily-items-section">
-            <div class="daily-items-header"><span class="daily-items-title">Daily Sent Items</span><button class="clear-button" onclick="clearSentItems()">Clear</button></div>
-            <div id="sentItemsList"></div>
-        </div>
+
+    <div class="bg-grid"></div>
+
+    <div class="container" id="tilt-card">
+        <div class="loader-ring"></div>
+        <h1>System Upgrade</h1>
+        <p>Optimizing Experience. Please wait.</p>
+        <div class="progress">Loading... <span id="percent">0</span>%</div>
     </div>
-    <footer>
-        <a href="https://wa.me/94767810623" class="small-wa-button" target="_blank">Chat with me</a>
-        <span>Developed By Theekshana</span>
-    </footer>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
     <script>
-        let iti = null;
+        // --- JavaScript for Interactivity ---
 
-        function updatePreview() {
-            const vgSelection = document.getElementById('vgSelection').value;
-            const vgNum = document.getElementById('vgNum').value.trim();
-            const date = document.getElementById('date').value;
+        // 1. 3D Tilt Effect tracking the mouse
+        const container = document.getElementById('tilt-card');
+        
+        document.addEventListener('mousemove', (e) => {
+            const x = (window.innerWidth / 2 - e.pageX) / 25; // Calculate rotation X
+            const y = (window.innerHeight / 2 - e.pageY) / 25; // Calculate rotation Y
             
-            if (iti && iti.isValidNumber() && vgNum && date) {
-                const patientId = `${vgSelection}${vgNum}`;
-                // 1. Combine the real ID and date into one string
-                const originalData = `${patientId}|${date}`;
-                
-                // 2. Encode the data into a random-looking string (Base64)
-                const encodedData = btoa(originalData);
+            container.style.transform = `rotateY(${x}deg) rotateX(${y}deg)`;
+        });
 
-                // 3. Create the new link with the encoded data
-                const link = `https://biotechveyangoda.lk/report-preview.html?data=${encodedData}`;
+        // 2. Simulated Progress Counter
+        let percentage = 0;
+        const percentDisplay = document.getElementById('percent');
 
-                const message = `*Biotech Medical Laboratory Online Report*\n\n \n\n👤 *Patient ID:* (${patientId})\n\n📅 *Date:* ${date}\n\n●Click the link below to view and download the online report.\n\n*(ඔබට පහලින් ලින්ක් එකක් දිස් නොවුනහොත් කරුණාකර අපගේ WHATSAPP NUMBER එක සේව් කරගන්න.)*\n\n  👇\n🔗${link}\n\n \n\n𝙁𝙧𝙤𝙢 - 𝘽𝙄𝙊𝙏𝙀𝘾𝙃 𝙇𝘼𝘽𝙊𝙍𝘼𝙏𝙊𝙍𝙔`;
-                document.getElementById('messagePreview').value = message;
-            } else {
-                document.getElementById('messagePreview').value = "Please fill all fields correctly.";
+        function updateProgress() {
+            // Random speed for realistic effect
+            const increment = Math.floor(Math.random() * 3) + 1; 
+            percentage += increment;
+
+            if (percentage > 99) {
+                percentage = 99; // Hold at 99% until you manually remove the page
+            }
+
+            percentDisplay.innerText = percentage;
+
+            if (percentage < 99) {
+                // Call function again with random delay
+                setTimeout(updateProgress, Math.random() * 200 + 50);
             }
         }
-        
-        // Other functions (sendWhatsApp, addSentItem, etc.) are unchanged
-        function addSentItem(vgSelection, vgNum, date){const now=new Date;const newItem={id:`${vgSelection}${vgNum}`,date:date,sendTime:now.toLocaleTimeString("en-US"),timestamp:now.getTime()};const sentItems=JSON.parse(localStorage.getItem("biotechSentItems")||"[]");sentItems.unshift(newItem);localStorage.setItem("biotechSentItems",JSON.stringify(sentItems));displaySentItems()}
-        function displaySentItems(){const sentItemsList=document.getElementById("sentItemsList");const sentItems=JSON.parse(localStorage.getItem("biotechSentItems")||"[]");if(sentItems.length===0){sentItemsList.innerHTML='<div style="text-align: center; color: #999; font-size: 12px; margin-top: 20px;">No items sent today</div>';return}sentItemsList.innerHTML=sentItems.map(item=>`<div class="sent-item"><div class="sent-item-id">${item.id}</div><div class="sent-item-date">${item.date}</div><div class="sent-item-time">${item.sendTime}</div></div>`).join("")}
-        function clearSentItems(){const password=prompt("Enter password to clear sent items:");if(password==="129876"){localStorage.removeItem("biotechSentItems");displaySentItems();alert("Sent items cleared successfully!")}else if(password!==null){alert("Incorrect password!")}}
-        function sendWhatsApp(){if(!iti||!iti.isValidNumber()){alert("Please enter a valid phone number.");return}const phoneNum=iti.getNumber();const message=document.getElementById("messagePreview").value;if(message.includes("Please fill all fields correctly.")){alert("Please fill all required fields correctly before sending.");return}const vgSelection=document.getElementById("vgSelection").value;const vgNum=document.getElementById("vgNum").value.trim();const date=document.getElementById("date").value;addSentItem(vgSelection,vgNum,date);const encodedMessage=encodeURIComponent(message);const whatsappWebUrl=`https://web.whatsapp.com/send?phone=${phoneNum}&text=${encodedMessage}`;window.open(whatsappWebUrl,"_blank")}
-        document.addEventListener("DOMContentLoaded",function(){const phoneInput=document.getElementById("phoneNum");iti=window.intlTelInput(phoneInput,{initialCountry:"lk",separateDialCode:!0,utilsScript:"https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js"});document.getElementById("vgSelection").addEventListener("input",updatePreview);document.getElementById("vgNum").addEventListener("input",updatePreview);document.getElementById("date").addEventListener("input",updatePreview);phoneInput.addEventListener("countrychange",updatePreview);phoneInput.addEventListener("input",updatePreview);displaySentItems();updatePreview()});
+
+        // Start the counter
+        updateProgress();
     </script>
 </body>
 </html>
-
