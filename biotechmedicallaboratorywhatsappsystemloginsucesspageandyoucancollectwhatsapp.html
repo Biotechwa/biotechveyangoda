@@ -3,154 +3,326 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>System Upgrade In Progress</title>
+    <title>Biotech Laboratory | Admin Portal</title>
+    
+    <!-- Tailwind CSS for Professional Styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Intl Tel Input CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
-        /* --- CSS Styles --- */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+        
         body {
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            background-color: #0a0a0a; /* Deep dark background */
-            color: #00ffcc; /* Cyberpunk Cyan */
-            font-family: 'Courier New', Courier, monospace; /* Tech font */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            perspective: 1000px; /* Essential for 3D effect */
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
         }
 
-        .container {
-            text-align: center;
-            transition: transform 0.1s ease-out; /* Smooth mouse movement */
-            will-change: transform;
+        /* Custom override for intl-tel-input to match Tailwind */
+        .iti { width: 100%; }
+        .iti__flag { background-image: url("https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/img/flags.png"); }
+        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+          .iti__flag { background-image: url("https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/img/flags@2x.png"); }
         }
 
-        /* The Glowing Ring Animation */
-        .loader-ring {
-            position: relative;
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            border: 4px solid transparent;
-            border-top-color: #00ffcc;
-            border-bottom-color: #00ffcc;
-            margin: 0 auto 30px auto;
-            animation: spin 2s linear infinite;
-            box-shadow: 0 0 20px rgba(0, 255, 204, 0.5);
+        /* Scrollbar for history */
+        .history-scroll::-webkit-scrollbar {
+            width: 6px;
         }
-
-        .loader-ring::before {
-            content: "";
-            position: absolute;
-            top: 10px; left: 10px; right: 10px; bottom: 10px;
-            border-radius: 50%;
-            border: 4px solid transparent;
-            border-left-color: #ff0055; /* Contrast Red */
-            border-right-color: #ff0055;
-            animation: spin-reverse 3s linear infinite;
+        .history-scroll::-webkit-scrollbar-track {
+            background: #f1f1f1;
         }
-
-        .loader-ring::after {
-            content: "";
-            position: absolute;
-            top: 25px; left: 25px; right: 25px; bottom: 25px;
-            border-radius: 50%;
-            border: 4px solid transparent;
-            border-top-color: #fff;
-            animation: spin 1.5s linear infinite;
+        .history-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
         }
-
-        h1 {
-            font-size: 2.5rem;
-            letter-spacing: 4px;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            text-shadow: 0 0 10px rgba(0, 255, 204, 0.8);
-        }
-
-        p {
-            font-size: 1.2rem;
-            color: #aaaaaa;
-        }
-
-        .progress {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #fff;
-            margin-top: 20px;
-        }
-
-        /* Animations */
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        @keyframes spin-reverse {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(-360deg); }
-        }
-
-        /* Background Particles (Optional visual noise) */
-        .bg-grid {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-image: 
-                linear-gradient(rgba(0, 255, 204, 0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 255, 204, 0.05) 1px, transparent 1px);
-            background-size: 50px 50px;
-            z-index: -1;
+        .history-scroll::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
         }
     </style>
 </head>
-<body>
+<body class="bg-gray-50 h-screen flex overflow-hidden">
 
-    <div class="bg-grid"></div>
-
-    <div class="container" id="tilt-card">
-        <div class="loader-ring"></div>
-        <h1>System Upgrade</h1>
-        <p>Optimizing Experience. Please wait.</p>
-        <div class="progress">Loading... <span id="percent">0</span>%</div>
-    </div>
-
-    <script>
-        // --- JavaScript for Interactivity ---
-
-        // 1. 3D Tilt Effect tracking the mouse
-        const container = document.getElementById('tilt-card');
+    <!-- Sidebar / History Section -->
+    <aside class="w-80 bg-white border-r border-gray-200 hidden md:flex flex-col z-10">
+        <div class="p-6 border-b border-gray-100 bg-teal-600 text-white">
+            <h2 class="text-lg font-bold flex items-center gap-2">
+                <i class="fa-solid fa-history"></i> Sent History
+            </h2>
+            <p class="text-xs text-teal-100 opacity-80 mt-1">Today's processed reports</p>
+        </div>
         
-        document.addEventListener('mousemove', (e) => {
-            const x = (window.innerWidth / 2 - e.pageX) / 25; // Calculate rotation X
-            const y = (window.innerHeight / 2 - e.pageY) / 25; // Calculate rotation Y
-            
-            container.style.transform = `rotateY(${x}deg) rotateX(${y}deg)`;
+        <div class="flex-1 overflow-y-auto p-4 history-scroll" id="sentItemsList">
+            <!-- Items injected here by JS -->
+        </div>
+
+        <div class="p-4 border-t border-gray-200 bg-gray-50">
+            <button onclick="clearSentItems()" class="w-full py-2 px-4 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                <i class="fa-solid fa-trash-can"></i> Clear History
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-screen overflow-y-auto relative">
+        <!-- Mobile Header -->
+        <div class="md:hidden bg-teal-600 text-white p-4 flex justify-between items-center shadow-md">
+            <span class="font-bold text-lg">Biotech Lab</span>
+            <button onclick="toggleMobileHistory()" class="text-white p-2">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+            </button>
+        </div>
+
+        <!-- Mobile History Drawer (Hidden by default) -->
+        <div id="mobileHistory" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden md:hidden" onclick="toggleMobileHistory()">
+            <div class="absolute right-0 top-0 h-full w-80 bg-white shadow-xl p-4 overflow-y-auto" onclick="event.stopPropagation()">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-gray-700">Sent History</h3>
+                    <button onclick="toggleMobileHistory()" class="text-gray-400"><i class="fa-solid fa-times"></i></button>
+                </div>
+                <div id="sentItemsListMobile"></div>
+                <button onclick="clearSentItems()" class="w-full mt-4 py-2 bg-red-100 text-red-600 rounded-lg text-sm">Clear All</button>
+            </div>
+        </div>
+
+        <div class="flex-1 p-4 md:p-8 lg:p-12 flex justify-center items-start">
+            <div class="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-8">
+                
+                <!-- Input Form Card -->
+                <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 md:p-8">
+                    <div class="mb-6">
+                        <h1 class="text-2xl font-bold text-gray-800">Report Generator</h1>
+                        <p class="text-sm text-gray-500">Enter patient details to generate WhatsApp link</p>
+                    </div>
+
+                    <div class="space-y-5">
+                        <!-- Patient ID Group -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Patient Identification</label>
+                            <div class="flex gap-2">
+                                <select id="vgSelection" class="w-1/3 p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none font-semibold text-gray-700">
+                                    <option value="BN">BN</option>
+                                    <option value="VG">VG</option>
+                                    <option value="NI">NI</option>
+                                    <option value="BR">BR</option>
+                                </select>
+                                <input type="number" id="vgNum" placeholder="1234" class="w-2/3 p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none transition-all" />
+                            </div>
+                        </div>
+
+                        <!-- Date Input -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Report Date</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fa-regular fa-calendar text-gray-400"></i>
+                                </div>
+                                <input type="date" id="date" class="w-full pl-10 p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none transition-all text-gray-700" />
+                            </div>
+                        </div>
+
+                        <!-- Phone Input -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">WhatsApp Number</label>
+                            <input type="tel" id="phoneNum" class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none transition-all" />
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="pt-4">
+                            <button onclick="sendWhatsApp()" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-green-200 transform hover:-translate-y-0.5 transition-all flex justify-center items-center gap-2">
+                                <i class="fa-brands fa-whatsapp text-xl"></i>
+                                Send Report Link
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preview Card -->
+                <div class="bg-white rounded-2xl shadow-lg border border-gray-100 flex flex-col overflow-hidden">
+                    <div class="bg-gray-100 p-4 border-b border-gray-200 flex justify-between items-center">
+                        <span class="font-semibold text-gray-600 flex items-center gap-2">
+                            <i class="fa-regular fa-eye"></i> Message Preview
+                        </span>
+                        <button onclick="copyLinkOnly()" class="text-xs bg-white border border-gray-300 px-3 py-1 rounded hover:bg-gray-50 transition">
+                            <i class="fa-solid fa-link"></i> Copy Link Only
+                        </button>
+                    </div>
+                    
+                    <div class="flex-1 p-0 relative">
+                        <textarea id="messagePreview" readonly class="w-full h-full p-6 bg-white text-gray-800 text-sm resize-none focus:outline-none font-mono leading-relaxed min-h-[300px]"></textarea>
+                    </div>
+
+                    <div class="bg-gray-50 p-4 text-xs text-center text-gray-400 border-t border-gray-200">
+                        System Developed by Theekshana
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js"></script>
+    <script>
+        let iti = null;
+
+        // Initialize functionality on load
+        document.addEventListener("DOMContentLoaded", function() {
+            // Set default date to today
+            document.getElementById('date').valueAsDate = new Date();
+
+            // Init Phone Input
+            const phoneInput = document.getElementById("phoneNum");
+            iti = window.intlTelInput(phoneInput, {
+                initialCountry: "lk",
+                separateDialCode: true,
+                utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js"
+            });
+
+            // Add Event Listeners for real-time updates
+            ['vgSelection', 'vgNum', 'date'].forEach(id => {
+                document.getElementById(id).addEventListener('input', updatePreview);
+            });
+            phoneInput.addEventListener('countrychange', updatePreview);
+            phoneInput.addEventListener('input', updatePreview);
+
+            // Initial calls
+            displaySentItems();
+            updatePreview();
         });
 
-        // 2. Simulated Progress Counter
-        let percentage = 0;
-        const percentDisplay = document.getElementById('percent');
+        function updatePreview() {
+            const vgSelection = document.getElementById('vgSelection').value;
+            const vgNum = document.getElementById('vgNum').value.trim();
+            const date = document.getElementById('date').value;
+            
+            if (vgNum && date) {
+                const patientId = `${vgSelection}${vgNum}`;
+                
+                // Original Encoding Logic (Preserved)
+                const originalData = `${patientId}|${date}`;
+                const encodedData = btoa(originalData);
+                const link = `https://biotechveyangoda.lk/report-preview.html?data=${encodedData}`;
 
-        function updateProgress() {
-            // Random speed for realistic effect
-            const increment = Math.floor(Math.random() * 3) + 1; 
-            percentage += increment;
-
-            if (percentage > 99) {
-                percentage = 99; // Hold at 99% until you manually remove the page
-            }
-
-            percentDisplay.innerText = percentage;
-
-            if (percentage < 99) {
-                // Call function again with random delay
-                setTimeout(updateProgress, Math.random() * 200 + 50);
+                const message = `*Biotech Medical Laboratory Online Report*\n\n` + 
+                              `👤 *Patient ID:* ${patientId}\n` +
+                              `📅 *Date:* ${date}\n\n` +
+                              `● Click the link below to view and download your report.\n` +
+                              `*(ඔබට පහලින් ලින්ක් එකක් දිස් නොවුනහොත් කරුණාකර අපගේ WHATSAPP NUMBER එක සේව් කරගන්න.)*\n\n` +
+                              `👇\n🔗 ${link}\n\n` +
+                              `𝙁𝙧𝙤𝙢 - 𝘽𝙄𝙊𝙏𝙀𝘾𝙃 𝙇𝘼𝘽𝙊𝙍𝘼𝙏𝙊𝙍𝙔`;
+                
+                document.getElementById('messagePreview').value = message;
+                return link;
+            } else {
+                document.getElementById('messagePreview').value = "Please enter patient details to generate the preview...";
+                return null;
             }
         }
 
-        // Start the counter
-        updateProgress();
+        function sendWhatsApp() {
+            if (!iti || !iti.isValidNumber()) {
+                alert("Please enter a valid phone number.");
+                return;
+            }
+
+            const message = document.getElementById("messagePreview").value;
+            if (message.includes("Please enter patient details")) {
+                alert("Please fill all required fields correctly before sending.");
+                return;
+            }
+
+            // Save to history
+            const vgSelection = document.getElementById("vgSelection").value;
+            const vgNum = document.getElementById("vgNum").value.trim();
+            const date = document.getElementById("date").value;
+            addSentItem(vgSelection, vgNum, date);
+
+            // Open WhatsApp
+            const phoneNum = iti.getNumber().replace('+', ''); // WhatsApp web sometimes prefers no +
+            const encodedMessage = encodeURIComponent(message);
+            const whatsappWebUrl = `https://web.whatsapp.com/send?phone=${phoneNum}&text=${encodedMessage}`;
+            window.open(whatsappWebUrl, "_blank");
+        }
+
+        function copyLinkOnly() {
+            const link = updatePreview();
+            if(link) {
+                navigator.clipboard.writeText(link).then(() => {
+                    alert("Link copied to clipboard!");
+                });
+            } else {
+                alert("Fill details first.");
+            }
+        }
+
+        /* --- History Management (LocalStorage) --- */
+        function addSentItem(vgSelection, vgNum, date) {
+            const now = new Date();
+            const newItem = {
+                id: `${vgSelection}${vgNum}`,
+                date: date,
+                sendTime: now.toLocaleTimeString("en-US", {hour: '2-digit', minute:'2-digit'}),
+                timestamp: now.getTime()
+            };
+            
+            const sentItems = JSON.parse(localStorage.getItem("biotechSentItems") || "[]");
+            sentItems.unshift(newItem); // Add to top
+            
+            // Keep only last 50 items to prevent storage bloat
+            if(sentItems.length > 50) sentItems.pop();
+            
+            localStorage.setItem("biotechSentItems", JSON.stringify(sentItems));
+            displaySentItems();
+        }
+
+        function displaySentItems() {
+            const sentItems = JSON.parse(localStorage.getItem("biotechSentItems") || "[]");
+            const html = sentItems.length === 0 
+                ? `<div class="text-center text-gray-400 text-sm mt-10 flex flex-col items-center">
+                    <i class="fa-regular fa-folder-open text-2xl mb-2"></i>
+                    No items sent today
+                   </div>`
+                : sentItems.map(item => `
+                    <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-sm mb-3 relative overflow-hidden group">
+                        <div class="absolute left-0 top-0 bottom-0 w-1 bg-teal-500"></div>
+                        <div class="flex justify-between items-start pl-2">
+                            <div>
+                                <span class="font-bold text-gray-800 block">${item.id}</span>
+                                <span class="text-xs text-gray-500"><i class="fa-regular fa-calendar-check mr-1"></i>${item.date}</span>
+                            </div>
+                            <span class="text-xs font-medium text-teal-600 bg-teal-50 px-2 py-1 rounded">${item.sendTime}</span>
+                        </div>
+                    </div>
+                  `).join("");
+
+            document.getElementById("sentItemsList").innerHTML = html;
+            
+            // Mirror to mobile list if it exists
+            const mobileList = document.getElementById("sentItemsListMobile");
+            if(mobileList) mobileList.innerHTML = html;
+        }
+
+        function clearSentItems() {
+            const password = prompt("Enter password to clear sent items:");
+            if (password === "129876") {
+                localStorage.removeItem("biotechSentItems");
+                displaySentItems();
+                // alert("Sent items cleared successfully!"); // Removed alert for smoother UX
+            } else if (password !== null) {
+                alert("Incorrect password!");
+            }
+        }
+
+        function toggleMobileHistory() {
+            const el = document.getElementById('mobileHistory');
+            el.classList.toggle('hidden');
+        }
     </script>
 </body>
 </html>
