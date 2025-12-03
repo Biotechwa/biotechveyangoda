@@ -16,6 +16,7 @@
         body {
             font-family: 'Inter', sans-serif;
             background-color: #111827; 
+            /* Subtle dark pattern */
             background-image: radial-gradient(#1f2937 1px, transparent 1px);
             background-size: 20px 20px;
             height: 100vh;
@@ -26,19 +27,21 @@
             align-items: center;
         }
 
-        #app-frame {
+        /* Mobile App Container */
+        #chat-panel {
             width: 100%;
             height: 100%;
             background: #fff;
-            position: relative;
             display: flex;
             flex-direction: column;
+            position: relative;
+            z-index: 20;
             overflow: hidden;
         }
 
-        /* Desktop Container Styling */
+        /* Desktop view styling to look like a phone */
         @media (min-width: 768px) {
-            #app-frame {
+            #chat-panel {
                 max-width: 420px;
                 height: 90vh;
                 border-radius: 24px;
@@ -47,6 +50,7 @@
             }
         }
 
+        /* Custom Scrollbar */
         .chat-scroll::-webkit-scrollbar { width: 4px; }
         .chat-scroll::-webkit-scrollbar-track { background: transparent; }
         .chat-scroll::-webkit-scrollbar-thumb { background: rgba(20, 184, 166, 0.3); border-radius: 10px; }
@@ -81,11 +85,11 @@
         .ringing-animation { animation: ring 1s infinite ease-in-out; }
         @keyframes ring { 0% { transform: rotate(0); } 10% { transform: rotate(10deg); } 20% { transform: rotate(-10deg); } 30% { transform: rotate(10deg); } 40% { transform: rotate(-10deg); } 100% { transform: rotate(0); } }
 
-        audio { height: 32px; max-width: 180px; }
+        audio { height: 32px; max-width: 200px; }
         .msg-sent audio { filter: invert(1) opacity(0.9); }
 
         .emoji-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; max-height: 150px; overflow-y: auto; }
-        .emoji-btn { font-size: 1.2rem; padding: 6px; border-radius: 4px; cursor: pointer; text-align: center; }
+        .emoji-btn { font-size: 1.4rem; padding: 6px; border-radius: 4px; cursor: pointer; text-align: center; }
         .emoji-btn:hover { background-color: #f0fdf4; }
     </style>
 </head>
@@ -96,9 +100,8 @@
     <audio id="msgSound" src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3" preload="auto"></audio>
     <audio id="ringtone" src="https://media.geeksforgeeks.org/wp-content/uploads/20190531135120/beep.mp3" loop preload="auto"></audio>
 
-    <!-- APP CONTAINER -->
-    <main id="app-frame">
-        
+    <!-- MOBILE APP CONTAINER -->
+    <main id="chat-panel">
         <!-- HEADER -->
         <header class="bg-teal-900 text-white p-4 shadow-md z-20 flex justify-between items-center shrink-0">
             <div class="flex flex-col">
@@ -123,11 +126,11 @@
         <!-- IDENTITY BAR -->
         <div class="bg-gray-50 border-b border-gray-200 p-2 shrink-0 z-10">
             <div class="relative">
-                <select id="branchIdentity" onchange="updateIdentity()" class="w-full bg-white text-xs font-bold text-gray-700 py-2 pl-8 pr-4 rounded-lg border border-gray-200 focus:border-teal-500 outline-none appearance-none shadow-sm">
+                <select id="branchIdentity" onchange="updateIdentity()" class="w-full bg-white text-xs font-bold text-gray-700 py-2 pl-8 pr-4 rounded-lg border border-gray-200 focus:border-teal-500 outline-none appearance-none shadow-sm cursor-pointer">
                     <option value="HEAD OFFICE">🏢 HEAD OFFICE</option>
                     <option value="VEYANGODA">🧪 VEYANGODA (VG)</option>
-                    
-                    <option value="Naiwala">🧪 NAIWALA (NI)</option>
+                    <option value="NITTAMBUWA">🧪 NITTAMBUWA (NI)</option>
+                    <option value="Naiwala">🧪 NAIWALA</option>
                     <option value="BANDARANAYAKE">🧪 BANDARANAYAKE (BN)</option>
                     <option value="BANDURAGODA">🧪 BANDURAGODA (BR)</option>
                 </select>
@@ -144,90 +147,12 @@
             </div>
         </div>
 
-        <!-- FLOATING OVERLAYS (Inside App Frame) -->
-        
-        <!-- 1. CALL DIRECTORY MODAL -->
-        <div id="callModal" class="hidden absolute inset-0 bg-gray-900/95 z-50 flex flex-col animate-enter">
-            <div class="p-4 bg-gray-800 text-white flex justify-between items-center border-b border-gray-700 shrink-0">
-                <h3 class="font-bold"><i class="fa-solid fa-address-book text-teal-400 mr-2"></i> Directory</h3>
-                <button onclick="toggleCallModal()" class="w-8 h-8 flex items-center justify-center bg-gray-700 rounded-full"><i class="fa-solid fa-times"></i></button>
-            </div>
-            <div class="p-2 bg-blue-900/40 text-blue-200 text-[10px] text-center">
-                <i class="fa-solid fa-wifi"></i> Free Web Call &nbsp;|&nbsp; <i class="fa-solid fa-mobile-screen"></i> Normal Call
-            </div>
-            <div class="flex-1 overflow-y-auto p-4 space-y-3" id="branchList">
-                <!-- List injected via JS -->
-            </div>
-        </div>
-
-        <!-- 2. INCOMING CALL SCREEN -->
-        <div id="incomingCallModal" class="hidden absolute inset-0 z-[60] bg-gray-900 flex flex-col items-center justify-center text-white animate-enter">
-            <div class="relative z-10 flex flex-col items-center">
-                <div class="w-24 h-24 bg-teal-500 rounded-full flex items-center justify-center mb-6 ringing-animation shadow-[0_0_40px_rgba(20,184,166,0.6)]">
-                    <i class="fa-solid fa-phone text-4xl"></i>
-                </div>
-                <h2 class="text-2xl font-bold mb-2">Incoming Call</h2>
-                <p id="callerName" class="text-teal-400 font-bold text-xl mb-12 tracking-wide">Head Office</p>
-                
-                <div class="flex gap-10">
-                    <button onclick="rejectCall()" class="flex flex-col items-center gap-2 group">
-                        <div class="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition">
-                            <i class="fa-solid fa-phone-slash text-2xl"></i>
-                        </div>
-                        <span class="text-xs font-bold text-gray-400">Decline</span>
-                    </button>
-                    <button onclick="answerCall()" class="flex flex-col items-center gap-2 group">
-                        <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition">
-                            <i class="fa-solid fa-phone text-2xl animate-pulse"></i>
-                        </div>
-                        <span class="text-xs font-bold text-gray-400">Accept</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- 3. ACTIVE CALL SCREEN -->
-        <div id="activeCallModal" class="hidden absolute inset-0 z-[60] bg-gray-900 flex flex-col items-center justify-center text-white">
-             <div class="absolute top-6 right-6 flex items-center gap-2 bg-red-500/20 px-3 py-1 rounded-full border border-red-500/30">
-                <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span> 
-                <span class="text-[10px] font-bold tracking-widest">LIVE AUDIO</span>
-            </div>
-            
-            <div class="w-24 h-24 bg-gray-800 rounded-full flex items-center justify-center mb-6 border-4 border-gray-700 shadow-2xl relative">
-                <i class="fa-solid fa-user text-4xl text-gray-500"></i>
-            </div>
-            
-            <h2 class="text-2xl font-bold mb-2" id="activeCallTarget">Connected</h2>
-            <p class="text-teal-400 text-sm mb-12 font-mono" id="callStatus">Establishing Audio...</p>
-            
-            <!-- Controls -->
-            <div class="flex gap-8 mb-12">
-                <button id="muteBtn" onclick="toggleMute()" class="flex flex-col items-center gap-2 group">
-                    <div class="w-14 h-14 bg-gray-700 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition">
-                        <i class="fa-solid fa-microphone text-xl" id="muteIcon"></i>
-                    </div>
-                    <span class="text-xs text-gray-400">Mute</span>
-                </button>
-
-                <button id="speakerBtn" onclick="toggleSpeaker()" class="flex flex-col items-center gap-2 group">
-                    <div class="w-14 h-14 bg-gray-700 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition">
-                        <i class="fa-solid fa-volume-high text-xl" id="speakerIcon"></i>
-                    </div>
-                    <span class="text-xs text-gray-400">Speaker</span>
-                </button>
-            </div>
-
-            <button onclick="endCall()" class="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center shadow-xl hover:bg-red-700 active:scale-95 transition">
-                <i class="fa-solid fa-phone-slash text-3xl"></i>
-            </button>
-        </div>
-
-        <!-- 4. EMOJI PICKER -->
+        <!-- EMOJI PICKER -->
         <div id="emojiPicker" class="hidden absolute bottom-[70px] left-2 right-2 bg-white shadow-2xl border border-gray-200 rounded-xl p-3 z-30 animate-enter">
             <div class="emoji-grid" id="emojiGrid"></div>
         </div>
 
-        <!-- 5. RECORDING INDICATOR -->
+        <!-- RECORDING OVERLAY -->
         <div id="recordingOverlay" class="hidden absolute bottom-[80px] left-0 right-0 z-30 flex justify-center animate-enter pointer-events-none">
             <div class="bg-red-500 text-white px-5 py-2 rounded-full shadow-lg flex items-center gap-3 backdrop-blur-md">
                 <div class="w-3 h-3 bg-white rounded-full animate-pulse"></div>
@@ -235,7 +160,7 @@
             </div>
         </div>
 
-        <!-- 6. PROCESSING LOADER -->
+        <!-- PROCESSING LOADER -->
         <div id="uploadLoader" class="hidden absolute inset-0 bg-white/80 z-40 flex items-center justify-center backdrop-blur-sm">
             <div class="flex flex-col items-center">
                 <i class="fa-solid fa-circle-notch fa-spin text-teal-600 text-3xl mb-2"></i>
@@ -246,27 +171,97 @@
         <!-- INPUT AREA -->
         <div class="p-3 bg-white border-t border-gray-100 shrink-0 z-20">
             <div class="flex items-end gap-2 bg-gray-50 p-1.5 rounded-3xl border border-gray-200">
-                <div class="flex pb-1 pl-1">
+                <div class="flex pb-1 pl-1 gap-1">
                     <input type="file" id="imageInput" accept="image/*" class="hidden" onchange="handleImageUpload(this)">
-                    <button onclick="document.getElementById('imageInput').click()" class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-teal-600 transition">
+                    <button onclick="document.getElementById('imageInput').click()" class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-teal-600 transition rounded-full hover:bg-gray-100">
                         <i class="fa-solid fa-paperclip"></i>
                     </button>
-                    <button onclick="toggleEmoji()" class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-yellow-500 transition">
-                        <i class="fa-regular fa-face-smile"></i>
+                    <button onclick="toggleEmoji()" class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-yellow-500 transition rounded-full hover:bg-gray-100">
+                        <i class="fa-regular fa-face-smile text-lg"></i>
                     </button>
                 </div>
-                <textarea id="chatMsg" rows="1" placeholder="Type Message..." class="flex-1 bg-transparent text-sm py-2 max-h-24 resize-none focus:outline-none text-gray-700" onkeypress="handleEnter(event)"></textarea>
+                <textarea id="chatMsg" rows="1" placeholder="Type..." class="flex-1 bg-transparent text-sm py-2 max-h-24 resize-none focus:outline-none text-gray-700" onkeypress="handleEnter(event)"></textarea>
                 <div class="flex pb-1 pr-1 gap-1">
-                    <button id="micBtn" onclick="toggleVoiceRecording()" class="w-8 h-8 rounded-full bg-gray-200 text-gray-500 hover:bg-red-100 hover:text-red-500 transition flex items-center justify-center">
+                    <button id="micBtn" onclick="toggleVoiceRecording()" class="w-9 h-9 rounded-full bg-gray-200 text-gray-500 hover:bg-red-100 hover:text-red-500 transition flex items-center justify-center">
                         <i class="fa-solid fa-microphone text-sm"></i>
                     </button>
-                    <button onclick="sendRealtimeMessage()" class="w-8 h-8 rounded-full bg-teal-600 text-white shadow-md hover:bg-teal-700 transition flex items-center justify-center">
+                    <button onclick="sendRealtimeMessage()" class="w-9 h-9 rounded-full bg-teal-600 text-white shadow-md hover:bg-teal-700 transition flex items-center justify-center transform active:scale-95">
                         <i class="fa-solid fa-paper-plane text-xs"></i>
                     </button>
                 </div>
             </div>
         </div>
     </main>
+
+    <!-- GLOBAL MODALS (Overlay Entire Screen) -->
+    
+    <!-- 1. CALL DIRECTORY MODAL -->
+    <div id="callModal" class="hidden fixed inset-0 bg-gray-900/95 z-50 flex flex-col animate-enter">
+        <div class="p-4 bg-gray-800 text-white flex justify-between items-center border-b border-gray-700 shrink-0">
+            <h3 class="font-bold"><i class="fa-solid fa-address-book text-teal-400 mr-2"></i> Directory</h3>
+            <button onclick="toggleCallModal()" class="w-8 h-8 flex items-center justify-center bg-gray-700 rounded-full"><i class="fa-solid fa-times"></i></button>
+        </div>
+        <div class="p-2 bg-blue-900/40 text-blue-200 text-[10px] text-center">
+            <i class="fa-solid fa-wifi"></i> Free Web Call &nbsp;|&nbsp; <i class="fa-solid fa-mobile-screen"></i> Normal Call
+        </div>
+        <div class="flex-1 overflow-y-auto p-4 space-y-3" id="branchList"></div>
+    </div>
+
+    <!-- 2. INCOMING CALL MODAL -->
+    <div id="incomingCallModal" class="hidden fixed inset-0 z-[60] bg-gray-900 flex flex-col items-center justify-center text-white animate-enter">
+        <div class="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center mb-6 ringing-animation shadow-[0_0_40px_rgba(34,197,94,0.6)]">
+            <i class="fa-solid fa-phone text-4xl"></i>
+        </div>
+        <h2 class="text-2xl font-bold mb-2">Incoming Call</h2>
+        <p id="callerName" class="text-teal-400 font-bold text-xl mb-12 tracking-wide">Head Office</p>
+        <div class="flex gap-10">
+            <button onclick="rejectCall()" class="flex flex-col items-center gap-2 group cursor-pointer">
+                <div class="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition">
+                    <i class="fa-solid fa-phone-slash text-2xl"></i>
+                </div>
+                <span class="text-xs font-bold text-gray-400">Decline</span>
+            </button>
+            <button onclick="answerCall()" class="flex flex-col items-center gap-2 group cursor-pointer">
+                <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition">
+                    <i class="fa-solid fa-phone text-2xl animate-pulse"></i>
+                </div>
+                <span class="text-xs font-bold text-gray-400">Answer</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- 3. ACTIVE CALL MODAL -->
+    <div id="activeCallModal" class="hidden fixed inset-0 z-[60] bg-gray-900 flex flex-col items-center justify-center text-white">
+        <div class="absolute top-6 right-6 flex items-center gap-2 bg-red-500/20 px-3 py-1 rounded-full border border-red-500/30">
+            <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span> 
+            <span class="text-[10px] font-bold tracking-widest">LIVE AUDIO</span>
+        </div>
+        <div class="w-32 h-32 bg-gray-800 rounded-full flex items-center justify-center mb-6 border-4 border-gray-700 shadow-2xl relative">
+            <i class="fa-solid fa-user text-5xl text-gray-500"></i>
+        </div>
+        <h2 class="text-2xl font-bold mb-1" id="activeCallTarget">Connected</h2>
+        <p class="text-teal-400 text-sm mb-12 font-mono" id="callStatus">Establishing Audio...</p>
+        
+        <div class="flex gap-8 mb-12">
+            <button id="muteBtn" onclick="toggleMute()" class="flex flex-col items-center gap-2 group cursor-pointer">
+                <div class="w-14 h-14 bg-gray-700 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition">
+                    <i class="fa-solid fa-microphone text-xl" id="muteIcon"></i>
+                </div>
+                <span class="text-xs text-gray-400">Mute</span>
+            </button>
+            <button id="speakerBtn" onclick="toggleSpeaker()" class="flex flex-col items-center gap-2 group cursor-pointer">
+                <div class="w-14 h-14 bg-gray-700 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition">
+                    <i class="fa-solid fa-volume-high text-xl" id="speakerIcon"></i>
+                </div>
+                <span class="text-xs text-gray-400">Speaker</span>
+            </button>
+        </div>
+        
+        <button onclick="endCall()" class="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center shadow-xl hover:bg-red-700 active:scale-95 transition cursor-pointer">
+            <i class="fa-solid fa-phone-slash text-3xl"></i>
+        </button>
+        <p class="text-xs text-gray-500 mt-4 font-medium uppercase tracking-widest">End Call</p>
+    </div>
 
     <!-- FIREBASE & LOGIC -->
     <script type="module">
@@ -287,7 +282,6 @@
         const db = getDatabase(app);
         const chatRef = ref(db, 'biotech_messages');
         
-        // --- WebRTC Variables ---
         let localStream;
         let peerConnection;
         const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
@@ -300,12 +294,13 @@
         const branches = [
             { id: "HEAD OFFICE", name: "Head Office" },
             { id: "VEYANGODA", name: "Veyangoda" },
-          
+            { id: "NITTAMBUWA", name: "Nittambuwa" },
             { id: "Naiwala", name: "Naiwala" },
             { id: "BANDARANAYAKE", name: "Bandaranaye" },
             { id: "BANDURAGODA", name: "Banduragoda" }
         ];
 
+        // RENDER BRANCH LIST
         function renderBranchList() {
             const list = document.getElementById('branchList');
             const myId = document.getElementById('branchIdentity').value;
@@ -513,7 +508,6 @@
             });
         }
 
-        // --- TOGGLES ---
         window.toggleMute = function() {
             if(localStream) {
                 const audioTrack = localStream.getAudioTracks()[0];
@@ -533,7 +527,6 @@
 
         window.toggleSpeaker = function() {
             isSpeaker = !isSpeaker;
-            const btn = document.getElementById('speakerBtn');
             const icon = document.getElementById('speakerIcon');
             if(isSpeaker) icon.className = "fa-solid fa-volume-high text-xl text-green-400";
             else icon.className = "fa-solid fa-ear-listen text-xl";
@@ -723,7 +716,7 @@
     <script>
         window.toggleCallModal = function() { document.getElementById('callModal').classList.toggle('hidden'); }
         
-        const emojis = ["👍", "👋", "🧪", "✅", "❌", "😊", "😂", "🩸", "🦠", "🔬", "🏥", "🚑", "💊", "🧾", "💵", "❗", "❓", "📞"];
+        const emojis = ["👍", "👋", "🧪", "✅", "❌", "😊", "😂", "🩸", "🦠", "🔬", "🏥", "🚑", "💊", "🧾", "💵", "❗", "❓", "📞", "🧬", "🧫", "💉", "🧑‍🔬", "📑", "📉", "📈"];
         document.addEventListener("DOMContentLoaded", function() {
             document.getElementById('emojiGrid').innerHTML = emojis.map(e => `<div class="emoji-btn" onclick="insertEmoji('${e}')">${e}</div>`).join('');
         });
