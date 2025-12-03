@@ -53,18 +53,21 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
 
-        /* Call Bubble Styles */
-        .msg-call {
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-            color: white;
-            width: 100%;
-            max-width: 280px;
-        }
-        
         .status-dot {
             height: 8px; width: 8px; background-color: #4ade80; border-radius: 50%; display: inline-block;
             box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.3);
             animation: pulse 2s infinite;
+        }
+        
+        .recording-pulse {
+            animation: recordPulse 1s infinite;
+            color: #ef4444 !important;
+        }
+        
+        @keyframes recordPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
         }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
@@ -83,6 +86,15 @@
             cursor: pointer;
         }
         .emoji-btn:hover { background-color: #f0fdf4; }
+
+        /* Audio Player Styling */
+        audio {
+            height: 32px;
+            max-width: 200px;
+        }
+        .msg-sent audio {
+            filter: invert(1) opacity(0.8);
+        }
     </style>
 </head>
 <body class="h-screen flex overflow-hidden">
@@ -101,9 +113,9 @@
             </div>
             
             <div class="flex items-center gap-3">
-                <!-- Call Modal Trigger -->
-                <button onclick="toggleCallModal()" class="text-teal-200 hover:text-white transition-colors bg-teal-800/50 p-2 rounded-full hover:bg-teal-700" title="Call Center">
-                    <i class="fa-solid fa-phone-volume"></i>
+                <!-- Phone Directory Trigger -->
+                <button onclick="toggleCallModal()" class="text-teal-200 hover:text-white transition-colors bg-teal-800/50 p-2 rounded-full hover:bg-teal-700" title="Phone Directory">
+                    <i class="fa-solid fa-address-book"></i>
                 </button>
                 <!-- Clear Chat Option -->
                 <button onclick="clearChat()" class="text-teal-200 hover:text-red-400 transition-colors" title="Clear Chat History">
@@ -124,8 +136,8 @@
                     <option value="HEAD OFFICE">🏢 HEAD OFFICE</option>
                     <option value="VEYANGODA">🧪 VEYANGODA (VG)</option>
                     <option value="NITTAMBUWA">🧪 NITTAMBUWA (NI)</option>
-                    <option value="BANDURAGODA">🧪 BANDURAGODA (BN)</option>
-                    <option value="BERA">🧪 BERA (BR)</option>
+                    <option value="BANDURAGODA">🧪 BANDARANAYAKE (BN)</option>
+                    <option value="BERA">🧪 BANDURAGODA (BR)</option>
                 </select>
                 <i class="fa-solid fa-user-tag absolute left-2.5 top-2.5 text-gray-400"></i>
             </div>
@@ -139,30 +151,17 @@
             </div>
         </div>
 
-        <!-- CALL CENTER MODAL -->
+        <!-- PHONE DIRECTORY MODAL -->
         <div id="callModal" class="hidden absolute inset-0 bg-gray-900/90 z-40 backdrop-blur-sm flex flex-col animate-enter">
             <div class="p-4 bg-gray-800 text-white flex justify-between items-center border-b border-gray-700">
-                <h3 class="font-bold"><i class="fa-solid fa-tower-broadcast text-teal-400"></i> Call Center</h3>
+                <h3 class="font-bold"><i class="fa-solid fa-address-book text-teal-400"></i> Phone Directory</h3>
                 <button onclick="toggleCallModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-times"></i></button>
             </div>
             
             <div class="flex-1 overflow-y-auto p-4 space-y-4">
-                <!-- Online Meeting Option -->
-                <div class="bg-gradient-to-r from-blue-600 to-blue-500 rounded-xl p-4 text-center shadow-lg">
-                    <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-2">
-                        <i class="fa-solid fa-video text-2xl text-white"></i>
-                    </div>
-                    <h4 class="font-bold text-white mb-1">Online Group Meeting</h4>
-                    <p class="text-blue-100 text-xs mb-3">Start a free voice/video call with all branches instantly.</p>
-                    <button onclick="startGroupMeeting()" class="bg-white text-blue-600 font-bold py-2 px-6 rounded-full text-sm hover:bg-blue-50 transition shadow-md w-full">
-                        START MEETING
-                    </button>
-                </div>
-
-                <!-- Phone Directory -->
                 <div class="bg-white rounded-xl overflow-hidden shadow-md">
                     <div class="p-3 bg-gray-100 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase">
-                        Phone Directory
+                        Branch Numbers
                     </div>
                     <div class="divide-y divide-gray-100">
                         <a href="tel:+94767810623" class="flex items-center justify-between p-4 hover:bg-gray-50 transition">
@@ -172,8 +171,7 @@
                             </div>
                             <i class="fa-solid fa-phone text-teal-500"></i>
                         </a>
-                        <!-- TODO: Update these numbers -->
-                        <a href="tel:+94767810623" class="flex items-center justify-between p-4 hover:bg-gray-50 transition">
+                        <a href="tel:+9473524143" class="flex items-center justify-between p-4 hover:bg-gray-50 transition">
                             <div class="flex items-center gap-3">
                                 <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">VG</div>
                                 <span class="text-sm font-bold text-gray-700">Veyangoda</span>
@@ -183,7 +181,7 @@
                         <a href="tel:+94767810623" class="flex items-center justify-between p-4 hover:bg-gray-50 transition">
                             <div class="flex items-center gap-3">
                                 <div class="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center">NI</div>
-                                <span class="text-sm font-bold text-gray-700">Nittambuwa</span>
+                                <span class="text-sm font-bold text-gray-700">Naiwala</span>
                             </div>
                             <i class="fa-solid fa-phone text-gray-300 hover:text-teal-500"></i>
                         </a>
@@ -194,16 +192,22 @@
 
         <!-- Emoji Picker Popover -->
         <div id="emojiPicker" class="hidden absolute bottom-20 left-4 right-4 bg-white shadow-xl border border-gray-200 rounded-lg p-2 z-30">
-            <div class="emoji-grid" id="emojiGrid">
-                <!-- Emojis injected via JS -->
+            <div class="emoji-grid" id="emojiGrid"></div>
+        </div>
+        
+        <!-- Recording Overlay -->
+        <div id="recordingOverlay" class="hidden absolute bottom-20 left-0 right-0 z-30 flex justify-center animate-enter">
+            <div class="bg-red-500 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
+                <div class="w-3 h-3 bg-white rounded-full animate-pulse"></div>
+                <span class="text-xs font-bold">Recording... (Click mic to stop)</span>
             </div>
         </div>
 
         <!-- Input Area -->
         <div class="p-3 bg-white border-t border-gray-200 relative">
-            <!-- Loading Overlay for Images -->
+            <!-- Loading Overlay -->
             <div id="uploadLoader" class="hidden absolute inset-0 bg-white/80 z-40 flex items-center justify-center">
-                <span class="text-xs text-teal-600 font-bold animate-pulse">Compressing Image...</span>
+                <span class="text-xs text-teal-600 font-bold animate-pulse">Processing...</span>
             </div>
 
             <div class="flex gap-2 items-end">
@@ -212,6 +216,11 @@
                 
                 <button onclick="document.getElementById('imageInput').click()" class="text-gray-400 hover:text-teal-600 p-2 transition-colors" title="Send Photo">
                     <i class="fa-solid fa-paperclip text-lg"></i>
+                </button>
+                
+                <!-- Microphone Button -->
+                <button id="micBtn" onclick="toggleVoiceRecording()" class="text-gray-400 hover:text-red-500 p-2 transition-colors" title="Hold to Record">
+                    <i class="fa-solid fa-microphone text-lg"></i>
                 </button>
                 
                 <button onclick="toggleEmoji()" class="text-gray-400 hover:text-yellow-500 p-2 transition-colors" title="Emojis">
@@ -343,6 +352,14 @@
         const container = document.getElementById('chatContainer');
         
         let firstLoad = true;
+        let lastMsgTimestamp = 0;
+
+        // --- NOTIFICATION PERMISSION ---
+        if ("Notification" in window) {
+            if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+                Notification.requestPermission();
+            }
+        }
 
         // --- SEND TEXT MESSAGE ---
         window.sendRealtimeMessage = function() {
@@ -361,24 +378,72 @@
                 document.getElementById('emojiPicker').classList.add('hidden');
             }
         };
-        
-        // --- START VIDEO MEETING (JITSI) ---
-        window.startGroupMeeting = function() {
-            const branch = document.getElementById('branchIdentity').value;
-            const meetingId = "BiotechLab_" + Date.now(); // Unique Room ID
-            const meetLink = "https://meet.jit.si/" + meetingId;
-            
-            push(chatRef, {
-                sender: branch,
-                text: "started a live meeting.",
-                link: meetLink,
-                type: 'call', // Special type
-                timestamp: serverTimestamp()
-            });
-            
-            toggleCallModal(); // Close modal
-            window.open(meetLink, '_blank'); // Join immediately
-        };
+
+        // --- VOICE RECORDING LOGIC ---
+        let mediaRecorder;
+        let audioChunks = [];
+        let isRecording = false;
+
+        window.toggleVoiceRecording = function() {
+            if (!isRecording) {
+                startRecording();
+            } else {
+                stopRecording();
+            }
+        }
+
+        async function startRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                
+                mediaRecorder.start();
+                isRecording = true;
+                
+                // UI Updates
+                document.getElementById('micBtn').classList.add('recording-pulse');
+                document.getElementById('recordingOverlay').classList.remove('hidden');
+                audioChunks = [];
+
+                mediaRecorder.addEventListener("dataavailable", event => {
+                    audioChunks.push(event.data);
+                });
+
+                mediaRecorder.addEventListener("stop", () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const reader = new FileReader();
+                    reader.readAsDataURL(audioBlob); 
+                    reader.onloadend = function() {
+                        const base64data = reader.result;
+                        // Send to Firebase
+                        const branch = document.getElementById('branchIdentity').value;
+                        push(chatRef, {
+                            sender: branch,
+                            audio: base64data,
+                            type: 'audio',
+                            timestamp: serverTimestamp()
+                        });
+                        document.getElementById('uploadLoader').classList.add('hidden');
+                    }
+                });
+
+            } catch (err) {
+                alert("Microphone access denied or error: " + err);
+            }
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && isRecording) {
+                document.getElementById('uploadLoader').classList.remove('hidden'); // Show processing
+                mediaRecorder.stop();
+                mediaRecorder.stream.getTracks().forEach(track => track.stop()); // Turn off mic
+                isRecording = false;
+                
+                // UI Updates
+                document.getElementById('micBtn').classList.remove('recording-pulse');
+                document.getElementById('recordingOverlay').classList.add('hidden');
+            }
+        }
 
         // --- CLEAR CHAT LOGIC ---
         window.clearChat = function() {
@@ -462,7 +527,29 @@
                 return;
             }
 
-            Object.values(data).forEach(msg => renderMessage(msg));
+            const messages = Object.values(data);
+            messages.forEach(msg => renderMessage(msg));
+            
+            // --- NOTIFICATION LOGIC ---
+            const lastMsg = messages[messages.length - 1];
+            if (lastMsg.timestamp > lastMsgTimestamp) {
+                lastMsgTimestamp = lastMsg.timestamp;
+                const myBranch = document.getElementById('branchIdentity').value;
+                
+                // If message is NOT from me, and it's new (not initial load check)
+                if (lastMsg.sender !== myBranch && Date.now() - lastMsg.timestamp < 10000) {
+                    if (Notification.permission === "granted") {
+                        new Notification(`Biotech: Message from ${lastMsg.sender}`, {
+                            body: lastMsg.type === 'text' ? lastMsg.text : `Sent a ${lastMsg.type}`,
+                            icon: "https://cdn-icons-png.flaticon.com/512/3774/3774880.png"
+                        });
+                        // Optional: Play Sound
+                        // const audio = new Audio('notification_sound_url.mp3');
+                        // audio.play();
+                    }
+                }
+            }
+            
             scrollToBottom();
         });
 
@@ -482,48 +569,25 @@
             if (msg.type === 'image') {
                 contentHtml = `<img src="${msg.image}" class="rounded-lg max-w-full h-auto border-2 border-white/20 mt-1" alt="Shared Photo">`;
             } 
-            else if (msg.type === 'call') {
-                // SPECIAL CALL BUBBLE
-                contentHtml = `
-                    <div class="bg-blue-600 text-white rounded-lg p-3 text-center shadow-md border-2 border-blue-400">
-                        <div class="font-bold text-sm mb-1"><i class="fa-solid fa-video animate-pulse"></i> LIVE MEETING</div>
-                        <p class="text-xs text-blue-100 mb-2">Click to join the call</p>
-                        <a href="${msg.link}" target="_blank" class="block w-full bg-white text-blue-600 font-bold py-1.5 px-4 rounded text-xs hover:bg-gray-100 transition">
-                            JOIN NOW
-                        </a>
-                    </div>
-                `;
+            else if (msg.type === 'audio') {
+                contentHtml = `<audio controls src="${msg.audio}" class="mt-1"></audio>`;
             }
             else {
                 contentHtml = `<p class="leading-relaxed whitespace-pre-wrap">${msg.text || ''}</p>`;
             }
 
-            // If it's a call, we override the bubble style slightly
-            const finalBubbleClass = msg.type === 'call' ? '' : `max-w-[85%] rounded-2xl px-4 py-2 ${alignClass} text-sm relative group mb-1`;
-            const senderHeader = msg.type === 'call' ? 
-                `<div class="text-center text-[10px] font-bold text-gray-400 uppercase mb-1">${msg.sender} started a call</div>` : 
-                `<div class="flex justify-between items-end gap-3 mb-0.5"><span class="text-[10px] font-bold opacity-80 uppercase tracking-wider">${msg.sender}</span></div>`;
-
             const msgDiv = document.createElement('div');
             msgDiv.className = `flex flex-col ${alignContainer} animate-enter w-full`;
             
-            if (msg.type === 'call') {
-                 msgDiv.innerHTML = `
-                    <div class="w-full max-w-[280px] mb-2 mx-auto">
-                        ${senderHeader}
-                        ${contentHtml}
-                        <span class="text-[9px] text-gray-400 block text-center mt-1">${timeStr}</span>
+            msgDiv.innerHTML = `
+                <div class="max-w-[85%] rounded-2xl px-4 py-2 ${alignClass} text-sm relative group mb-1">
+                    <div class="flex justify-between items-end gap-3 mb-0.5">
+                        <span class="text-[10px] font-bold opacity-80 uppercase tracking-wider">${msg.sender}</span>
                     </div>
-                `;
-            } else {
-                msgDiv.innerHTML = `
-                    <div class="${finalBubbleClass}">
-                        ${senderHeader}
-                        ${contentHtml}
-                        <span class="text-[9px] opacity-60 block text-right mt-1">${timeStr}</span>
-                    </div>
-                `;
-            }
+                    ${contentHtml}
+                    <span class="text-[9px] opacity-60 block text-right mt-1">${timeStr}</span>
+                </div>
+            `;
 
             container.appendChild(msgDiv);
         }
@@ -538,7 +602,8 @@
             location.reload(); 
         }
 
-        // Load saved branch preference
+        // --- PERSISTENT BRANCH LOCK ---
+        // Load saved branch preference immediately on load
         const savedBranch = localStorage.getItem("biotechBranch");
         if(savedBranch) {
             document.getElementById('branchIdentity').value = savedBranch;
