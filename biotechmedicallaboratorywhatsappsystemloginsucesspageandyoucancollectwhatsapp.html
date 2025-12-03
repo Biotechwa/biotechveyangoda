@@ -269,6 +269,7 @@
             updatePreview();
         });
 
+        // --- NEW UPDATED PREVIEW FUNCTION WITH 2 WEEK EXPIRY ---
         function updatePreview() {
             const vgSelection = document.getElementById('vgSelection').value;
             const vgNum = document.getElementById('vgNum').value.trim();
@@ -282,13 +283,25 @@
                 sendBtn.classList.remove('opacity-50', 'cursor-not-allowed');
                 
                 const patientId = `${vgSelection}${vgNum}`;
-                const originalData = `${patientId}|${date}`;
+
+                // --- NEW: EXPIRATION LOGIC (2 WEEKS) ---
+                const now = new Date();
+                // 14 days * 24 hours * 60 min * 60 sec * 1000 ms
+                const twoWeeksInMillis = 14 * 24 * 60 * 60 * 1000; // 14 Days; 
+                const expiryTimestamp = now.getTime() + twoWeeksInMillis;
+                // ---------------------------------------
+
+                // We add the expiryTimestamp to the data string using a separator symbol "|"
+                // Format: ID | ReportDate | ExpiryTime
+                const originalData = `${patientId}|${date}|${expiryTimestamp}`;
+                
                 const encodedData = btoa(originalData);
                 const link = `https://biotechveyangoda.lk/report-preview.html?data=${encodedData}`;
 
                 const message = `*Biotech Medical Laboratory Online Report*\n\n` + 
                               `👤 *Patient ID:* ${patientId}\n` +
-                              `📅 *Date:* ${date}\n\n` +
+                              `📅 *Date:* ${date}\n` +
+                              `⏳ *Expires in:* 2 Weeks\n\n` + 
                               `● Click the link below to view and download your report.\n` +
                               `*(ඔබට පහලින් ලින්ක් එකක් දිස් නොවුනහොත් කරුණාකර අපගේ WHATSAPP NUMBER එක සේව් කරගන්න.)*\n\n` +
                               `👇\n🔗 ${link}\n\n` +
@@ -311,6 +324,7 @@
                 return null;
             }
         }
+        // -----------------------------------------------------
 
         function sendWhatsApp() {
             // Final safety check
