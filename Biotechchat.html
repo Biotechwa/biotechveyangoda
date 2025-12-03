@@ -90,8 +90,12 @@
 </head>
 <body>
 
-    <!-- HIDDEN AUDIO ELEMENT FOR CALLS -->
+    <!-- AUDIO ELEMENTS -->
     <audio id="remoteAudio" autoplay playsinline></audio>
+    <!-- Simple Message Sound -->
+    <audio id="msgSound" src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3" preload="auto"></audio>
+    <!-- Phone Ringtone -->
+    <audio id="ringtone" src="https://media.geeksforgeeks.org/wp-content/uploads/20190531135120/beep.mp3" loop preload="auto"></audio>
 
     <!-- APP CONTAINER -->
     <main id="app-frame">
@@ -123,7 +127,8 @@
                 <select id="branchIdentity" onchange="updateIdentity()" class="w-full bg-white text-xs font-bold text-gray-700 py-2 pl-8 pr-4 rounded-lg border border-gray-200 focus:border-teal-500 outline-none appearance-none shadow-sm">
                     <option value="HEAD OFFICE">🏢 HEAD OFFICE</option>
                     <option value="VEYANGODA">🧪 VEYANGODA (VG)</option>
-                    <option value="Naiwala">🧪 NAIWALA (NI)</option>
+                    <option value="NITTAMBUWA">🧪 NITTAMBUWA (NI)</option>
+                    <option value="Naiwala">🧪 NAIWALA</option>
                     <option value="BANDARANAYAKE">🧪 BANDARANAYAKE (BN)</option>
                     <option value="BANDURAGODA">🧪 BANDURAGODA (BR)</option>
                 </select>
@@ -194,8 +199,27 @@
             </div>
             
             <h2 class="text-2xl font-bold mb-2" id="activeCallTarget">Connected</h2>
-            <p class="text-teal-400 text-sm mb-12 font-mono" id="callStatus">Establishing Audio...</p>
+            <p class="text-teal-400 text-sm mb-8 font-mono" id="callStatus">Establishing Audio...</p>
             
+            <!-- Call Controls -->
+            <div class="flex gap-6 mb-10">
+                <!-- Mute Button -->
+                <button id="muteBtn" onclick="toggleMute()" class="flex flex-col items-center gap-2 group">
+                    <div class="w-14 h-14 bg-gray-700 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition">
+                        <i class="fa-solid fa-microphone text-xl" id="muteIcon"></i>
+                    </div>
+                    <span class="text-xs text-gray-400">Mute</span>
+                </button>
+
+                <!-- Speaker Button -->
+                <button id="speakerBtn" onclick="toggleSpeaker()" class="flex flex-col items-center gap-2 group">
+                    <div class="w-14 h-14 bg-gray-700 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition">
+                        <i class="fa-solid fa-volume-high text-xl" id="speakerIcon"></i>
+                    </div>
+                    <span class="text-xs text-gray-400">Speaker</span>
+                </button>
+            </div>
+
             <button onclick="endCall()" class="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center shadow-xl hover:bg-red-700 active:scale-95 transition">
                 <i class="fa-solid fa-phone-slash text-3xl"></i>
             </button>
@@ -272,10 +296,14 @@
         const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
         let currentCallRef = null;
         let myBranchName = "";
+        let candidateQueue = []; // Queue for candidates before remote desc is set
+        let isMuted = false;
+        let isSpeaker = false;
 
         const branches = [
             { id: "HEAD OFFICE", name: "Head Office" },
             { id: "VEYANGODA", name: "Veyangoda" },
+            { id: "NITTAMBUWA", name: "Nittambuwa" },
             { id: "Naiwala", name: "Naiwala" },
             { id: "BANDARANAYAKE", name: "Bandaranaye" },
             { id: "BANDURAGODA", name: "Banduragoda" }
@@ -302,7 +330,7 @@
             `).join('');
         }
 
-        // --- WEBRTC CALL LOGIC (FIXED: ICE CANDIDATES) ---
+        // --- WEBRTC CALL LOGIC (FIXED: ICE QUEUE) ---
         window.initiateCall = async function(targetBranch) {
             myBranchName = document.getElementById('branchIdentity').value;
             try {
@@ -312,13 +340,20 @@
             peerConnection = new RTCPeerConnection(rtcConfig);
             localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
             
+            // Handle Remote Audio
             const audioEl = document.getElementById('remoteAudio');
             peerConnection.ontrack = event => {
                 audioEl.srcObject = event.streams[0];
                 audioEl.play().catch(e => console.log("Autoplay blocked:", e));
             };
             
-            // Send ICE Candidates
+            // Connection State Monitoring
+            peerConnection.onconnectionstatechange = () => {
+                const status = document.getElementById('callStatus');
+                if(status) status.innerText = peerConnection.connectionState === 'connected' ? "Voice Connected" : peerConnection.connectionState;
+            };
+
+            // Send Local ICE Candidates
             peerConnection.onicecandidate = event => {
                 if (event.candidate) {
                     push(ref(db, `biotech_calls/${targetBranch}/candidates`), {
@@ -335,7 +370,7 @@
             const callBase = `biotech_calls/${targetBranch}`;
             currentCallRef = ref(db, callBase);
             
-            // Clear previous candidates
+            // Clean previous session data
             set(ref(db, `${callBase}/candidates`), null);
 
             // Send Offer
@@ -350,20 +385,29 @@
             document.getElementById('activeCallTarget').innerText = "Calling " + targetBranch + "...";
             
             // Listen for Answer
-            onValue(ref(db, `${callBase}/answer`), (snapshot) => {
+            onValue(ref(db, `${callBase}/answer`), async (snapshot) => {
                 const data = snapshot.val();
                 if (data && !peerConnection.currentRemoteDescription) {
                     const desc = new RTCSessionDescription(JSON.parse(data.sdp));
-                    peerConnection.setRemoteDescription(desc);
-                    document.getElementById('callStatus').innerText = "Voice Connected";
+                    await peerConnection.setRemoteDescription(desc);
+                    
+                    // Flush Candidate Queue
+                    while(candidateQueue.length > 0) {
+                        peerConnection.addIceCandidate(candidateQueue.shift()).catch(e => console.log(e));
+                    }
                 }
             });
 
-            // Listen for Remote Candidates
+            // Listen for Remote Candidates (QUEUEING IMPLEMENTED)
             onChildAdded(ref(db, `${callBase}/candidates`), (snapshot) => {
                 const data = snapshot.val();
                 if (data && data.sender !== myBranchName) {
-                    peerConnection.addIceCandidate(new RTCIceCandidate(JSON.parse(data.candidate)));
+                    const candidate = new RTCIceCandidate(JSON.parse(data.candidate));
+                    if (peerConnection.remoteDescription) {
+                        peerConnection.addIceCandidate(candidate).catch(e => console.log(e));
+                    } else {
+                        candidateQueue.push(candidate);
+                    }
                 }
             });
         };
@@ -373,6 +417,11 @@
                 localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
             } catch(e) { alert("Mic Error"); return; }
 
+            // Stop Ringtone
+            const ringAudio = document.getElementById('ringtone');
+            ringAudio.pause();
+            ringAudio.currentTime = 0;
+
             peerConnection = new RTCPeerConnection(rtcConfig);
             localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
             
@@ -381,12 +430,17 @@
                 audioEl.srcObject = event.streams[0];
                 audioEl.play().catch(e => console.log("Autoplay blocked:", e));
             };
+            
+            peerConnection.onconnectionstatechange = () => {
+                const status = document.getElementById('callStatus');
+                if(status) status.innerText = peerConnection.connectionState === 'connected' ? "Voice Connected" : peerConnection.connectionState;
+            };
 
             myBranchName = document.getElementById('branchIdentity').value;
             const callBase = `biotech_calls/${myBranchName}`;
             currentCallRef = ref(db, callBase);
 
-            // Send ICE Candidates
+            // Send Local Candidates
             peerConnection.onicecandidate = event => {
                 if (event.candidate) {
                     push(ref(db, `${callBase}/candidates`), {
@@ -396,17 +450,21 @@
                 }
             };
             
-            // Get Offer
+            // Get Offer & Send Answer
             onValue(ref(db, `${callBase}/offer`), async (snapshot) => {
                 const data = snapshot.val();
                 if (data && !peerConnection.currentRemoteDescription) {
                     const remoteDesc = new RTCSessionDescription(JSON.parse(data.sdp));
                     await peerConnection.setRemoteDescription(remoteDesc);
                     
+                    // Flush Queue
+                    while(candidateQueue.length > 0) {
+                        peerConnection.addIceCandidate(candidateQueue.shift()).catch(e => console.log(e));
+                    }
+                    
                     const answer = await peerConnection.createAnswer();
                     await peerConnection.setLocalDescription(answer);
                     
-                    // Send Answer
                     set(ref(db, `${callBase}/answer`), {
                         sdp: JSON.stringify(answer),
                         timestamp: serverTimestamp()
@@ -415,15 +473,19 @@
                     document.getElementById('incomingCallModal').classList.add('hidden');
                     document.getElementById('activeCallModal').classList.remove('hidden');
                     document.getElementById('activeCallTarget').innerText = data.caller;
-                    document.getElementById('callStatus').innerText = "Voice Connected";
                 }
             }, { onlyOnce: true });
 
-            // Listen for Remote Candidates
+            // Listen for Remote Candidates (QUEUEING IMPLEMENTED)
             onChildAdded(ref(db, `${callBase}/candidates`), (snapshot) => {
                 const data = snapshot.val();
                 if (data && data.sender !== myBranchName) {
-                    peerConnection.addIceCandidate(new RTCIceCandidate(JSON.parse(data.candidate)));
+                    const candidate = new RTCIceCandidate(JSON.parse(data.candidate));
+                    if (peerConnection.remoteDescription) {
+                        peerConnection.addIceCandidate(candidate).catch(e => console.log(e));
+                    } else {
+                        candidateQueue.push(candidate);
+                    }
                 }
             });
 
@@ -434,12 +496,22 @@
         };
 
         window.rejectCall = function() {
+            // Stop Ringtone
+            const ringAudio = document.getElementById('ringtone');
+            ringAudio.pause();
+            ringAudio.currentTime = 0;
+
             myBranchName = document.getElementById('branchIdentity').value;
             remove(ref(db, `biotech_calls/${myBranchName}`));
             document.getElementById('incomingCallModal').classList.add('hidden');
         };
 
         window.endCall = function() {
+            // Stop Ringtone
+            const ringAudio = document.getElementById('ringtone');
+            ringAudio.pause();
+            ringAudio.currentTime = 0;
+
             if (peerConnection) peerConnection.close();
             if (localStream) localStream.getTracks().forEach(track => track.stop());
             if (currentCallRef) remove(currentCallRef);
@@ -460,12 +532,59 @@
                 if (data) {
                     document.getElementById('callerName').innerText = data.caller;
                     document.getElementById('incomingCallModal').classList.remove('hidden');
-                    // Play a ring sound if desired
+                    
+                    // Play Ringtone
+                    const ringAudio = document.getElementById('ringtone');
+                    ringAudio.play().catch(e => console.log("Ring blocked:", e));
+
                 } else {
                     document.getElementById('incomingCallModal').classList.add('hidden');
+                    // Stop Ringtone
+                    const ringAudio = document.getElementById('ringtone');
+                    ringAudio.pause();
+                    ringAudio.currentTime = 0;
                 }
             });
         }
+
+        // --- TOGGLE MUTE ---
+        window.toggleMute = function() {
+            if(localStream) {
+                const audioTrack = localStream.getAudioTracks()[0];
+                isMuted = !isMuted;
+                audioTrack.enabled = !isMuted;
+                
+                const btn = document.getElementById('muteBtn');
+                const icon = document.getElementById('muteIcon');
+                if(isMuted) {
+                    icon.className = "fa-solid fa-microphone-slash text-xl text-red-400";
+                    btn.querySelector('div').classList.add('bg-gray-600');
+                } else {
+                    icon.className = "fa-solid fa-microphone text-xl";
+                    btn.querySelector('div').classList.remove('bg-gray-600');
+                }
+            }
+        };
+
+        // --- TOGGLE SPEAKER (Simulated) ---
+        window.toggleSpeaker = function() {
+            const audioEl = document.getElementById('remoteAudio');
+            isSpeaker = !isSpeaker;
+            
+            // Try to set Sink ID if supported (Chrome/Edge desktop feature mostly)
+            if (audioEl.setSinkId) {
+                // Just toggle between default and default for now as finding Speaker ID is complex
+                // This is mostly visual for mobile web unless OS allows it
+            }
+
+            const btn = document.getElementById('speakerBtn');
+            const icon = document.getElementById('speakerIcon');
+            if(isSpeaker) {
+                icon.className = "fa-solid fa-volume-high text-xl text-green-400";
+            } else {
+                icon.className = "fa-solid fa-ear-listen text-xl";
+            }
+        };
 
         // --- CHAT LOGIC ---
         let firstLoad = true;
@@ -596,6 +715,21 @@
             }
             const messages = Object.values(data);
             messages.forEach(msg => renderMessage(msg));
+            
+            const lastMsg = messages[messages.length - 1];
+            if (lastMsg.timestamp > lastMsgTimestamp) {
+                lastMsgTimestamp = lastMsg.timestamp;
+                const myBranch = document.getElementById('branchIdentity').value;
+                if (lastMsg.sender !== myBranch && Date.now() - lastMsg.timestamp < 10000) {
+                    // Play Message Sound
+                    const msgAudio = document.getElementById('msgSound');
+                    msgAudio.play().catch(e => console.log("Msg Sound blocked"));
+
+                    if (Notification.permission === "granted") {
+                        new Notification(`Biotech: ${lastMsg.sender}`, { body: "New Message" });
+                    }
+                }
+            }
             container.scrollTop = container.scrollHeight;
         });
 
