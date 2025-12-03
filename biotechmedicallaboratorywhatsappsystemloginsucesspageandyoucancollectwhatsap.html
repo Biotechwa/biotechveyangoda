@@ -52,6 +52,14 @@
             border-bottom-left-radius: 0; 
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
+
+        /* Call Bubble Styles */
+        .msg-call {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: white;
+            width: 100%;
+            max-width: 280px;
+        }
         
         .status-dot {
             height: 8px; width: 8px; background-color: #4ade80; border-radius: 50%; display: inline-block;
@@ -93,10 +101,10 @@
             </div>
             
             <div class="flex items-center gap-3">
-                <!-- Call Option -->
-                <a href="tel:+94767810623" class="text-teal-200 hover:text-white transition-colors" title="Call Admin">
-                    <i class="fa-solid fa-phone"></i>
-                </a>
+                <!-- Call Modal Trigger -->
+                <button onclick="toggleCallModal()" class="text-teal-200 hover:text-white transition-colors bg-teal-800/50 p-2 rounded-full hover:bg-teal-700" title="Call Center">
+                    <i class="fa-solid fa-phone-volume"></i>
+                </button>
                 <!-- Clear Chat Option -->
                 <button onclick="clearChat()" class="text-teal-200 hover:text-red-400 transition-colors" title="Clear Chat History">
                     <i class="fa-solid fa-trash-can"></i>
@@ -128,6 +136,59 @@
             <div class="flex flex-col items-center justify-center h-full text-gray-400 opacity-60">
                 <i class="fa-solid fa-circle-notch fa-spin text-2xl mb-2"></i>
                 <span class="text-xs">Connecting to Biotech Server...</span>
+            </div>
+        </div>
+
+        <!-- CALL CENTER MODAL -->
+        <div id="callModal" class="hidden absolute inset-0 bg-gray-900/90 z-40 backdrop-blur-sm flex flex-col animate-enter">
+            <div class="p-4 bg-gray-800 text-white flex justify-between items-center border-b border-gray-700">
+                <h3 class="font-bold"><i class="fa-solid fa-tower-broadcast text-teal-400"></i> Call Center</h3>
+                <button onclick="toggleCallModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-times"></i></button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-4 space-y-4">
+                <!-- Online Meeting Option -->
+                <div class="bg-gradient-to-r from-blue-600 to-blue-500 rounded-xl p-4 text-center shadow-lg">
+                    <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <i class="fa-solid fa-video text-2xl text-white"></i>
+                    </div>
+                    <h4 class="font-bold text-white mb-1">Online Group Meeting</h4>
+                    <p class="text-blue-100 text-xs mb-3">Start a free voice/video call with all branches instantly.</p>
+                    <button onclick="startGroupMeeting()" class="bg-white text-blue-600 font-bold py-2 px-6 rounded-full text-sm hover:bg-blue-50 transition shadow-md w-full">
+                        START MEETING
+                    </button>
+                </div>
+
+                <!-- Phone Directory -->
+                <div class="bg-white rounded-xl overflow-hidden shadow-md">
+                    <div class="p-3 bg-gray-100 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase">
+                        Phone Directory
+                    </div>
+                    <div class="divide-y divide-gray-100">
+                        <a href="tel:+94767810623" class="flex items-center justify-between p-4 hover:bg-gray-50 transition">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center"><i class="fa-solid fa-building"></i></div>
+                                <span class="text-sm font-bold text-gray-700">Head Office</span>
+                            </div>
+                            <i class="fa-solid fa-phone text-teal-500"></i>
+                        </a>
+                        <!-- TODO: Update these numbers -->
+                        <a href="tel:+94767810623" class="flex items-center justify-between p-4 hover:bg-gray-50 transition">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">VG</div>
+                                <span class="text-sm font-bold text-gray-700">Veyangoda</span>
+                            </div>
+                            <i class="fa-solid fa-phone text-gray-300 hover:text-teal-500"></i>
+                        </a>
+                        <a href="tel:+94767810623" class="flex items-center justify-between p-4 hover:bg-gray-50 transition">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center">NI</div>
+                                <span class="text-sm font-bold text-gray-700">Nittambuwa</span>
+                            </div>
+                            <i class="fa-solid fa-phone text-gray-300 hover:text-teal-500"></i>
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -300,6 +361,24 @@
                 document.getElementById('emojiPicker').classList.add('hidden');
             }
         };
+        
+        // --- START VIDEO MEETING (JITSI) ---
+        window.startGroupMeeting = function() {
+            const branch = document.getElementById('branchIdentity').value;
+            const meetingId = "BiotechLab_" + Date.now(); // Unique Room ID
+            const meetLink = "https://meet.jit.si/" + meetingId;
+            
+            push(chatRef, {
+                sender: branch,
+                text: "started a live meeting.",
+                link: meetLink,
+                type: 'call', // Special type
+                timestamp: serverTimestamp()
+            });
+            
+            toggleCallModal(); // Close modal
+            window.open(meetLink, '_blank'); // Join immediately
+        };
 
         // --- CLEAR CHAT LOGIC ---
         window.clearChat = function() {
@@ -328,27 +407,20 @@
                 reader.onload = function(e) {
                     const img = new Image();
                     img.onload = function() {
-                        // Compress Image using Canvas
                         const canvas = document.createElement('canvas');
                         let width = img.width;
                         let height = img.height;
-                        
-                        // Max width 800px to keep database fast
                         const MAX_WIDTH = 800;
                         if (width > MAX_WIDTH) {
                             height *= MAX_WIDTH / width;
                             width = MAX_WIDTH;
                         }
-
                         canvas.width = width;
                         canvas.height = height;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
-
-                        // Convert to Base64 (JPEG 60% quality)
                         const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
                         
-                        // Send to Firebase
                         const branch = document.getElementById('branchIdentity').value;
                         push(chatRef, {
                             sender: branch,
@@ -358,7 +430,7 @@
                         });
 
                         loader.classList.add('hidden');
-                        input.value = ''; // Reset input
+                        input.value = ''; 
                     };
                     img.src = e.target.result;
                 };
@@ -376,7 +448,6 @@
         // --- LISTEN FOR MESSAGES ---
         const recentMessagesQuery = query(chatRef, limitToLast(50));
         
-        // Use onValue instead of onChildAdded to easily handle "Clear Chat" (which returns null)
         onValue(recentMessagesQuery, (snapshot) => {
             if(firstLoad) {
                 container.innerHTML = "";
@@ -384,14 +455,13 @@
             }
 
             const data = snapshot.val();
-            container.innerHTML = ""; // Re-render logic to handle clearing
+            container.innerHTML = "";
 
             if (!data) {
                 container.innerHTML = `<div class="text-center text-gray-400 text-xs mt-10 italic">Chat history is empty.</div>`;
                 return;
             }
 
-            // Convert object to array and render
             Object.values(data).forEach(msg => renderMessage(msg));
             scrollToBottom();
         });
@@ -408,23 +478,52 @@
             }
 
             let contentHtml = "";
+            
             if (msg.type === 'image') {
                 contentHtml = `<img src="${msg.image}" class="rounded-lg max-w-full h-auto border-2 border-white/20 mt-1" alt="Shared Photo">`;
-            } else {
+            } 
+            else if (msg.type === 'call') {
+                // SPECIAL CALL BUBBLE
+                contentHtml = `
+                    <div class="bg-blue-600 text-white rounded-lg p-3 text-center shadow-md border-2 border-blue-400">
+                        <div class="font-bold text-sm mb-1"><i class="fa-solid fa-video animate-pulse"></i> LIVE MEETING</div>
+                        <p class="text-xs text-blue-100 mb-2">Click to join the call</p>
+                        <a href="${msg.link}" target="_blank" class="block w-full bg-white text-blue-600 font-bold py-1.5 px-4 rounded text-xs hover:bg-gray-100 transition">
+                            JOIN NOW
+                        </a>
+                    </div>
+                `;
+            }
+            else {
                 contentHtml = `<p class="leading-relaxed whitespace-pre-wrap">${msg.text || ''}</p>`;
             }
 
+            // If it's a call, we override the bubble style slightly
+            const finalBubbleClass = msg.type === 'call' ? '' : `max-w-[85%] rounded-2xl px-4 py-2 ${alignClass} text-sm relative group mb-1`;
+            const senderHeader = msg.type === 'call' ? 
+                `<div class="text-center text-[10px] font-bold text-gray-400 uppercase mb-1">${msg.sender} started a call</div>` : 
+                `<div class="flex justify-between items-end gap-3 mb-0.5"><span class="text-[10px] font-bold opacity-80 uppercase tracking-wider">${msg.sender}</span></div>`;
+
             const msgDiv = document.createElement('div');
             msgDiv.className = `flex flex-col ${alignContainer} animate-enter w-full`;
-            msgDiv.innerHTML = `
-                <div class="max-w-[85%] rounded-2xl px-4 py-2 ${alignClass} text-sm relative group mb-1">
-                    <div class="flex justify-between items-end gap-3 mb-0.5">
-                        <span class="text-[10px] font-bold opacity-80 uppercase tracking-wider">${msg.sender}</span>
+            
+            if (msg.type === 'call') {
+                 msgDiv.innerHTML = `
+                    <div class="w-full max-w-[280px] mb-2 mx-auto">
+                        ${senderHeader}
+                        ${contentHtml}
+                        <span class="text-[9px] text-gray-400 block text-center mt-1">${timeStr}</span>
                     </div>
-                    ${contentHtml}
-                    <span class="text-[9px] opacity-60 block text-right mt-1">${timeStr}</span>
-                </div>
-            `;
+                `;
+            } else {
+                msgDiv.innerHTML = `
+                    <div class="${finalBubbleClass}">
+                        ${senderHeader}
+                        ${contentHtml}
+                        <span class="text-[9px] opacity-60 block text-right mt-1">${timeStr}</span>
+                    </div>
+                `;
+            }
 
             container.appendChild(msgDiv);
         }
@@ -436,7 +535,6 @@
         window.updateIdentity = function() {
             const selected = document.getElementById('branchIdentity').value;
             localStorage.setItem("biotechBranch", selected);
-            // Re-render handled by onValue update
             location.reload(); 
         }
 
@@ -447,10 +545,15 @@
         }
     </script>
 
-    <!-- STANDARD JAVASCRIPT FOR REPORT GENERATOR & EMOJIS -->
+    <!-- STANDARD JAVASCRIPT FOR REPORT GENERATOR & EMOJIS & UI -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js"></script>
     <script>
+        // --- CALL UI FUNCTIONS ---
+        window.toggleCallModal = function() {
+            document.getElementById('callModal').classList.toggle('hidden');
+        }
+
         // --- EMOJI LOGIC ---
         const emojis = ["👍", "👋", "🧪", "✅", "❌", "😊", "😂", "🩸", "🦠", "🔬", "🏥", "🚑", "💊", "🧾", "💵", "❗", "❓", "📞"];
         
@@ -468,8 +571,6 @@
             const input = document.getElementById('chatMsg');
             input.value += emoji;
             input.focus();
-            // Optional: close picker after selection
-            // document.getElementById('emojiPicker').classList.add('hidden');
         }
 
         // --- UI FUNCTIONS ---
