@@ -64,13 +64,13 @@
                 <p class="text-gray-500 font-medium">Securely fetching details...</p>
             </div>
 
-            <div id="errorCard" class="hidden text-center py-6">
-                <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="fa-solid fa-link-slash text-red-500 text-2xl"></i>
+            <div id="errorCard" class="hidden text-center py-6 animate-fade-in-up">
+                <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-100">
+                    <i class="fa-solid fa-hourglass-end text-red-500 text-2xl"></i>
                 </div>
                 <h3 class="text-gray-800 font-bold text-lg mb-2">Link Expired or Invalid</h3>
-                <p class="text-gray-500 text-sm mb-6">We couldn't find a report associated with this link.</p>
-                <a href="https://wa.me/94773524143" class="inline-flex items-center text-teal-600 font-semibold hover:underline">
+                <p class="text-gray-500 text-sm mb-6 px-4">This secure link was valid for 2 weeks and has now expired. Please contact the lab.</p>
+                <a href="https://wa.me/94767810623" class="inline-flex items-center text-teal-600 font-semibold hover:underline bg-teal-50 px-4 py-2 rounded-lg border border-teal-100">
                     Contact Support <i class="fa-solid fa-arrow-right ml-2"></i>
                 </a>
             </div>
@@ -116,9 +116,9 @@
             <div class="flex flex-col items-center justify-center text-center">
                 <p class="text-gray-500 text-sm mb-3">Having trouble opening the report?</p>
                 
-                <a href="https://wa.me/94773524143" target="_blank" class="flex items-center gap-2 bg-white border border-green-500 text-green-600 px-5 py-2 rounded-full font-medium hover:bg-green-50 transition-colors shadow-sm w-full justify-center">
+                <a href="https://wa.me/94767810623" target="_blank" class="flex items-center gap-2 bg-white border border-green-500 text-green-600 px-5 py-2 rounded-full font-medium hover:bg-green-50 transition-colors shadow-sm w-full justify-center">
                     <i class="fa-brands fa-whatsapp text-xl"></i>
-                    <span>Chat on WhatsApp: <strong></strong></span>
+                    <span>Chat on WhatsApp</span>
                 </a>
             </div>
             <p class="text-center text-gray-300 text-[10px] mt-4 uppercase tracking-widest">Powered by Biotech</p>
@@ -161,7 +161,24 @@
 
                     // 1. Decode Logic
                     const decodedString = atob(encodedData);
-                    const [patientId, date] = decodedString.split('|');
+                    
+                    // We now split into 3 parts: ID | Date | ExpiryTimestamp
+                    const parts = decodedString.split('|');
+                    
+                    const patientId = parts[0];
+                    const date = parts[1];
+                    const expiryTime = parts[2] ? parseInt(parts[2]) : null;
+
+                    // --- NEW: EXPIRATION CHECK ---
+                    if (expiryTime) {
+                        const now = new Date().getTime();
+                        // If current time is greater than expiry time, THROW ERROR
+                        if (now > expiryTime) {
+                            console.error("Link Expired");
+                            throw new Error("Expired");
+                        }
+                    }
+                    // -----------------------------
 
                     if (patientId && date) {
                         // 2. Set UI Elements
@@ -169,7 +186,6 @@
                         dateDisplay.textContent = date;
                         
                         // 3. Construct the Specific URL format
-                        // Format: https://amlws.appexsl.com/report/7/{ID}/{Date}
                         const finalLink = `https://amlws.appexsl.com/report/7/${patientId}/${date}`;
                         downloadBtn.href = finalLink;
 
