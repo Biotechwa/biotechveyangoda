@@ -59,6 +59,22 @@
             animation: pulse 2s infinite;
         }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        /* Emoji Picker Grid */
+        .emoji-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 5px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        .emoji-btn {
+            font-size: 1.2rem;
+            padding: 4px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .emoji-btn:hover { background-color: #f0fdf4; }
     </style>
 </head>
 <body class="h-screen flex overflow-hidden">
@@ -75,10 +91,21 @@
                     <span class="status-dot mr-1"></span> Live Connection
                 </div>
             </div>
-            <!-- Close button for mobile -->
-            <button onclick="toggleMobileChat()" class="md:hidden text-gray-300 hover:text-white">
-                <i class="fa-solid fa-times text-xl"></i>
-            </button>
+            
+            <div class="flex items-center gap-3">
+                <!-- Call Option -->
+                <a href="tel:+94767810623" class="text-teal-200 hover:text-white transition-colors" title="Call Admin">
+                    <i class="fa-solid fa-phone"></i>
+                </a>
+                <!-- Clear Chat Option -->
+                <button onclick="clearChat()" class="text-teal-200 hover:text-red-400 transition-colors" title="Clear Chat History">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+                <!-- Close button for mobile -->
+                <button onclick="toggleMobileChat()" class="md:hidden text-gray-300 hover:text-white">
+                    <i class="fa-solid fa-times text-xl"></i>
+                </button>
+            </div>
         </div>
         
         <!-- Branch Identity Selector -->
@@ -104,11 +131,35 @@
             </div>
         </div>
 
+        <!-- Emoji Picker Popover -->
+        <div id="emojiPicker" class="hidden absolute bottom-20 left-4 right-4 bg-white shadow-xl border border-gray-200 rounded-lg p-2 z-30">
+            <div class="emoji-grid" id="emojiGrid">
+                <!-- Emojis injected via JS -->
+            </div>
+        </div>
+
         <!-- Input Area -->
-        <div class="p-3 bg-white border-t border-gray-200">
+        <div class="p-3 bg-white border-t border-gray-200 relative">
+            <!-- Loading Overlay for Images -->
+            <div id="uploadLoader" class="hidden absolute inset-0 bg-white/80 z-40 flex items-center justify-center">
+                <span class="text-xs text-teal-600 font-bold animate-pulse">Compressing Image...</span>
+            </div>
+
             <div class="flex gap-2 items-end">
+                <!-- Hidden File Input -->
+                <input type="file" id="imageInput" accept="image/*" class="hidden" onchange="handleImageUpload(this)">
+                
+                <button onclick="document.getElementById('imageInput').click()" class="text-gray-400 hover:text-teal-600 p-2 transition-colors" title="Send Photo">
+                    <i class="fa-solid fa-paperclip text-lg"></i>
+                </button>
+                
+                <button onclick="toggleEmoji()" class="text-gray-400 hover:text-yellow-500 p-2 transition-colors" title="Emojis">
+                    <i class="fa-regular fa-face-smile text-lg"></i>
+                </button>
+
                 <textarea id="chatMsg" rows="1" placeholder="Type a message..." class="flex-1 bg-gray-100 text-sm p-3 rounded-2xl border-0 focus:ring-2 focus:ring-teal-500 outline-none resize-none max-h-24" onkeypress="handleEnter(event)"></textarea>
-                <button onclick="sendRealtimeMessage()" class="bg-teal-600 hover:bg-teal-700 text-white w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-md hover:scale-105 active:scale-95">
+                
+                <button onclick="sendRealtimeMessage()" class="bg-teal-600 hover:bg-teal-700 text-white w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-md hover:scale-105 active:scale-95 shrink-0">
                     <i class="fa-solid fa-paper-plane text-sm pl-0.5"></i>
                 </button>
             </div>
@@ -211,12 +262,11 @@
 
     <!-- FIREBASE INTEGRATION -->
     <script type="module">
-        // 1. Import Firebase App and Database SDKs
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-        import { getDatabase, ref, push, onChildAdded, serverTimestamp, query, limitToLast } 
+        import { getDatabase, ref, push, set, onValue, serverTimestamp, query, limitToLast } 
         from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
 
-        // 2. YOUR CONFIGURATION (Inserted from your request)
+        // CONFIGURATION
         const firebaseConfig = {
             apiKey: "AIzaSyCPYqMnRIapygJqaKe6JZpitF3E5fq8jIs",
             authDomain: "biotechchat-c0a38.firebaseapp.com",
@@ -226,18 +276,14 @@
             appId: "1:1081724102554:web:16b0c1ee763148b4a63c23"
         };
 
-        // 3. Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        
-        // 4. Chat Logic
         const chatRef = ref(db, 'biotech_messages');
         const container = document.getElementById('chatContainer');
         
-        // Remove "Connecting..." message on first load
         let firstLoad = true;
 
-        // Function to Send Message
+        // --- SEND TEXT MESSAGE ---
         window.sendRealtimeMessage = function() {
             const input = document.getElementById('chatMsg');
             const text = input.value.trim();
@@ -247,13 +293,79 @@
                 push(chatRef, {
                     sender: branch,
                     text: text,
+                    type: 'text',
                     timestamp: serverTimestamp()
                 });
-                input.value = ""; // Clear input
+                input.value = "";
+                document.getElementById('emojiPicker').classList.add('hidden');
             }
         };
 
-        // Handle Enter Key
+        // --- CLEAR CHAT LOGIC ---
+        window.clearChat = function() {
+            const pw = prompt("Enter Administrator Password to CLEAR ALL HISTORY:");
+            if (pw === "12987654321") {
+                if(confirm("Are you sure? This will delete all messages for ALL branches permanently.")) {
+                    set(chatRef, null).then(() => {
+                        alert("Chat history cleared.");
+                    }).catch((error) => {
+                        alert("Error: " + error.message);
+                    });
+                }
+            } else if (pw !== null) {
+                alert("Incorrect Password!");
+            }
+        }
+
+        // --- HANDLE IMAGE UPLOAD (COMPRESSION) ---
+        window.handleImageUpload = function(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                const loader = document.getElementById('uploadLoader');
+                loader.classList.remove('hidden');
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        // Compress Image using Canvas
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+                        
+                        // Max width 800px to keep database fast
+                        const MAX_WIDTH = 800;
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        // Convert to Base64 (JPEG 60% quality)
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+                        
+                        // Send to Firebase
+                        const branch = document.getElementById('branchIdentity').value;
+                        push(chatRef, {
+                            sender: branch,
+                            image: dataUrl,
+                            type: 'image',
+                            timestamp: serverTimestamp()
+                        });
+
+                        loader.classList.add('hidden');
+                        input.value = ''; // Reset input
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
         window.handleEnter = function(e) {
             if(e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -261,59 +373,70 @@
             }
         }
 
-        // Listen for Incoming Messages
+        // --- LISTEN FOR MESSAGES ---
         const recentMessagesQuery = query(chatRef, limitToLast(50));
         
-        onChildAdded(recentMessagesQuery, (snapshot) => {
+        // Use onValue instead of onChildAdded to easily handle "Clear Chat" (which returns null)
+        onValue(recentMessagesQuery, (snapshot) => {
             if(firstLoad) {
-                container.innerHTML = ""; // Clear loading spinner
+                container.innerHTML = "";
                 firstLoad = false;
             }
 
             const data = snapshot.val();
-            const myBranch = document.getElementById('branchIdentity').value;
-            renderMessage(data);
+            container.innerHTML = ""; // Re-render logic to handle clearing
+
+            if (!data) {
+                container.innerHTML = `<div class="text-center text-gray-400 text-xs mt-10 italic">Chat history is empty.</div>`;
+                return;
+            }
+
+            // Convert object to array and render
+            Object.values(data).forEach(msg => renderMessage(msg));
+            scrollToBottom();
         });
 
-        // Render Message to UI
         function renderMessage(msg) {
             const myCurrentBranch = document.getElementById('branchIdentity').value;
             const isMe = msg.sender === myCurrentBranch;
             const alignClass = isMe ? 'msg-sent' : 'msg-received';
             const alignContainer = isMe ? 'items-end' : 'items-start';
             
-            // Format Time
             let timeStr = "...";
             if(msg.timestamp) {
                 timeStr = new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             }
 
-            // Create HTML
+            let contentHtml = "";
+            if (msg.type === 'image') {
+                contentHtml = `<img src="${msg.image}" class="rounded-lg max-w-full h-auto border-2 border-white/20 mt-1" alt="Shared Photo">`;
+            } else {
+                contentHtml = `<p class="leading-relaxed whitespace-pre-wrap">${msg.text || ''}</p>`;
+            }
+
             const msgDiv = document.createElement('div');
             msgDiv.className = `flex flex-col ${alignContainer} animate-enter w-full`;
             msgDiv.innerHTML = `
-                <div class="max-w-[85%] rounded-2xl px-4 py-2 ${alignClass} text-sm relative group">
+                <div class="max-w-[85%] rounded-2xl px-4 py-2 ${alignClass} text-sm relative group mb-1">
                     <div class="flex justify-between items-end gap-3 mb-0.5">
                         <span class="text-[10px] font-bold opacity-80 uppercase tracking-wider">${msg.sender}</span>
                     </div>
-                    <p class="leading-relaxed whitespace-pre-wrap">${msg.text}</p>
+                    ${contentHtml}
                     <span class="text-[9px] opacity-60 block text-right mt-1">${timeStr}</span>
                 </div>
             `;
 
             container.appendChild(msgDiv);
-            scrollToBottom();
         }
 
         function scrollToBottom() {
             container.scrollTop = container.scrollHeight;
         }
 
-        // Update view if user changes their own branch
         window.updateIdentity = function() {
             const selected = document.getElementById('branchIdentity').value;
             localStorage.setItem("biotechBranch", selected);
-            // Reload page to re-align "My" messages vs "Received" messages
+            // Re-render handled by onValue update
             location.reload(); 
         }
 
@@ -322,20 +445,40 @@
         if(savedBranch) {
             document.getElementById('branchIdentity').value = savedBranch;
         }
-
     </script>
 
-    <!-- STANDARD JAVASCRIPT FOR REPORT GENERATOR -->
+    <!-- STANDARD JAVASCRIPT FOR REPORT GENERATOR & EMOJIS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js"></script>
     <script>
+        // --- EMOJI LOGIC ---
+        const emojis = ["👍", "👋", "🧪", "✅", "❌", "😊", "😂", "🩸", "🦠", "🔬", "🏥", "🚑", "💊", "🧾", "💵", "❗", "❓", "📞"];
+        
+        function initEmojiPicker() {
+            const grid = document.getElementById('emojiGrid');
+            grid.innerHTML = emojis.map(e => `<div class="emoji-btn" onclick="insertEmoji('${e}')">${e}</div>`).join('');
+        }
+
+        window.toggleEmoji = function() {
+            const picker = document.getElementById('emojiPicker');
+            picker.classList.toggle('hidden');
+        }
+
+        window.insertEmoji = function(emoji) {
+            const input = document.getElementById('chatMsg');
+            input.value += emoji;
+            input.focus();
+            // Optional: close picker after selection
+            // document.getElementById('emojiPicker').classList.add('hidden');
+        }
+
         // --- UI FUNCTIONS ---
         function toggleMobileChat() {
             const sidebar = document.getElementById('chatSidebar');
             if (sidebar.classList.contains('-translate-x-full')) {
-                sidebar.classList.remove('-translate-x-full'); // Show
+                sidebar.classList.remove('-translate-x-full');
             } else {
-                sidebar.classList.add('-translate-x-full'); // Hide
+                sidebar.classList.add('-translate-x-full');
             }
         }
 
@@ -344,6 +487,8 @@
         let finalRawNumber = "";
 
         document.addEventListener("DOMContentLoaded", function() {
+            initEmojiPicker(); // Init Emojis
+
             document.getElementById('date').valueAsDate = new Date();
             const phoneInput = document.getElementById("phoneNum");
             
@@ -384,10 +529,8 @@
                 sendBtn.classList.remove('opacity-50', 'cursor-not-allowed');
                 
                 const patientId = `${vgSelection}${vgNum}`;
-                // Expiry: 14 days
                 const expiry = new Date().getTime() + (14 * 24 * 60 * 60 * 1000);
                 
-                // Encode Data
                 const originalData = `${patientId}|${date}|${expiry}`;
                 const encodedData = btoa(originalData);
                 const link = `https://biotechveyangoda.lk/report-preview.html?data=${encodedData}`;
