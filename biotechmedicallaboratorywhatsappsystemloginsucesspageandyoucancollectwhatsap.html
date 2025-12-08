@@ -605,6 +605,7 @@
         let currentCallRef = null;
         let myBranchName = "";
         let candidateQueue = [];
+        window.disconnectTimer = null; // Store timer globally
 
         // 1. INITIATE CALL
         window.initiateCall = async function(targetBranch) {
@@ -624,17 +625,31 @@
                 audioEl.play().catch(e => console.log("Autoplay blocked:", e));
             };
             
-            peerConnection.onconnectionstatechange = () => {
-                const status = document.getElementById('callStatusText');
-                if(status) {
-                    if(peerConnection.connectionState === 'connected') {
-                        status.innerText = "Voice Connected";
-                        status.className = "text-[10px] font-bold text-green-600 uppercase mb-1";
+            // Connection Monitoring with Auto-Disconnect
+            peerConnection.oniceconnectionstatechange = () => {
+                const state = peerConnection.iceConnectionState;
+                const statusEl = document.getElementById('callStatusText');
+                
+                if (state === 'disconnected' || state === 'failed') {
+                    if(statusEl) {
+                        statusEl.innerText = "Reconnecting...";
+                        statusEl.classList.remove('text-green-600');
+                        statusEl.classList.add('text-red-500', 'animate-pulse');
+                    }
+                    
+                    if(window.disconnectTimer) clearTimeout(window.disconnectTimer);
+                    window.disconnectTimer = setTimeout(() => {
+                        window.endCall();
+                    }, 5000); 
+                } else if (state === 'connected') {
+                    if(statusEl) {
+                        statusEl.innerText = "Voice Connected";
+                        statusEl.classList.remove('text-red-500', 'animate-pulse');
+                        statusEl.classList.add('text-green-600');
                         window.startTimer();
                         document.getElementById('ringtone').pause();
-                    } else {
-                        status.innerText = peerConnection.connectionState;
                     }
+                    if(window.disconnectTimer) clearTimeout(window.disconnectTimer);
                 }
             };
 
@@ -734,14 +749,30 @@
                 audioEl.play().catch(e => console.log("Autoplay blocked:", e));
             };
             
-            peerConnection.onconnectionstatechange = () => {
-                const status = document.getElementById('callStatusText');
-                if(status) {
-                    if(peerConnection.connectionState === 'connected') {
-                         status.innerText = "Voice Connected";
-                         status.className = "text-[10px] font-bold text-green-600 uppercase mb-1";
-                         window.startTimer();
+            // Connection Monitoring with Auto-Disconnect
+            peerConnection.oniceconnectionstatechange = () => {
+                const state = peerConnection.iceConnectionState;
+                const statusEl = document.getElementById('callStatusText');
+                
+                if (state === 'disconnected' || state === 'failed') {
+                    if(statusEl) {
+                        statusEl.innerText = "Reconnecting...";
+                        statusEl.classList.remove('text-green-600');
+                        statusEl.classList.add('text-red-500', 'animate-pulse');
                     }
+                    
+                    if(window.disconnectTimer) clearTimeout(window.disconnectTimer);
+                    window.disconnectTimer = setTimeout(() => {
+                        window.endCall();
+                    }, 5000); 
+                } else if (state === 'connected') {
+                    if(statusEl) {
+                        statusEl.innerText = "Voice Connected";
+                        statusEl.classList.remove('text-red-500', 'animate-pulse');
+                        statusEl.classList.add('text-green-600');
+                        window.startTimer();
+                    }
+                    if(window.disconnectTimer) clearTimeout(window.disconnectTimer);
                 }
             };
 
@@ -808,6 +839,9 @@
 
         // 5. END CALL (CLEANUP)
         window.endCall = function() {
+            // Clear failsafe timer
+            if(window.disconnectTimer) clearTimeout(window.disconnectTimer);
+
             document.getElementById('ringtone').pause();
             document.getElementById('ringtone').currentTime = 0;
 
