@@ -15,15 +15,14 @@
         
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #f0f9ff; /* Matches Report Portal */
-            /* Exact Gradient from Report Portal */
+            background-color: #f0f9ff;
             background-image: 
                 radial-gradient(at 0% 0%, rgba(20, 184, 166, 0.15) 0px, transparent 50%),
                 radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.15) 0px, transparent 50%);
             background-size: cover;
             background-attachment: fixed;
             color: #334155; 
-            overflow: hidden; /* Lock scroll */
+            overflow: hidden;
         }
 
         /* --- UI UTILITIES --- */
@@ -53,9 +52,40 @@
             background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
         }
 
+        .history-item {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .history-item:hover {
+            transform: translateX(4px);
+            border-color: #99f6e4; /* teal-200 */
+            background-color: #f0fdfa; /* teal-50 */
+        }
+        .history-item:active {
+            transform: scale(0.98) translateX(4px);
+        }
+
+        /* --- CALL ANIMATIONS --- */
+        .pulse-ring {
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            animation: pulse-green 2s infinite;
+        }
+        @keyframes pulse-green {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        .ringing-icon { animation: ring 1s infinite ease-in-out; }
+        @keyframes ring { 0% { transform: rotate(0); } 10% { transform: rotate(10deg); } 20% { transform: rotate(-10deg); } 30% { transform: rotate(10deg); } 40% { transform: rotate(-10deg); } 100% { transform: rotate(0); } }
+
+
         /* --- ANIMATIONS --- */
         .fade-in { animation: fadeIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards; opacity: 0; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } }
 
         /* --- STATIC PHONE MOCKUP (Scaled to Fit) --- */
         .phone-wrapper {
@@ -107,6 +137,7 @@
             display: flex; align-items: center; gap: 10px;
             border-bottom: 1px solid rgba(0,0,0,0.05);
             box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+            cursor: default;
         }
         .wa-bubble {
             background: #d9fdd3;
@@ -143,7 +174,13 @@
 </head>
 <body class="flex h-screen w-full">
 
-    <!-- LEFT SIDEBAR (History) -->
+    <!-- AUDIO: Ringtone & Remote Stream -->
+    <audio id="ringtone" loop>
+        <source src="https://assets.mixkit.co/active_storage/sfx/1359/1359-preview.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="remoteAudio" autoplay playsinline class="hidden"></audio>
+
+    <!-- LEFT SIDEBAR (History & Voice) -->
     <aside class="w-80 h-full bg-white border-r border-slate-100 flex flex-col z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)] shrink-0 transform transition-transform duration-300 md:translate-x-0 -translate-x-full fixed md:relative" id="sidebar">
         <!-- Logo Area -->
         <div class="p-8 border-b border-slate-50">
@@ -157,6 +194,90 @@
                         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                         <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Online</span>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VOICE CALL SYSTEM -->
+        <div class="px-6 py-4 bg-slate-50/50 border-b border-slate-100">
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Live Voice Link</h3>
+                <div class="w-2 h-2 rounded-full bg-teal-400"></div>
+            </div>
+            
+            <!-- Connection State: Idle -->
+            <div id="voiceIdleState" class="space-y-3">
+                
+                <!-- My Identity (Setup Phase) -->
+                <div id="setupPhase">
+                    <label class="text-[9px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Set My Location</label>
+                    <select id="myIdentity" onchange="updateIdentity()" class="w-full bg-white border border-slate-200 text-teal-700 text-[10px] font-bold rounded-lg p-1.5 outline-none focus:border-teal-400 transition-colors cursor-pointer shadow-sm">
+                        <option value="" disabled selected>Select...</option>
+                        <option value="HEAD OFFICE">Head Office</option>
+                        <option value="VEYANGODA">Veyangoda</option>
+                        <option value="Naiwala">Naiwala</option>
+                        <option value="BANDARANAYAKE">Bandaranayake</option>
+                        <option value="BANDURAGODA">Banduragoda</option>
+                        <option value="ADMIN">Admin</option>
+                    </select>
+                </div>
+
+                <!-- Call Buttons (Active Phase) -->
+                <div id="callPhase" class="hidden">
+                    <label class="text-[9px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Quick Call</label>
+                    <div class="grid grid-cols-6 gap-1">
+                        
+                        <button onclick="startCall('BANDARANAYAKE')" class="relative aspect-square rounded-md bg-white border border-slate-200 hover:bg-teal-50 hover:border-teal-200 hover:text-teal-700 text-[10px] font-bold text-slate-600 transition-all shadow-sm flex items-center justify-center group" title="Bandaranayake">
+                            BN
+                            <span id="dot-BANDARANAYAKE" class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-400 border border-white"></span>
+                        </button>
+                        
+                        <button onclick="startCall('VEYANGODA')" class="relative aspect-square rounded-md bg-white border border-slate-200 hover:bg-teal-50 hover:border-teal-200 hover:text-teal-700 text-[10px] font-bold text-slate-600 transition-all shadow-sm flex items-center justify-center group" title="Veyangoda">
+                            VG
+                            <span id="dot-VEYANGODA" class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-400 border border-white"></span>
+                        </button>
+                        
+                        <button onclick="startCall('BANDURAGODA')" class="relative aspect-square rounded-md bg-white border border-slate-200 hover:bg-teal-50 hover:border-teal-200 hover:text-teal-700 text-[10px] font-bold text-slate-600 transition-all shadow-sm flex items-center justify-center group" title="Banduragoda">
+                            BR
+                            <span id="dot-BANDURAGODA" class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-400 border border-white"></span>
+                        </button>
+                        
+                        <button onclick="startCall('Naiwala')" class="relative aspect-square rounded-md bg-white border border-slate-200 hover:bg-teal-50 hover:border-teal-200 hover:text-teal-700 text-[10px] font-bold text-slate-600 transition-all shadow-sm flex items-center justify-center group" title="Naiwala">
+                            NI
+                            <span id="dot-Naiwala" class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-400 border border-white"></span>
+                        </button>
+                        
+                        <button onclick="startCall('HEAD OFFICE')" class="relative aspect-square rounded-md bg-white border border-slate-200 hover:bg-teal-50 hover:border-teal-200 hover:text-teal-700 text-[10px] font-bold text-slate-600 transition-all shadow-sm flex items-center justify-center group" title="Head Office">
+                            HO
+                            <span id="dot-HEAD_OFFICE" class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-400 border border-white"></span>
+                        </button>
+                        
+                        <button onclick="startCall('ADMIN')" class="relative aspect-square rounded-md bg-slate-100 border border-slate-300 hover:bg-slate-200 text-[10px] font-bold text-slate-700 transition-all shadow-sm flex items-center justify-center group" title="Admin">
+                            AD
+                            <span id="dot-ADMIN" class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-400 border border-white"></span>
+                        </button>
+
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Connection State: Active -->
+            <div id="voiceActiveState" class="hidden mt-2">
+                <div class="bg-white border border-teal-100 rounded-xl p-3 shadow-sm text-center mb-2 relative overflow-hidden">
+                    <div class="absolute inset-0 bg-teal-50 opacity-50 pulse-ring"></div>
+                    <div class="relative z-10">
+                        <div class="text-[10px] font-bold text-teal-600 uppercase mb-1" id="callStatusText">Calling...</div>
+                        <div class="text-xs font-extrabold text-slate-700" id="callTimer">00:00</div>
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="toggleMute()" id="muteBtn" class="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg transition-colors border border-slate-200">
+                        <i class="fa-solid fa-microphone"></i>
+                    </button>
+                    <button onclick="endCall()" class="flex-1 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-lg transition-colors shadow-sm">
+                        <i class="fa-solid fa-phone-slash"></i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -188,6 +309,29 @@
         <i class="fa-solid fa-bars"></i>
     </button>
 
+    <!-- INCOMING CALL MODAL (Hidden by default) -->
+    <div id="incomingCallModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm fade-in">
+        <div class="bg-white rounded-3xl shadow-2xl p-8 w-80 text-center border-4 border-white relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-teal-400 to-blue-500"></div>
+            
+            <div class="w-20 h-20 bg-teal-50 rounded-full flex items-center justify-center mx-auto mb-4 ringing-icon shadow-lg border border-teal-100">
+                <i class="fa-solid fa-phone text-3xl text-teal-500"></i>
+            </div>
+            
+            <h3 class="text-slate-800 font-extrabold text-lg mb-1">Incoming Call</h3>
+            <p class="text-slate-500 text-xs font-medium mb-8">From: <span id="callerName" class="text-teal-600 font-bold">Unknown</span></p>
+            
+            <div class="flex justify-center gap-4">
+                <button onclick="rejectCall()" class="w-12 h-12 rounded-full bg-rose-100 text-rose-500 hover:bg-rose-500 hover:text-white transition flex items-center justify-center shadow-sm">
+                    <i class="fa-solid fa-phone-slash"></i>
+                </button>
+                <button onclick="answerCall()" class="w-12 h-12 rounded-full bg-green-500 text-white hover:bg-green-600 transition flex items-center justify-center shadow-lg animate-bounce">
+                    <i class="fa-solid fa-phone"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- MAIN CONTENT -->
     <main class="flex-1 h-full relative flex items-center justify-center p-4 lg:p-6 overflow-hidden">
         
@@ -195,7 +339,6 @@
             
             <!-- LEFT: FORM SECTION -->
             <div class="w-full lg:w-1/2 p-10 lg:p-14 flex flex-col justify-center bg-white/50 relative">
-                
                 <!-- Background decoration -->
                 <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-teal-400 via-blue-500 to-indigo-500"></div>
 
@@ -261,6 +404,11 @@
                     <h3 class="text-xs font-extrabold text-slate-300 uppercase tracking-[0.2em]">Client Preview</h3>
                 </div>
 
+                <!-- HISTORY OVERLAY INDICATOR -->
+                <div id="historyIndicator" class="hidden absolute top-16 z-30 bg-amber-100 text-amber-700 border border-amber-200 px-3 py-1 rounded-full text-[10px] font-bold shadow-sm animate-bounce">
+                    <i class="fa-solid fa-clock-rotate-left mr-1"></i> Viewing History Record
+                </div>
+
                 <!-- PHONE WRAPPER FOR SCALING -->
                 <div class="phone-wrapper">
                     <div class="phone-mockup">
@@ -269,10 +417,16 @@
                             
                             <!-- WA Header -->
                             <div class="wa-header">
-                                <div class="w-8 h-8 rounded-full bg-teal-600 flex items-center justify-center text-white text-[10px] font-bold">BL</div>
+                                <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 text-[10px] font-bold">
+                                    <i class="fa-solid fa-user"></i>
+                                </div>
                                 <div class="flex-1">
-                                    <div class="text-[14px] font-bold text-black">Biotech Lab <i class="fa-solid fa-certificate text-teal-500 text-[10px] ml-1"></i></div>
-                                    <div class="text-[11px] text-gray-500">Business Account</div>
+                                    <div class="text-[14px] font-bold text-black" id="headerContactName">Biotech Lab <i class="fa-solid fa-certificate text-teal-500 text-[10px] ml-1"></i></div>
+                                    <div class="text-[10px] text-gray-500">online</div>
+                                </div>
+                                <div class="flex gap-4 text-teal-600 text-lg pr-2">
+                                    <i class="fa-solid fa-video"></i>
+                                    <i class="fa-solid fa-phone"></i>
                                 </div>
                             </div>
 
@@ -327,12 +481,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js"></script>
 
-    <!-- FIREBASE MODULE -->
+    <!-- FIREBASE MODULES -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-        import { getDatabase, ref, push, set, onValue } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
+        import { getDatabase, ref, push, set, onValue, serverTimestamp, query, limitToLast, remove, onChildAdded, onDisconnect } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
         
-        const firebaseConfig = {
+        // --- 1. HISTORY APP CONFIG ---
+        const historyConfig = {
             apiKey: "AIzaSyCmIFVSvMOVDk0uqtfHUU6GM_Gx4lv1TZA",
             authDomain: "whatsappp-4f74e.firebaseapp.com",
             databaseURL: "https://whatsappp-4f74e-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -343,13 +498,29 @@
             measurementId: "G-JSHJS2B2E7"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const historyRef = ref(db, 'history'); 
+        // --- 2. VOICE APP CONFIG ---
+        const voiceConfig = {
+            apiKey: "AIzaSyCPYqMnRIapygJqaKe6JZpitF3E5fq8jIs",
+            authDomain: "biotechchat-c0a38.firebaseapp.com",
+            projectId: "biotechchat-c0a38",
+            storageBucket: "biotechchat-c0a38.firebasestorage.app",
+            messagingSenderId: "1081724102554",
+            appId: "1:1081724102554:web:16b0c1ee763148b4a63c23"
+        };
 
+        // Initialize both apps
+        const historyApp = initializeApp(historyConfig, "historyApp");
+        const voiceApp = initializeApp(voiceConfig, "voiceApp");
+
+        const historyDb = getDatabase(historyApp);
+        const voiceDb = getDatabase(voiceApp);
+
+        // --- HISTORY LOGIC ---
+        const historyRef = ref(historyDb, 'history'); 
         window.firebasePush = push;
         window.firebaseSet = set;
         window.historyPath = historyRef;
+        window.historyData = [];
 
         onValue(historyRef, (snapshot) => {
             const data = snapshot.val();
@@ -357,30 +528,31 @@
             const badge = document.getElementById("countBadge");
             
             if (!data) {
-                listContainer.innerHTML = `
-                    <div class="text-center py-8">
-                        <div class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-slate-50 text-slate-300 mb-3 border border-slate-100">
-                            <i class="fa-regular fa-folder-open text-lg"></i>
-                        </div>
-                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wide">No records found</p>
-                    </div>`;
+                listContainer.innerHTML = `<div class="text-center py-8 text-slate-300 text-xs">No records</div>`;
                 badge.innerText = "0";
+                window.historyData = [];
                 return;
             }
 
             const itemsArray = Object.entries(data).map(([key, value]) => value).reverse();
+            window.historyData = itemsArray;
             badge.innerText = itemsArray.length;
             
             const html = itemsArray.slice(0, 50).map((item, index) => `
-                <div style="animation: fadeIn 0.3s ease forwards; animation-delay: ${index * 0.05}s; opacity: 0;" 
-                     class="bg-white p-4 rounded-2xl border border-slate-100 hover:border-teal-100 hover:shadow-md transition-all group cursor-default relative overflow-hidden">
-                    <div class="absolute left-0 top-0 h-full w-1 bg-teal-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div onclick="loadHistoryItem(${index})" style="animation: fadeIn 0.3s ease forwards; animation-delay: ${index * 0.05}s; opacity: 0;" 
+                     class="history-item bg-white p-3 rounded-2xl border border-slate-100 relative overflow-hidden group">
                     <div class="flex justify-between items-start mb-1">
                         <span class="font-bold text-slate-700 text-xs group-hover:text-teal-600 transition-colors tracking-wide">${item.id}</span>
                         <span class="text-[9px] text-slate-400 bg-slate-50 px-2 py-1 rounded-md border border-slate-100 font-medium">${item.sendTime}</span>
                     </div>
-                    <div class="flex items-center gap-2 text-[10px] text-slate-400">
-                        <i class="fa-regular fa-calendar text-slate-300"></i> ${item.date}
+                    <div class="flex justify-between items-center text-[10px] text-slate-400 mt-2">
+                         <div class="flex items-center gap-1.5">
+                            <i class="fa-solid fa-phone text-teal-500/50"></i>
+                            <span class="font-mono text-slate-500">${item.phoneNumber || 'No Number'}</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 opacity-60">
+                            <i class="fa-regular fa-calendar"></i> ${item.date}
+                        </div>
                     </div>
                 </div>
             `).join("");
@@ -389,30 +561,330 @@
         });
 
         window.clearSentItemsFirebase = function() {
-            const password = prompt("Please enter Admin PIN to clear history:");
-            if (password === "129876") {
-                set(historyRef, null)
-                    .then(() => alert("History cleared successfully."))
-                    .catch((err) => alert("Error: " + err.message));
-            } else if (password !== null) {
-                alert("Incorrect PIN.");
+            if (prompt("Enter Admin PIN:") === "129876") {
+                set(historyRef, null).catch((err) => alert(err));
             }
         };
         
         document.getElementById('clearHistoryBtn').addEventListener('click', window.clearSentItemsFirebase);
+
+        // --- PRESENCE SYSTEM (ONLINE STATUS) ---
+        // Monitor all branches
+        onValue(ref(voiceDb, 'biotech_presence'), (snapshot) => {
+            const presences = snapshot.val() || {};
+            const branches = ['BANDARANAYAKE', 'VEYANGODA', 'BANDURAGODA', 'Naiwala', 'HEAD OFFICE', 'ADMIN'];
+            
+            branches.forEach(branch => {
+                const safeId = branch.replace(' ', '_'); // Handle "HEAD OFFICE" -> "HEAD_OFFICE"
+                const el = document.getElementById('dot-' + safeId);
+                if(el) {
+                    const isOnline = presences[branch]?.online === true;
+                    if(isOnline) {
+                        el.className = "absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)] border border-white transition-all";
+                    } else {
+                        el.className = "absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-400 border border-white transition-all";
+                    }
+                }
+            });
+        });
+
+        // Set Myself Online
+        window.setPresence = (branchId) => {
+            const presenceRef = ref(voiceDb, `biotech_presence/${branchId}`);
+            // Set online
+            set(presenceRef, { online: true, last_seen: serverTimestamp() });
+            // Auto remove on disconnect (tab close/internet loss)
+            onDisconnect(presenceRef).remove();
+        };
+
+
+        // --- VOICE LOGIC (WebRTC) ---
+        let localStream;
+        let peerConnection;
+        const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+        let currentCallRef = null;
+        let myBranchName = "";
+        let candidateQueue = [];
+        window.disconnectTimer = null; // Store timer globally
+
+        // 1. INITIATE CALL
+        window.initiateCall = async function(targetBranch) {
+            myBranchName = localStorage.getItem('myBranchIdentity');
+            if(!myBranchName) { alert("Please set your location first."); return; }
+
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            } catch(e) { alert("Microphone access denied!"); return; }
+
+            peerConnection = new RTCPeerConnection(rtcConfig);
+            localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+            
+            const audioEl = document.getElementById('remoteAudio');
+            peerConnection.ontrack = event => {
+                audioEl.srcObject = event.streams[0];
+                audioEl.play().catch(e => console.log("Autoplay blocked:", e));
+            };
+            
+            // Connection Monitoring with Auto-Disconnect
+            peerConnection.oniceconnectionstatechange = () => {
+                const state = peerConnection.iceConnectionState;
+                const statusEl = document.getElementById('callStatusText');
+                
+                if (state === 'disconnected' || state === 'failed') {
+                    if(statusEl) {
+                        statusEl.innerText = "Reconnecting...";
+                        statusEl.classList.remove('text-green-600');
+                        statusEl.classList.add('text-red-500', 'animate-pulse');
+                    }
+                    
+                    if(window.disconnectTimer) clearTimeout(window.disconnectTimer);
+                    window.disconnectTimer = setTimeout(() => {
+                        window.endCall();
+                    }, 5000); 
+                } else if (state === 'connected') {
+                    if(statusEl) {
+                        statusEl.innerText = "Voice Connected";
+                        statusEl.classList.remove('text-red-500', 'animate-pulse');
+                        statusEl.classList.add('text-green-600');
+                        window.startTimer();
+                        document.getElementById('ringtone').pause();
+                    }
+                    if(window.disconnectTimer) clearTimeout(window.disconnectTimer);
+                }
+            };
+
+            peerConnection.onicecandidate = event => {
+                if (event.candidate) {
+                    push(ref(voiceDb, `biotech_calls/${targetBranch}/candidates`), {
+                        candidate: JSON.stringify(event.candidate),
+                        sender: myBranchName
+                    });
+                }
+            };
+
+            const offer = await peerConnection.createOffer();
+            await peerConnection.setLocalDescription(offer);
+
+            const callBase = `biotech_calls/${targetBranch}`;
+            currentCallRef = ref(voiceDb, callBase);
+            set(ref(voiceDb, `${callBase}/candidates`), null);
+
+            set(ref(voiceDb, `${callBase}/offer`), {
+                caller: myBranchName,
+                sdp: JSON.stringify(peerConnection.localDescription),
+                timestamp: serverTimestamp()
+            });
+
+            // Update UI for Caller
+            document.getElementById('callPhase').classList.add('hidden'); // Hide buttons while calling
+            document.getElementById('voiceActiveState').classList.remove('hidden');
+            document.getElementById('callStatusText').innerText = "Calling " + targetBranch + "...";
+            document.getElementById('ringtone').play();
+            
+            onValue(ref(voiceDb, `${callBase}/answer`), async (snapshot) => {
+                const data = snapshot.val();
+                if (data && !peerConnection.currentRemoteDescription) {
+                    const desc = new RTCSessionDescription(JSON.parse(data.sdp));
+                    await peerConnection.setRemoteDescription(desc);
+                    while(candidateQueue.length > 0) {
+                        peerConnection.addIceCandidate(candidateQueue.shift()).catch(e => console.log(e));
+                    }
+                }
+            });
+
+            onChildAdded(ref(voiceDb, `${callBase}/candidates`), (snapshot) => {
+                const data = snapshot.val();
+                if (data && data.sender !== myBranchName) {
+                    const candidate = new RTCIceCandidate(JSON.parse(data.candidate));
+                    if (peerConnection.remoteDescription) peerConnection.addIceCandidate(candidate).catch(e => console.log(e));
+                    else candidateQueue.push(candidate);
+                }
+            });
+        };
+
+        // 2. LISTEN FOR CALLS (Auto-runs on Identity Change)
+        window.listenForCalls = function() {
+            myBranchName = localStorage.getItem('myBranchIdentity');
+            if(!myBranchName) return;
+
+            // Mark user online
+            window.setPresence(myBranchName);
+
+            // Update UI State based on stored identity
+            document.getElementById('setupPhase').classList.add('hidden');
+            document.getElementById('callPhase').classList.remove('hidden');
+
+            const myOfferRef = ref(voiceDb, `biotech_calls/${myBranchName}/offer`);
+            
+            onValue(myOfferRef, (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    document.getElementById('callerName').innerText = data.caller;
+                    document.getElementById('incomingCallModal').classList.remove('hidden');
+                    document.getElementById('ringtone').play().catch(e => console.log("Ring blocked:", e));
+                } else {
+                    document.getElementById('incomingCallModal').classList.add('hidden');
+                    document.getElementById('ringtone').pause();
+                    document.getElementById('ringtone').currentTime = 0;
+                }
+            });
+        };
+
+        // 3. ANSWER CALL
+        window.answerCall = async function() {
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            } catch(e) { alert("Mic Error"); return; }
+
+            const ringAudio = document.getElementById('ringtone');
+            ringAudio.pause();
+            ringAudio.currentTime = 0;
+
+            peerConnection = new RTCPeerConnection(rtcConfig);
+            localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+            
+            const audioEl = document.getElementById('remoteAudio');
+            peerConnection.ontrack = event => {
+                audioEl.srcObject = event.streams[0];
+                audioEl.play().catch(e => console.log("Autoplay blocked:", e));
+            };
+            
+            // Connection Monitoring with Auto-Disconnect
+            peerConnection.oniceconnectionstatechange = () => {
+                const state = peerConnection.iceConnectionState;
+                const statusEl = document.getElementById('callStatusText');
+                
+                if (state === 'disconnected' || state === 'failed') {
+                    if(statusEl) {
+                        statusEl.innerText = "Reconnecting...";
+                        statusEl.classList.remove('text-green-600');
+                        statusEl.classList.add('text-red-500', 'animate-pulse');
+                    }
+                    
+                    if(window.disconnectTimer) clearTimeout(window.disconnectTimer);
+                    window.disconnectTimer = setTimeout(() => {
+                        window.endCall();
+                    }, 5000); 
+                } else if (state === 'connected') {
+                    if(statusEl) {
+                        statusEl.innerText = "Voice Connected";
+                        statusEl.classList.remove('text-red-500', 'animate-pulse');
+                        statusEl.classList.add('text-green-600');
+                        window.startTimer();
+                    }
+                    if(window.disconnectTimer) clearTimeout(window.disconnectTimer);
+                }
+            };
+
+            myBranchName = localStorage.getItem('myBranchIdentity');
+            const callBase = `biotech_calls/${myBranchName}`;
+            currentCallRef = ref(voiceDb, callBase);
+
+            peerConnection.onicecandidate = event => {
+                if (event.candidate) {
+                    push(ref(voiceDb, `${callBase}/candidates`), {
+                        candidate: JSON.stringify(event.candidate),
+                        sender: myBranchName
+                    });
+                }
+            };
+            
+            onValue(ref(voiceDb, `${callBase}/offer`), async (snapshot) => {
+                const data = snapshot.val();
+                if (data && !peerConnection.currentRemoteDescription) {
+                    const remoteDesc = new RTCSessionDescription(JSON.parse(data.sdp));
+                    await peerConnection.setRemoteDescription(remoteDesc);
+                    
+                    while(candidateQueue.length > 0) {
+                        peerConnection.addIceCandidate(candidateQueue.shift()).catch(e => console.log(e));
+                    }
+                    
+                    const answer = await peerConnection.createAnswer();
+                    await peerConnection.setLocalDescription(answer);
+                    
+                    set(ref(voiceDb, `${callBase}/answer`), {
+                        sdp: JSON.stringify(answer),
+                        timestamp: serverTimestamp()
+                    });
+
+                    // Update UI for Receiver
+                    document.getElementById('incomingCallModal').classList.add('hidden');
+                    document.getElementById('callPhase').classList.add('hidden'); // Hide buttons
+                    document.getElementById('voiceActiveState').classList.remove('hidden');
+                    document.getElementById('callStatusText').innerText = "Connected to " + data.caller;
+                }
+            }, { onlyOnce: true });
+
+            onChildAdded(ref(voiceDb, `${callBase}/candidates`), (snapshot) => {
+                const data = snapshot.val();
+                if (data && data.sender !== myBranchName) {
+                    const candidate = new RTCIceCandidate(JSON.parse(data.candidate));
+                    if (peerConnection.remoteDescription) peerConnection.addIceCandidate(candidate).catch(e => console.log(e));
+                    else candidateQueue.push(candidate);
+                }
+            });
+
+            onValue(ref(voiceDb, `${callBase}/offer`), (snapshot) => {
+                 if(!snapshot.exists()) window.endCall();
+            });
+        };
+
+        // 4. REJECT CALL
+        window.rejectCall = function() {
+            document.getElementById('ringtone').pause();
+            myBranchName = localStorage.getItem('myBranchIdentity');
+            remove(ref(voiceDb, `biotech_calls/${myBranchName}`));
+            document.getElementById('incomingCallModal').classList.add('hidden');
+        };
+
+        // 5. END CALL (CLEANUP)
+        window.endCall = function() {
+            // Clear failsafe timer
+            if(window.disconnectTimer) clearTimeout(window.disconnectTimer);
+
+            document.getElementById('ringtone').pause();
+            document.getElementById('ringtone').currentTime = 0;
+
+            if (peerConnection) peerConnection.close();
+            if (localStream) localStream.getTracks().forEach(track => track.stop());
+            if (currentCallRef) remove(currentCallRef);
+            
+            // UI Reset
+            document.getElementById('voiceActiveState').classList.add('hidden');
+            document.getElementById('incomingCallModal').classList.add('hidden');
+            document.getElementById('callTimer').innerText = "00:00";
+            
+            // Re-show buttons
+            document.getElementById('callPhase').classList.remove('hidden');
+            
+            window.isMuted = false;
+            window.updateMuteBtn();
+            
+            window.listenForCalls(); // Re-attach listener
+        };
+        
+        // Expose to global scope for HTML onclicks
+        window.voiceDb = voiceDb;
+        window.ref = ref;
+        window.push = push;
+        window.set = set;
+        window.remove = remove;
     </script>
 
-    <!-- CORE LOGIC -->
+    <!-- CORE LOGIC & VOICE CONTROLLER -->
     <script>
         let iti = null;
         let finalRawNumber = "";
+        let isPreviewMode = false;
 
+        // --- VOICE VARIABLES ---
+        let callTimerInterval;
+        let isMuted = false;
+        
         document.addEventListener("DOMContentLoaded", function() {
-            // Set Date
             const dateInput = document.getElementById('date');
             dateInput.valueAsDate = new Date();
             
-            // Time
             const updateTime = () => {
                 const now = new Date();
                 document.getElementById('msgTime').innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
@@ -420,7 +892,6 @@
             updateTime();
             setInterval(updateTime, 60000);
 
-            // Phone Init
             const phoneInput = document.getElementById("phoneNum");
             iti = window.intlTelInput(phoneInput, {
                 initialCountry: "lk",
@@ -429,69 +900,156 @@
                 utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js"
             });
 
-            // Input Logic
             phoneInput.addEventListener('input', function(e) {
-                const errorDiv = document.getElementById('phoneError');
-                let val = e.target.value.replace(/\D/g, '');
-                if (val.startsWith('0')) val = val.substring(1);
-
-                if (val.length > 9) {
-                    val = val.substring(0, 9);
-                    errorDiv.classList.remove('hidden');
-                    errorDiv.classList.add('flex', 'shake'); 
-                    setTimeout(() => errorDiv.classList.remove('shake'), 500);
-                } else {
-                    errorDiv.classList.add('hidden');
-                    errorDiv.classList.remove('flex');
-                }
-
-                e.target.value = val;
-                finalRawNumber = val;
-                updatePreview();
+                // If user types, exit preview mode
+                isPreviewMode = false;
+                document.getElementById('historyIndicator').classList.add('hidden');
+                handlePhoneInput(e.target.value);
             });
 
             ['vgSelection', 'vgNum', 'date'].forEach(id => {
-                document.getElementById(id).addEventListener('input', updatePreview);
+                document.getElementById(id).addEventListener('input', () => {
+                    // If user types, exit preview mode
+                    isPreviewMode = false;
+                    document.getElementById('historyIndicator').classList.add('hidden');
+                    updatePreviewFromInputs();
+                });
             });
             
-            updatePreview();
+            // Load saved identity if exists
+            const savedId = localStorage.getItem('myBranchIdentity');
+            if(savedId) {
+                // document.getElementById('myIdentity').value = savedId; // No need to set value, we hide it
+                // Wait for module to load then listen
+                setTimeout(() => { if(window.listenForCalls) window.listenForCalls(); }, 1500);
+            } else {
+                 // Ensure setup is shown
+                 document.getElementById('setupPhase').classList.remove('hidden');
+                 document.getElementById('callPhase').classList.add('hidden');
+            }
+
+            updatePreviewFromInputs();
         });
 
-        function updatePreview() {
+        // --- VOICE UI WRAPPERS ---
+        function updateIdentity() {
+            const id = document.getElementById('myIdentity').value;
+            localStorage.setItem('myBranchIdentity', id);
+            if(window.listenForCalls) window.listenForCalls();
+        }
+
+        function startCall(target) {
+            if(!target) return;
+            if(window.initiateCall) window.initiateCall(target);
+        }
+        
+        // Timer Logic
+        window.startTimer = function() {
+            let seconds = 0;
+            const timerEl = document.getElementById('callTimer');
+            clearInterval(callTimerInterval);
+            callTimerInterval = setInterval(() => {
+                seconds++;
+                const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+                const secs = (seconds % 60).toString().padStart(2, '0');
+                timerEl.innerText = `${mins}:${secs}`;
+            }, 1000);
+        }
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            updateMuteBtn();
+        }
+
+        window.updateMuteBtn = function() {
+            const btn = document.getElementById('muteBtn');
+            if(isMuted) {
+                btn.innerHTML = `<i class="fa-solid fa-microphone-slash text-red-500"></i>`;
+                btn.classList.add('bg-red-50', 'border-red-200');
+            } else {
+                btn.innerHTML = `<i class="fa-solid fa-microphone"></i>`;
+                btn.classList.remove('bg-red-50', 'border-red-200');
+            }
+        }
+
+        // --- PREVIEW LOGIC ---
+
+        function handlePhoneInput(val) {
+            const errorDiv = document.getElementById('phoneError');
+            val = val.replace(/\D/g, '');
+            if (val.startsWith('0')) val = val.substring(1);
+
+            if (val.length > 9) {
+                val = val.substring(0, 9);
+                errorDiv.classList.remove('hidden');
+                errorDiv.classList.add('flex', 'shake'); 
+                setTimeout(() => errorDiv.classList.remove('shake'), 500);
+            } else {
+                errorDiv.classList.add('hidden');
+                errorDiv.classList.remove('flex');
+            }
+            
+            document.getElementById('phoneNum').value = val;
+            finalRawNumber = val;
+            updatePreviewFromInputs();
+        }
+
+        // Wrapper to update preview from actual DOM inputs
+        function updatePreviewFromInputs() {
+            if(isPreviewMode) return; // Don't auto-update if viewing history
+            
             const vgSelection = document.getElementById('vgSelection').value;
             const vgNum = document.getElementById('vgNum').value.trim();
             const date = document.getElementById('date').value;
+            
+            renderPreview(vgSelection, vgNum, date, finalRawNumber);
+        }
+
+        // Core Render Function - Decoupled from Inputs
+        function renderPreview(prefix, num, dateStr, rawPhone) {
             const sendBtn = document.getElementById('sendBtn');
             const previewText = document.getElementById('previewText');
             const linkCard = document.getElementById('linkCard');
             const hiddenArea = document.getElementById('messagePreview');
-            
-            if (vgNum && date && finalRawNumber.length === 9) {
+            const headerName = document.getElementById('headerContactName');
+
+            // Dynamic Header Name
+            if(rawPhone && rawPhone.length > 3) {
+                const formattedNum = "0" + rawPhone.replace(/(\d{2})(\d{3})(\d{4})/, '$1 $2 $3').trim();
+                headerName.innerHTML = `${formattedNum} <i class="fa-solid fa-certificate text-teal-500 text-[10px] ml-1"></i>`;
+            } else {
+                headerName.innerHTML = `Biotech Lab <i class="fa-solid fa-certificate text-teal-500 text-[10px] ml-1"></i>`;
+            }
+
+            if (num && dateStr && rawPhone && rawPhone.length === 9) {
+                // Enable Send Button ONLY if NOT in preview mode (prevents sending old history by accident)
+                if(!isPreviewMode) {
+                    sendBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    sendBtn.disabled = false;
+                } else {
+                    sendBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    sendBtn.disabled = true;
+                }
                 
-                sendBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                sendBtn.disabled = false;
-                
-                const patientId = `${vgSelection}${vgNum}`;
+                const patientId = `${prefix}${num}`;
                 const now = new Date();
                 const expiryTimestamp = now.getTime() + (14 * 24 * 60 * 60 * 1000); 
 
-                const originalData = `${patientId}|${date}|${expiryTimestamp}`;
+                const originalData = `${patientId}|${dateStr}|${expiryTimestamp}`;
                 const encodedData = btoa(originalData);
                 const link = `https://biotechveyangoda.lk/report-preview.html?data=${encodedData}`;
 
-                // VISUAL PREVIEW HTML (Bold mapping for display)
                 const displayMsg = `<strong>Biotech Medical Laboratory Online Report</strong>\n\n` + 
                               `👤 <strong>Patient ID:</strong> ${patientId}\n` +
-                              `📅 <strong>Date:</strong> ${date}\n` +
+                              `📅 <strong>Date:</strong> ${dateStr}\n` +
                               `⏳ <strong>Expires in:</strong> 2 Weeks\n\n` + 
                               `● Click the link below to view/download.\n\n` +
                               `<span class="text-blue-500">${link}</span>\n\n` +
                               `<em>From - BIOTECH LABORATORY</em>`;
                 
-                // ACTUAL TEXT FOR WHATSAPP
                 const rawMsg = `*Biotech Medical Laboratory Online Report*\n\n` + 
                               `👤 *Patient ID:* ${patientId}\n` +
-                              `📅 *Date:* ${date}\n` +
+                              `📅 *Date:* ${dateStr}\n` +
                               `⏳ *Expires in:* 2 Weeks\n\n` + 
                               `● Click the link below to view and download your report.\n` +
                               `*(ඔබට පහලින් ලින්ක් එකක් දිස් නොවුනහොත් කරුණාකර අපගේ WHATSAPP NUMBER එක සේව් කරගන්න.)*\n\n` +
@@ -509,30 +1067,55 @@
                 linkCard.classList.add('hidden');
                 
                 let warning = "Waiting for input...";
-                if (finalRawNumber.length > 0 && finalRawNumber.length < 9) {
-                    warning = `Typing number... (${finalRawNumber.length}/9)`;
-                } else if (!vgNum) {
-                    warning = "Enter Patient Number...";
-                }
-                
+                if(isPreviewMode) warning = "Incomplete History Data";
+
                 previewText.innerHTML = `<span class="text-slate-400 italic">${warning}</span>`;
                 hiddenArea.value = "";
                 return null;
             }
         }
 
+        // Updated History Loader - PREVIEW ONLY
+        window.loadHistoryItem = (index) => {
+            const item = window.historyData[index];
+            if(!item) return;
+            
+            isPreviewMode = true; // Flag to stop input listeners from overwriting
+            document.getElementById('historyIndicator').classList.remove('hidden'); // Show indicator
+
+            // Parse ID (e.g. BN1005)
+            let prefix = "BN";
+            let num = "";
+            const match = item.id.match(/([a-zA-Z]+)(\d+)/);
+            if(match) {
+                prefix = match[1];
+                num = match[2];
+            } else {
+                num = item.id;
+            }
+
+            // Call render directly without touching DOM inputs
+            renderPreview(prefix, num, item.date, item.phoneNumber);
+            
+            // Visual feedback on mobile sidebar
+            if(window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.add('-translate-x-full');
+            }
+        };
+
         function sendWhatsApp() {
-            if (finalRawNumber.length !== 9) return;
+            if (finalRawNumber.length !== 9 || isPreviewMode) return;
 
             const message = document.getElementById("messagePreview").value;
             if (!message) return;
 
-            // Save to Firebase
+            // Save to Firebase (History App)
             if(window.firebasePush && window.historyPath) {
                 const now = new Date();
                 const newItem = {
                     id: `${document.getElementById("vgSelection").value}${document.getElementById("vgNum").value}`,
                     date: document.getElementById('date').value,
+                    phoneNumber: finalRawNumber,
                     sendTime: now.toLocaleTimeString("en-US", {hour: '2-digit', minute:'2-digit'}),
                     timestamp: now.getTime()
                 };
@@ -545,7 +1128,19 @@
         }
 
         function copyLinkOnly() {
-            const link = updatePreview();
+            // Need to calculate link based on current mode
+            let link = null;
+            if(isPreviewMode) {
+                 const rawMsg = document.getElementById('messagePreview').value;
+                 const linkMatch = rawMsg.match(/https:\/\/biotechveyangoda\.lk[^\s]+/);
+                 if(linkMatch) link = linkMatch[0];
+            } else {
+                 const vgSelection = document.getElementById('vgSelection').value;
+                 const vgNum = document.getElementById('vgNum').value.trim();
+                 const date = document.getElementById('date').value;
+                 link = renderPreview(vgSelection, vgNum, date, finalRawNumber);
+            }
+
             const btn = document.querySelector('button[onclick="copyLinkOnly()"]');
             
             if(link) {
@@ -559,7 +1154,6 @@
                     }, 2000);
                 });
             } else {
-                // Shake button error
                 btn.classList.add('shake');
                 setTimeout(() => btn.classList.remove('shake'), 500);
             }
