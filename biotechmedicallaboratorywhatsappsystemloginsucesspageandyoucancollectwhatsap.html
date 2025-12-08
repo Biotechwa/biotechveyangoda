@@ -3,354 +3,478 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Biotech System | PC</title>
+    <title>Biotech Admin | Command Center</title>
     
-    <!-- TAILWIND CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- PHONE INPUT CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css">
-    <!-- ICONS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <!-- Fonts -->
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
         
         body {
-            font-family: 'Inter', sans-serif;
-            background-image: linear-gradient(rgba(17, 24, 39, 0.9), rgba(17, 24, 39, 0.9)), url('https://images.unsplash.com/photo-1579154204601-01588f351e67?q=80&w=2070&auto=format&fit=crop'); 
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f0f9ff;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(20, 184, 166, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.15) 0px, transparent 50%);
             background-size: cover;
-            background-position: center;
             background-attachment: fixed;
-            color: #333;
+            color: #334155; 
+            overflow: hidden;
+        }
+
+        /* --- UI UTILITIES --- */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 1);
+            box-shadow: 0 25px 50px -12px rgba(13, 148, 136, 0.1);
+        }
+
+        .input-group {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s ease;
+        }
+        .input-group:focus-within {
+            border-color: #0d9488; /* Teal 600 */
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.1);
+        }
+
+        .gradient-btn {
+            background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+        }
+        .gradient-btn:hover {
+            background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
+        }
+
+        .history-item {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .history-item:hover {
+            transform: translateX(4px);
+            border-color: #99f6e4; /* teal-200 */
+            background-color: #f0fdfa; /* teal-50 */
+        }
+        .history-item:active {
+            transform: scale(0.98) translateX(4px);
+        }
+
+        /* --- CALL ANIMATIONS --- */
+        .pulse-ring {
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            animation: pulse-green 2s infinite;
+        }
+        @keyframes pulse-green {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        .ringing-icon { animation: ring 1s infinite ease-in-out; }
+        @keyframes ring { 0% { transform: rotate(0); } 10% { transform: rotate(10deg); } 20% { transform: rotate(-10deg); } 30% { transform: rotate(10deg); } 40% { transform: rotate(-10deg); } 100% { transform: rotate(0); } }
+
+
+        /* --- ANIMATIONS --- */
+        .fade-in { animation: fadeIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards; opacity: 0; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } }
+
+        /* --- STATIC PHONE MOCKUP (Scaled to Fit) --- */
+        .phone-wrapper {
+            transform: scale(0.9);
+            transform-origin: center;
+            transition: transform 0.3s ease;
+        }
+        @media (max-height: 800px) {
+            .phone-wrapper { transform: scale(0.8); }
+        }
+
+        .phone-mockup {
+            width: 320px;
+            height: 640px;
+            background: #fff;
+            border-radius: 50px;
+            box-shadow: 
+                0 0 0 4px #e2e8f0,
+                0 0 0 8px #cbd5e1,
+                0 30px 60px rgba(0,0,0,0.15);
+            position: relative;
+            overflow: hidden;
+            margin: auto;
+            border: 8px solid #1e293b; /* Dark Slate Frame */
+        }
+
+        .phone-notch {
+            position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+            width: 120px; height: 28px; background: #1e293b;
+            border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;
+            z-index: 20;
+        }
+
+        .phone-screen {
+            width: 100%; height: 100%;
+            background: #e5ddd5;
+            background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
+            background-size: 350px;
+            background-blend-mode: soft-light;
+            display: flex; flex-direction: column;
+            padding-top: 40px;
+        }
+
+        /* --- WHATSAPP UI --- */
+        .wa-header {
+            background: rgba(240, 242, 245, 0.95);
+            backdrop-filter: blur(5px);
+            padding: 10px 15px;
+            display: flex; align-items: center; gap: 10px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+            cursor: default;
+        }
+        .wa-bubble {
+            background: #d9fdd3;
+            padding: 12px;
+            border-radius: 12px; border-top-right-radius: 0;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+            font-size: 13px; line-height: 1.5; color: #111b21;
+            position: relative; margin: 15px 15px 10px auto; max-width: 85%;
+        }
+        .wa-bubble::after {
+            content: ''; position: absolute; top: 0; right: -10px; width: 0; height: 0;
+            border: 10px solid transparent; border-top-color: #d9fdd3; border-left-color: #d9fdd3;
+        }
+        
+        .link-preview {
+            background: rgba(0,0,0,0.03);
+            border-radius: 8px;
+            margin-top: 8px;
+            padding: 10px;
+            border-left: 4px solid #0d9488;
+            display: flex; flex-direction: column; gap: 2px;
         }
 
         /* Custom Scrollbar */
-        .chat-scroll::-webkit-scrollbar { width: 5px; }
-        .chat-scroll::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); }
-        .chat-scroll::-webkit-scrollbar-thumb { background: rgba(20, 184, 166, 0.5); border-radius: 10px; }
+        .custom-scroll::-webkit-scrollbar { width: 5px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-        .iti { width: 100%; }
-        
-        /* Animations */
-        .animate-enter { animation: fadeInUp 0.5s ease-out forwards; opacity: 0; }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); }
-
-        /* Chat Message Styles */
-        .msg-sent { 
-            align-self: flex-end; 
-            background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%); 
-            color: white;
-            border-bottom-right-radius: 0; 
-            box-shadow: 0 2px 5px rgba(20, 184, 166, 0.3);
-        }
-        .msg-received { 
-            align-self: flex-start; 
-            background-color: #f3f4f6; 
-            color: #1f2937;
-            border-bottom-left-radius: 0; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        
-        .status-dot {
-            height: 8px; width: 8px; background-color: #4ade80; border-radius: 50%; display: inline-block;
-            box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.3);
-            animation: pulse 2s infinite;
-        }
-        
-        .recording-pulse { animation: recordPulse 1s infinite; color: #ef4444 !important; }
-        @keyframes recordPulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
-        
-        .ringing-animation { animation: ring 1s infinite ease-in-out; }
-        @keyframes ring { 0% { transform: rotate(0); } 10% { transform: rotate(10deg); } 20% { transform: rotate(-10deg); } 30% { transform: rotate(10deg); } 40% { transform: rotate(-10deg); } 100% { transform: rotate(0); } }
-
-        audio { height: 32px; max-width: 200px; }
-        .msg-sent audio { filter: invert(1) opacity(0.8); }
-
-        .emoji-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; max-height: 150px; overflow-y: auto; }
-        .emoji-btn { font-size: 1.2rem; padding: 4px; border-radius: 4px; cursor: pointer; }
-        .emoji-btn:hover { background-color: #f0fdf4; }
+        /* Phone Input overrides */
+        .iti__selected-flag { background-color: transparent !important; }
+        .iti__country-list { background-color: white; border: 1px solid #e2e8f0; color: #334155; }
     </style>
 </head>
-<body class="h-screen flex overflow-hidden">
+<body class="flex h-screen w-full">
 
-    <!-- AUDIO ELEMENTS -->
-    <audio id="remoteAudio" autoplay playsinline></audio>
-    <audio id="msgSound" src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3" preload="auto"></audio>
-    <audio id="ringtone" src="https://media.geeksforgeeks.org/wp-content/uploads/20190531135120/beep.mp3" loop preload="auto"></audio>
+    <!-- AUDIO: Ringtone & Remote Stream -->
+    <audio id="ringtone" loop>
+        <source src="https://assets.mixkit.co/active_storage/sfx/1359/1359-preview.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="remoteAudio" autoplay playsinline class="hidden"></audio>
 
-    <!-- LEFT SIDE: CHAT SYSTEM -->
-    <aside class="w-full md:w-96 glass-panel border-r border-gray-200 flex flex-col z-20 shadow-2xl animate-enter h-full absolute md:relative transform -translate-x-full md:translate-x-0 transition-transform duration-300" id="chatSidebar">
-        <!-- Chat Header -->
-        <div class="p-4 bg-teal-900 text-white flex justify-between items-center shadow-md z-10">
-            <div>
-                <h2 class="font-bold text-md tracking-wider flex items-center gap-2">
-                    <i class="fa-solid fa-comments"></i> BRANCH LINK
-                </h2>
-                <div class="text-[10px] text-teal-200 mt-1 pl-6">
-                    <span class="status-dot mr-1"></span> Live Connection
+    <!-- LEFT SIDEBAR (History & Voice) -->
+    <aside class="w-80 h-full bg-white border-r border-slate-100 flex flex-col z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)] shrink-0 transform transition-transform duration-300 md:translate-x-0 -translate-x-full fixed md:relative" id="sidebar">
+        <!-- Logo Area -->
+        <div class="p-8 border-b border-slate-50">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-teal-50 flex items-center justify-center text-teal-600 shadow-sm border border-teal-100">
+                    <i class="fa-solid fa-microscope text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-slate-800 text-sm tracking-wide">BIOTECH LABS</h1>
+                    <div class="flex items-center gap-2 mt-1">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Online</span>
+                    </div>
                 </div>
             </div>
+        </div>
+
+        <!-- VOICE CALL SYSTEM -->
+        <div class="px-6 py-4 bg-slate-50/50 border-b border-slate-100">
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Live Voice Link</h3>
+                <div class="w-2 h-2 rounded-full bg-teal-400"></div>
+            </div>
             
-            <div class="flex items-center gap-3">
-                <button onclick="toggleCallModal()" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition backdrop-blur-sm relative" title="Call Directory">
-                    <i class="fa-solid fa-phone"></i>
-                </button>
-                <button onclick="clearChat()" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-red-500/20 hover:text-red-300 transition backdrop-blur-sm" title="Clear History">
-                    <i class="fa-solid fa-trash-can"></i>
-                </button>
-                <!-- Close button for mobile -->
-                <button onclick="toggleMobileChat()" class="md:hidden text-gray-300 hover:text-white">
-                    <i class="fa-solid fa-times text-xl"></i>
-                </button>
-            </div>
-        </div>
-        
-        <!-- Branch Identity Selector -->
-        <div class="p-3 bg-gray-50 border-b border-gray-200 shadow-inner">
-            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">You are sending as:</label>
-            <div class="relative">
-                <select id="branchIdentity" onchange="updateIdentity()" class="w-full text-sm p-2 pl-8 rounded border border-gray-300 focus:border-teal-500 outline-none font-bold text-teal-800 bg-white cursor-pointer appearance-none">
-                    <option value="HEAD OFFICE">🏢 HEAD OFFICE</option>
-                    <option value="VEYANGODA">🧪 VEYANGODA (VG)</option>
-                    \
-                    <option value="Naiwala">🧪 NAIWALA (NI)</option>
-                    <option value="BANDARANAYAKE">🧪 BANDARANAYAKE (BN)</option>
-                    <option value="BANDURAGODA">🧪 BANDURAGODA (BR)</option>
-                </select>
-                <i class="fa-solid fa-user-tag absolute left-2.5 top-2.5 text-gray-400"></i>
-            </div>
-        </div>
-
-        <!-- Messages Area -->
-        <div id="chatContainer" class="flex-1 overflow-y-auto p-4 flex flex-col gap-3 bg-slate-50 chat-scroll relative">
-            <div class="absolute inset-0 flex flex-col items-center justify-center text-gray-400 opacity-60 pointer-events-none">
-                <i class="fa-solid fa-circle-notch fa-spin text-2xl mb-2"></i>
-                <span class="text-xs">Connecting...</span>
-            </div>
-        </div>
-
-        <!-- Emoji Picker Popover -->
-        <div id="emojiPicker" class="hidden absolute bottom-20 left-4 right-4 bg-white shadow-xl border border-gray-200 rounded-lg p-2 z-30">
-            <div class="emoji-grid" id="emojiGrid"></div>
-        </div>
-        
-        <!-- Recording Overlay -->
-        <div id="recordingOverlay" class="hidden absolute bottom-20 left-0 right-0 z-30 flex justify-center animate-enter">
-            <div class="bg-red-500 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
-                <div class="w-3 h-3 bg-white rounded-full animate-pulse"></div>
-                <span class="text-xs font-bold">Recording... (Click mic to stop)</span>
-            </div>
-        </div>
-
-        <!-- Input Area -->
-        <div class="p-3 bg-white border-t border-gray-200 relative">
-            <div id="uploadLoader" class="hidden absolute inset-0 bg-white/80 z-40 flex items-center justify-center">
-                <span class="text-xs text-teal-600 font-bold animate-pulse">Processing...</span>
-            </div>
-
-            <div class="flex gap-2 items-end">
-                <input type="file" id="imageInput" accept="image/*" class="hidden" onchange="handleImageUpload(this)">
+            <!-- Connection State: Idle -->
+            <div id="voiceIdleState" class="space-y-3">
                 
-                <button onclick="document.getElementById('imageInput').click()" class="text-gray-400 hover:text-teal-600 p-2 transition-colors" title="Send Photo">
-                    <i class="fa-solid fa-paperclip text-lg"></i>
-                </button>
-                
-                <button id="micBtn" onclick="toggleVoiceRecording()" class="text-gray-400 hover:text-red-500 p-2 transition-colors" title="Hold to Record">
-                    <i class="fa-solid fa-microphone text-lg"></i>
-                </button>
-                
-                <button onclick="toggleEmoji()" class="text-gray-400 hover:text-yellow-500 p-2 transition-colors" title="Emojis">
-                    <i class="fa-regular fa-face-smile text-lg"></i>
-                </button>
+                <!-- My Identity (Setup Phase) -->
+                <div id="setupPhase">
+                    <label class="text-[9px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Set My Location</label>
+                    <select id="myIdentity" onchange="updateIdentity()" class="w-full bg-white border border-slate-200 text-teal-700 text-[10px] font-bold rounded-lg p-1.5 outline-none focus:border-teal-400 transition-colors cursor-pointer shadow-sm">
+                        <option value="" disabled selected>Select...</option>
+                        <option value="HEAD OFFICE">Head Office</option>
+                        <option value="VEYANGODA">Veyangoda</option>
+                        <option value="Naiwala">Naiwala</option>
+                        <option value="BANDARANAYAKE">Bandaranayake</option>
+                        <option value="BANDURAGODA">Banduragoda</option>
+                        <option value="ADMIN">Admin</option>
+                    </select>
+                </div>
 
-                <textarea id="chatMsg" rows="1" placeholder="Type a message..." class="flex-1 bg-gray-100 text-sm p-3 rounded-2xl border-0 focus:ring-2 focus:ring-teal-500 outline-none resize-none max-h-24" onkeypress="handleEnter(event)"></textarea>
-                
-                <button onclick="sendRealtimeMessage()" class="bg-teal-600 hover:bg-teal-700 text-white w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-md hover:scale-105 active:scale-95 shrink-0">
-                    <i class="fa-solid fa-paper-plane text-sm pl-0.5"></i>
-                </button>
+                <!-- Call Buttons (Active Phase) -->
+                <div id="callPhase" class="hidden">
+                    <label class="text-[9px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Quick Call</label>
+                    <div class="grid grid-cols-6 gap-1">
+                        <button onclick="startCall('BANDARANAYAKE')" class="aspect-square rounded-md bg-white border border-slate-200 hover:bg-teal-50 hover:border-teal-200 hover:text-teal-700 text-[10px] font-bold text-slate-600 transition-all shadow-sm flex items-center justify-center" title="Bandaranayake">BN</button>
+                        <button onclick="startCall('VEYANGODA')" class="aspect-square rounded-md bg-white border border-slate-200 hover:bg-teal-50 hover:border-teal-200 hover:text-teal-700 text-[10px] font-bold text-slate-600 transition-all shadow-sm flex items-center justify-center" title="Veyangoda">VG</button>
+                        <button onclick="startCall('BANDURAGODA')" class="aspect-square rounded-md bg-white border border-slate-200 hover:bg-teal-50 hover:border-teal-200 hover:text-teal-700 text-[10px] font-bold text-slate-600 transition-all shadow-sm flex items-center justify-center" title="Banduragoda">BR</button>
+                        <button onclick="startCall('Naiwala')" class="aspect-square rounded-md bg-white border border-slate-200 hover:bg-teal-50 hover:border-teal-200 hover:text-teal-700 text-[10px] font-bold text-slate-600 transition-all shadow-sm flex items-center justify-center" title="Naiwala">NI</button>
+                        <button onclick="startCall('HEAD OFFICE')" class="aspect-square rounded-md bg-white border border-slate-200 hover:bg-teal-50 hover:border-teal-200 hover:text-teal-700 text-[10px] font-bold text-slate-600 transition-all shadow-sm flex items-center justify-center" title="Head Office">HO</button>
+                        <button onclick="startCall('ADMIN')" class="aspect-square rounded-md bg-slate-100 border border-slate-300 hover:bg-slate-200 text-[10px] font-bold text-slate-700 transition-all shadow-sm flex items-center justify-center" title="Admin">AD</button>
+                    </div>
+                </div>
+
             </div>
+
+            <!-- Connection State: Active -->
+            <div id="voiceActiveState" class="hidden mt-2">
+                <div class="bg-white border border-teal-100 rounded-xl p-3 shadow-sm text-center mb-2 relative overflow-hidden">
+                    <div class="absolute inset-0 bg-teal-50 opacity-50 pulse-ring"></div>
+                    <div class="relative z-10">
+                        <div class="text-[10px] font-bold text-teal-600 uppercase mb-1" id="callStatusText">Calling...</div>
+                        <div class="text-xs font-extrabold text-slate-700" id="callTimer">00:00</div>
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="toggleMute()" id="muteBtn" class="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg transition-colors border border-slate-200">
+                        <i class="fa-solid fa-microphone"></i>
+                    </button>
+                    <button onclick="endCall()" class="flex-1 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-lg transition-colors shadow-sm">
+                        <i class="fa-solid fa-phone-slash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Header -->
+        <div class="p-6 pb-2 flex justify-between items-center">
+            <h3 class="text-xs font-extrabold text-slate-400 uppercase tracking-widest">Recent Activity</h3>
+            <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-1 rounded-lg font-bold" id="countBadge">0</span>
+        </div>
+
+        <!-- History List -->
+        <div class="flex-1 overflow-y-auto custom-scroll p-4 space-y-3" id="sentItemsList">
+            <div class="flex flex-col items-center justify-center h-40 text-slate-400 text-xs gap-3">
+                <i class="fa-solid fa-circle-notch fa-spin text-teal-500 text-xl"></i>
+                <span class="font-medium">Syncing Database...</span>
+            </div>
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="p-6 border-t border-slate-50">
+            <button id="clearHistoryBtn" class="w-full py-3 text-xs font-bold text-slate-500 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all flex items-center justify-center gap-2 border border-slate-100 hover:border-red-100">
+                <i class="fa-regular fa-trash-can"></i> Clear History
+            </button>
         </div>
     </aside>
 
-    <!-- MAIN CONTENT: REPORT GENERATOR -->
-    <main class="flex-1 flex flex-col h-screen overflow-y-auto relative bg-gray-900/50">
-        <!-- Mobile Header -->
-        <div class="md:hidden bg-teal-800 text-white p-4 flex justify-between items-center shadow-md z-10 sticky top-0">
-            <div class="flex items-center gap-2">
-                <i class="fa-solid fa-microscope"></i>
-                <span class="font-bold tracking-wide">Biotech Lab</span>
+    <!-- MOBILE TOGGLE -->
+    <button onclick="document.getElementById('sidebar').classList.toggle('-translate-x-full')" class="md:hidden fixed top-4 left-4 z-50 p-3 bg-white text-teal-600 rounded-xl shadow-lg border border-slate-100">
+        <i class="fa-solid fa-bars"></i>
+    </button>
+
+    <!-- INCOMING CALL MODAL (Hidden by default) -->
+    <div id="incomingCallModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm fade-in">
+        <div class="bg-white rounded-3xl shadow-2xl p-8 w-80 text-center border-4 border-white relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-teal-400 to-blue-500"></div>
+            
+            <div class="w-20 h-20 bg-teal-50 rounded-full flex items-center justify-center mx-auto mb-4 ringing-icon shadow-lg border border-teal-100">
+                <i class="fa-solid fa-phone text-3xl text-teal-500"></i>
             </div>
-            <button onclick="toggleMobileChat()" class="bg-white/10 px-3 py-1.5 rounded-lg text-sm border border-white/10 flex items-center gap-2 hover:bg-white/20 transition">
-                <span class="status-dot"></span> Chat
-            </button>
+            
+            <h3 class="text-slate-800 font-extrabold text-lg mb-1">Incoming Call</h3>
+            <p class="text-slate-500 text-xs font-medium mb-8">From: <span id="callerName" class="text-teal-600 font-bold">Unknown</span></p>
+            
+            <div class="flex justify-center gap-4">
+                <button onclick="rejectCall()" class="w-12 h-12 rounded-full bg-rose-100 text-rose-500 hover:bg-rose-500 hover:text-white transition flex items-center justify-center shadow-sm">
+                    <i class="fa-solid fa-phone-slash"></i>
+                </button>
+                <button onclick="answerCall()" class="w-12 h-12 rounded-full bg-green-500 text-white hover:bg-green-600 transition flex items-center justify-center shadow-lg animate-bounce">
+                    <i class="fa-solid fa-phone"></i>
+                </button>
+            </div>
         </div>
+    </div>
 
-        <div class="flex-1 p-4 md:p-8 flex justify-center items-start">
-            <div class="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 h-full relative flex items-center justify-center p-4 lg:p-6 overflow-hidden">
+        
+        <div class="w-full max-w-6xl h-[92vh] glass-panel rounded-[40px] flex flex-col lg:flex-row overflow-hidden shadow-2xl fade-in">
+            
+            <!-- LEFT: FORM SECTION -->
+            <div class="w-full lg:w-1/2 p-10 lg:p-14 flex flex-col justify-center bg-white/50 relative">
+                <!-- Background decoration -->
+                <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-teal-400 via-blue-500 to-indigo-500"></div>
+
+                <div class="mb-10">
+                    <span class="text-teal-600 text-[10px] font-extrabold tracking-[0.2em] uppercase mb-3 block">Admin Dashboard</span>
+                    <h2 class="text-4xl font-extrabold text-slate-800 mb-3 tracking-tight">Patient Report Link</h2>
+                    <p class="text-slate-500 text-sm leading-relaxed font-medium">Generate secure, encrypted download links for patient reports. Links automatically expire in 14 days.</p>
+                </div>
+
+                <div class="space-y-6">
+                    
+                    <!-- Patient ID -->
+                    <div class="flex gap-4">
+                        <div class="w-1/3 input-group rounded-2xl p-2">
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold px-3 pt-1">Prefix</label>
+                            <select id="vgSelection" class="w-full bg-transparent text-slate-700 font-bold p-2 text-lg outline-none cursor-pointer">
+                                <option value="BN">BN</option>
+                                <option value="VG">VG</option>
+                                <option value="NI">NI</option>
+                                <option value="BR">BR</option>
+                            </select>
+                        </div>
+                        <div class="w-2/3 input-group rounded-2xl p-2">
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold px-3 pt-1">Number</label>
+                            <input type="number" id="vgNum" placeholder="1005" class="w-full bg-transparent text-slate-700 font-mono text-lg p-2 outline-none placeholder-slate-300" />
+                        </div>
+                    </div>
+
+                    <!-- Date -->
+                    <div class="input-group rounded-2xl p-2">
+                        <label class="block text-[10px] text-slate-400 uppercase font-bold px-3 pt-1">Report Date</label>
+                        <input type="date" id="date" class="w-full bg-transparent text-slate-700 font-medium p-2 outline-none" />
+                    </div>
+
+                    <!-- WhatsApp Number -->
+                    <div class="input-group rounded-2xl p-2 relative">
+                        <label class="block text-[10px] text-slate-400 uppercase font-bold px-3 pt-1">WhatsApp Mobile</label>
+                        <input type="tel" id="phoneNum" class="w-full bg-transparent text-slate-700 text-lg p-2 outline-none" placeholder="76 781 0623" />
+                        <!-- Error Tag -->
+                        <div id="phoneError" class="absolute right-4 top-5 bg-rose-50 text-rose-500 text-[10px] font-bold px-2 py-1 rounded-lg hidden items-center gap-1 border border-rose-100">
+                            <i class="fa-solid fa-circle-exclamation"></i> 9 Digits
+                        </div>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="pt-4 flex gap-4">
+                        <button onclick="copyLinkOnly()" class="flex-1 py-4 rounded-2xl border-2 border-slate-100 bg-white text-slate-600 hover:border-teal-100 hover:text-teal-600 font-bold text-sm transition-all flex items-center justify-center gap-2 group">
+                            <i class="fa-regular fa-copy group-hover:scale-110 transition-transform"></i> Copy Link
+                        </button>
+                        
+                        <button onclick="sendWhatsApp()" id="sendBtn" class="flex-[1.5] py-4 rounded-2xl gradient-btn text-white font-bold text-sm shadow-xl shadow-teal-500/20 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2 opacity-50 cursor-not-allowed disabled:opacity-50">
+                            <i class="fa-brands fa-whatsapp text-xl"></i> Send Message
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- RIGHT: PREVIEW SECTION -->
+            <div class="w-full lg:w-1/2 bg-slate-50/50 flex flex-col items-center justify-center p-4 lg:p-0 relative">
                 
-                <!-- INPUT FORM -->
-                <div class="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl p-6 animate-enter delay-100 border border-white/50">
-                    <div class="flex items-center gap-3 mb-6 border-b border-gray-100 pb-4">
-                        <div class="w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center text-teal-600">
-                            <i class="fa-brands fa-whatsapp text-2xl"></i>
-                        </div>
-                        <div>
-                            <h1 class="text-xl font-bold text-gray-800">Report Link Generator</h1>
-                            <p class="text-xs text-gray-500">Generate secure links for patients</p>
-                        </div>
-                    </div>
+                <div class="absolute top-8 left-0 w-full text-center">
+                    <h3 class="text-xs font-extrabold text-slate-300 uppercase tracking-[0.2em]">Client Preview</h3>
+                </div>
 
-                    <div class="space-y-5">
-                        <!-- Patient ID -->
-                        <div>
-                            <label class="text-xs font-bold text-gray-500 uppercase tracking-wide ml-1">Patient ID</label>
-                            <div class="flex gap-2 mt-1.5">
-                                <select id="vgSelection" class="w-1/3 p-3 bg-gray-50 border border-gray-200 rounded-xl font-bold text-gray-700 outline-none focus:ring-2 focus:ring-teal-500 transition-all cursor-pointer">
-                                    <option value="BN">BN</option>
-                                    <option value="VG">VG</option>
-                                    <option value="NI">NI</option>
-                                    <option value="BR">BR</option>
-                                </select>
-                                <input type="number" id="vgNum" placeholder="101" class="w-2/3 p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-teal-500 font-mono text-lg transition-all" />
+                <!-- HISTORY OVERLAY INDICATOR -->
+                <div id="historyIndicator" class="hidden absolute top-16 z-30 bg-amber-100 text-amber-700 border border-amber-200 px-3 py-1 rounded-full text-[10px] font-bold shadow-sm animate-bounce">
+                    <i class="fa-solid fa-clock-rotate-left mr-1"></i> Viewing History Record
+                </div>
+
+                <!-- PHONE WRAPPER FOR SCALING -->
+                <div class="phone-wrapper">
+                    <div class="phone-mockup">
+                        <div class="phone-notch"></div>
+                        <div class="phone-screen">
+                            
+                            <!-- WA Header -->
+                            <div class="wa-header">
+                                <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 text-[10px] font-bold">
+                                    <i class="fa-solid fa-user"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="text-[14px] font-bold text-black" id="headerContactName">Biotech Lab <i class="fa-solid fa-certificate text-teal-500 text-[10px] ml-1"></i></div>
+                                    <div class="text-[10px] text-gray-500">online</div>
+                                </div>
+                                <div class="flex gap-4 text-teal-600 text-lg pr-2">
+                                    <i class="fa-solid fa-video"></i>
+                                    <i class="fa-solid fa-phone"></i>
+                                </div>
                             </div>
-                        </div>
 
-                        <!-- Date -->
-                        <div>
-                            <label class="text-xs font-bold text-gray-500 uppercase tracking-wide ml-1">Report Date</label>
-                            <input type="date" id="date" class="w-full mt-1.5 p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-teal-500 text-gray-700 font-medium transition-all" />
-                        </div>
-
-                        <!-- Phone Number -->
-                        <div>
-                            <label class="text-xs font-bold text-gray-500 uppercase tracking-wide ml-1">WhatsApp Number</label>
-                            <input type="tel" id="phoneNum" class="w-full mt-1.5 p-3 bg-gray-50 border border-gray-200 rounded-xl transition-all" />
-                            <div id="phoneError" class="text-red-500 text-xs mt-1.5 hidden font-semibold flex items-center gap-1">
-                                <i class="fa-solid fa-circle-exclamation"></i> Invalid Number (Must be 9 digits)
+                            <!-- Date Pill -->
+                            <div class="flex justify-center my-4">
+                                <span class="bg-gray-200 text-[11px] text-gray-600 px-3 py-1 rounded-lg font-medium shadow-sm">Today</span>
                             </div>
-                        </div>
 
-                        <!-- Action Button -->
-                        <button onclick="sendReportWhatsApp()" id="sendBtn" class="w-full mt-2 bg-gradient-to-r from-teal-600 to-teal-500 hover:from-teal-700 hover:to-teal-600 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-teal-500/20 transition-all opacity-50 cursor-not-allowed transform active:scale-95 flex justify-center items-center gap-2">
-                            <span>Send via WhatsApp</span> <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                        </button>
+                            <!-- Encryption -->
+                            <div class="text-[11px] text-center text-gray-500 bg-[#ffecb3] mx-6 p-2 rounded-lg mb-4 shadow-sm text-[10px] leading-tight border border-[#ffe082]">
+                                <i class="fa-solid fa-lock text-[8px] mr-1"></i> Messages and calls are end-to-end encrypted. No one outside of this chat can read or listen to them.
+                            </div>
+
+                            <!-- Message Bubble -->
+                            <div class="wa-bubble">
+                                <div id="previewText" class="whitespace-pre-line text-slate-800">
+                                    <span class="text-slate-400 italic">Enter patient details to preview message...</span>
+                                </div>
+                                
+                                <!-- Link Preview Card (Text Only) -->
+                                <div id="linkCard" class="hidden">
+                                    <div class="link-preview">
+                                        <span class="text-[12px] font-bold text-teal-700">Biotech Lab Report Portal</span>
+                                        <span class="text-[11px] text-slate-500">biotechveyangoda.lk</span>
+                                        <span class="text-[10px] text-slate-400 mt-0.5">Secure PDF Download (Exp: 2 Weeks)</span>
+                                    </div>
+                                </div>
+
+                                <div class="text-[11px] text-gray-500 text-right mt-1.5 flex justify-end gap-1 items-center">
+                                    <span id="msgTime">10:00 AM</span>
+                                    <i class="fa-solid fa-check-double text-blue-400"></i>
+                                </div>
+                            </div>
+
+                        </div>
                     </div>
                 </div>
 
-                <!-- LIVE PREVIEW -->
-                <div class="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-enter delay-200 h-[450px] border border-white/50">
-                    <div class="bg-gray-50 p-3 border-b border-gray-200 flex justify-between items-center">
-                        <span class="text-xs font-bold text-gray-500 uppercase flex items-center gap-2">
-                            <i class="fa-regular fa-eye"></i> Live Preview
-                        </span>
-                        <button onclick="copyLinkOnly()" class="text-xs bg-white border border-gray-200 px-3 py-1.5 rounded-lg hover:text-teal-600 hover:border-teal-200 font-semibold transition-colors flex items-center gap-1">
-                            <i class="fa-regular fa-copy"></i> Copy Link
-                        </button>
-                    </div>
-                    <div class="relative flex-1 bg-white">
-                        <textarea id="messagePreview" readonly class="w-full h-full p-6 text-sm font-mono text-gray-600 resize-none focus:outline-none leading-relaxed"></textarea>
-                        <div class="absolute bottom-4 right-4 opacity-5 pointer-events-none">
-                            <i class="fa-brands fa-whatsapp text-9xl"></i>
-                        </div>
-                    </div>
-                    <div class="bg-gray-50 p-2 text-[10px] text-center text-gray-400 border-t border-gray-200">
-                        Biotech Laboratory System
-                    </div>
-                </div>
+                <!-- Hidden Textarea -->
+                <textarea id="messagePreview" class="hidden"></textarea>
+
+                <p class="absolute bottom-8 text-[10px] text-slate-400 font-medium">
+                    Secured by <span class="text-teal-600 font-bold">Biotech Systems</span>
+                </p>
 
             </div>
+
         </div>
     </main>
 
-    <!-- GLOBAL MODALS (Overlay Entire Screen) -->
-    
-    <!-- 1. DIRECTORY / CALL MODAL -->
-    <div id="callModal" class="hidden fixed inset-0 bg-gray-900/90 z-50 backdrop-blur-sm flex flex-col animate-enter justify-center items-center p-4">
-        <div class="bg-white w-full max-w-md rounded-2xl overflow-hidden shadow-2xl">
-            <div class="p-4 bg-gray-800 text-white flex justify-between items-center border-b border-gray-700">
-                <h3 class="font-bold"><i class="fa-solid fa-address-book text-teal-400"></i> Branch Directory</h3>
-                <button onclick="toggleCallModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-times"></i></button>
-            </div>
-            <div class="p-3 bg-blue-50 text-blue-700 text-xs text-center border-b border-blue-100">
-                <i class="fa-solid fa-circle-info"></i> Click <i class="fa-solid fa-microphone text-green-600"></i> for Live Voice
-            </div>
-            <div class="p-4 space-y-3 max-h-[60vh] overflow-y-auto" id="branchList">
-                <!-- Branch List Generated by JS -->
-            </div>
-        </div>
-    </div>
+    <!-- JS LIBS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js"></script>
 
-    <!-- 2. INCOMING CALL MODAL -->
-    <div id="incomingCallModal" class="hidden fixed inset-0 z-[60] bg-gray-900/95 flex flex-col items-center justify-center text-white animate-enter">
-        <div class="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center mb-6 ringing-animation shadow-[0_0_40px_rgba(34,197,94,0.6)]">
-            <i class="fa-solid fa-phone text-4xl"></i>
-        </div>
-        <h2 class="text-2xl font-bold mb-2">Incoming Call...</h2>
-        <p id="callerName" class="text-teal-400 font-bold text-xl mb-10">Head Office</p>
-        
-        <div class="flex gap-8">
-            <button onclick="rejectCall()" class="flex flex-col items-center gap-2 group">
-                <div class="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition cursor-pointer">
-                    <i class="fa-solid fa-phone-slash text-2xl"></i>
-                </div>
-                <span class="text-sm font-bold text-gray-400">Decline</span>
-            </button>
-            <button onclick="answerCall()" class="flex flex-col items-center gap-2 group">
-                <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition cursor-pointer">
-                    <i class="fa-solid fa-phone text-2xl animate-pulse"></i>
-                </div>
-                <span class="text-sm font-bold text-gray-400">Answer</span>
-            </button>
-        </div>
-    </div>
-
-    <!-- 3. ACTIVE CALL MODAL -->
-    <div id="activeCallModal" class="hidden fixed inset-0 z-[60] bg-gray-900 flex flex-col items-center justify-center text-white">
-        <div class="absolute top-8 right-8 flex items-center gap-2 bg-red-500/20 px-4 py-1.5 rounded-full border border-red-500/30">
-            <span class="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse"></span> 
-            <span class="text-xs font-bold tracking-widest">LIVE AUDIO</span>
-        </div>
-        
-        <div class="w-32 h-32 bg-gray-800 rounded-full flex items-center justify-center mb-6 border-4 border-gray-700 shadow-2xl">
-            <i class="fa-solid fa-user text-5xl text-gray-500"></i>
-        </div>
-        <h2 class="text-2xl font-bold mb-1" id="activeCallTarget">Connected</h2>
-        <p class="text-teal-400 text-sm mb-12 font-mono" id="callStatus">Establishing Connection...</p>
-        
-        <!-- Call Controls -->
-        <div class="flex gap-8 mb-12">
-            <!-- Mute -->
-            <button id="muteBtn" onclick="toggleMute()" class="flex flex-col items-center gap-3 group">
-                <div class="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center shadow-lg hover:bg-gray-600 transition">
-                    <i class="fa-solid fa-microphone text-2xl" id="muteIcon"></i>
-                </div>
-                <span class="text-xs text-gray-400 font-semibold">Mute</span>
-            </button>
-
-            <!-- Speaker -->
-            <button id="speakerBtn" onclick="toggleSpeaker()" class="flex flex-col items-center gap-3 group">
-                <div class="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center shadow-lg hover:bg-gray-600 transition">
-                    <i class="fa-solid fa-volume-high text-2xl" id="speakerIcon"></i>
-                </div>
-                <span class="text-xs text-gray-400 font-semibold">Speaker</span>
-            </button>
-        </div>
-        
-        <button onclick="endCall()" class="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center shadow-xl hover:bg-red-700 transition transform hover:scale-105">
-            <i class="fa-solid fa-phone-slash text-3xl"></i>
-        </button>
-        <p class="text-sm text-gray-500 mt-4 font-medium">End Call</p>
-    </div>
-
-    <!-- FIREBASE & LOGIC -->
+    <!-- FIREBASE MODULES -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-        import { getDatabase, ref, push, set, onValue, serverTimestamp, query, limitToLast, remove, onChildAdded } 
-        from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+        import { getDatabase, ref, push, set, onValue, serverTimestamp, query, limitToLast, remove, onChildAdded } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
+        
+        // --- 1. HISTORY APP CONFIG ---
+        const historyConfig = {
+            apiKey: "AIzaSyCmIFVSvMOVDk0uqtfHUU6GM_Gx4lv1TZA",
+            authDomain: "whatsappp-4f74e.firebaseapp.com",
+            databaseURL: "https://whatsappp-4f74e-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "whatsappp-4f74e",
+            storageBucket: "whatsappp-4f74e.firebasestorage.app",
+            messagingSenderId: "560430245862",
+            appId: "1:560430245862:web:7dc53f6ff5aaadaa34d827",
+            measurementId: "G-JSHJS2B2E7"
+        };
 
-        const firebaseConfig = {
+        // --- 2. VOICE APP CONFIG ---
+        const voiceConfig = {
             apiKey: "AIzaSyCPYqMnRIapygJqaKe6JZpitF3E5fq8jIs",
             authDomain: "biotechchat-c0a38.firebaseapp.com",
             projectId: "biotechchat-c0a38",
@@ -359,54 +483,79 @@
             appId: "1:1081724102554:web:16b0c1ee763148b4a63c23"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const chatRef = ref(db, 'biotech_messages');
+        // Initialize both apps
+        const historyApp = initializeApp(historyConfig, "historyApp");
+        const voiceApp = initializeApp(voiceConfig, "voiceApp");
+
+        const historyDb = getDatabase(historyApp);
+        const voiceDb = getDatabase(voiceApp);
+
+        // --- HISTORY LOGIC ---
+        const historyRef = ref(historyDb, 'history'); 
+        window.firebasePush = push;
+        window.firebaseSet = set;
+        window.historyPath = historyRef;
+        window.historyData = [];
+
+        onValue(historyRef, (snapshot) => {
+            const data = snapshot.val();
+            const listContainer = document.getElementById("sentItemsList");
+            const badge = document.getElementById("countBadge");
+            
+            if (!data) {
+                listContainer.innerHTML = `<div class="text-center py-8 text-slate-300 text-xs">No records</div>`;
+                badge.innerText = "0";
+                window.historyData = [];
+                return;
+            }
+
+            const itemsArray = Object.entries(data).map(([key, value]) => value).reverse();
+            window.historyData = itemsArray;
+            badge.innerText = itemsArray.length;
+            
+            const html = itemsArray.slice(0, 50).map((item, index) => `
+                <div onclick="loadHistoryItem(${index})" style="animation: fadeIn 0.3s ease forwards; animation-delay: ${index * 0.05}s; opacity: 0;" 
+                     class="history-item bg-white p-3 rounded-2xl border border-slate-100 relative overflow-hidden group">
+                    <div class="flex justify-between items-start mb-1">
+                        <span class="font-bold text-slate-700 text-xs group-hover:text-teal-600 transition-colors tracking-wide">${item.id}</span>
+                        <span class="text-[9px] text-slate-400 bg-slate-50 px-2 py-1 rounded-md border border-slate-100 font-medium">${item.sendTime}</span>
+                    </div>
+                    <div class="flex justify-between items-center text-[10px] text-slate-400 mt-2">
+                         <div class="flex items-center gap-1.5">
+                            <i class="fa-solid fa-phone text-teal-500/50"></i>
+                            <span class="font-mono text-slate-500">${item.phoneNumber || 'No Number'}</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 opacity-60">
+                            <i class="fa-regular fa-calendar"></i> ${item.date}
+                        </div>
+                    </div>
+                </div>
+            `).join("");
+
+            listContainer.innerHTML = html;
+        });
+
+        window.clearSentItemsFirebase = function() {
+            if (prompt("Enter Admin PIN:") === "129876") {
+                set(historyRef, null).catch((err) => alert(err));
+            }
+        };
         
-        // --- WebRTC Variables ---
+        document.getElementById('clearHistoryBtn').addEventListener('click', window.clearSentItemsFirebase);
+
+        // --- VOICE LOGIC (WebRTC) ---
         let localStream;
         let peerConnection;
         const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
         let currentCallRef = null;
         let myBranchName = "";
-        let candidateQueue = []; 
-        let isMuted = false;
-        let isSpeaker = false;
+        let candidateQueue = [];
 
-        const branches = [
-            { id: "HEAD OFFICE", name: "Head Office" },
-            { id: "VEYANGODA", name: "Veyangoda" },
-            
-            { id: "Naiwala", name: "Naiwala" },
-            { id: "BANDARANAYAKE", name: "Bandaranaye" },
-            { id: "BANDURAGODA", name: "Banduragoda" }
-        ];
-
-        function renderBranchList() {
-            const list = document.getElementById('branchList');
-            const myId = document.getElementById('branchIdentity').value;
-            
-            list.innerHTML = branches.filter(b => b.id !== myId).map(b => `
-                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-200 hover:bg-gray-100 transition group shadow-sm">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center font-bold text-xs border border-teal-200">${b.id.substring(0,2)}</div>
-                        <span class="text-sm font-bold text-gray-700">${b.name}</span>
-                    </div>
-                    <div class="flex gap-2">
-                        <button onclick="window.initiateCall('${b.id}')" class="w-9 h-9 rounded-full bg-green-50 text-green-600 border border-green-200 hover:bg-green-500 hover:text-white transition flex items-center justify-center shadow-sm" title="Voice Call">
-                            <i class="fa-solid fa-microphone"></i>
-                        </button>
-                        <a href="tel:+94767810623" class="w-9 h-9 rounded-full bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-500 hover:text-white transition flex items-center justify-center shadow-sm" title="Mobile Call">
-                            <i class="fa-solid fa-phone"></i>
-                        </a>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // --- WEBRTC CALL LOGIC ---
+        // 1. INITIATE CALL
         window.initiateCall = async function(targetBranch) {
-            myBranchName = document.getElementById('branchIdentity').value;
+            myBranchName = localStorage.getItem('myBranchIdentity');
+            if(!myBranchName) { alert("Please set your location first."); return; }
+
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
             } catch(e) { alert("Microphone access denied!"); return; }
@@ -421,13 +570,22 @@
             };
             
             peerConnection.onconnectionstatechange = () => {
-                const status = document.getElementById('callStatus');
-                if(status) status.innerText = peerConnection.connectionState === 'connected' ? "Voice Connected" : peerConnection.connectionState;
+                const status = document.getElementById('callStatusText');
+                if(status) {
+                    if(peerConnection.connectionState === 'connected') {
+                        status.innerText = "Voice Connected";
+                        status.className = "text-[10px] font-bold text-green-600 uppercase mb-1";
+                        window.startTimer();
+                        document.getElementById('ringtone').pause();
+                    } else {
+                        status.innerText = peerConnection.connectionState;
+                    }
+                }
             };
 
             peerConnection.onicecandidate = event => {
                 if (event.candidate) {
-                    push(ref(db, `biotech_calls/${targetBranch}/candidates`), {
+                    push(ref(voiceDb, `biotech_calls/${targetBranch}/candidates`), {
                         candidate: JSON.stringify(event.candidate),
                         sender: myBranchName
                     });
@@ -438,20 +596,22 @@
             await peerConnection.setLocalDescription(offer);
 
             const callBase = `biotech_calls/${targetBranch}`;
-            currentCallRef = ref(db, callBase);
-            set(ref(db, `${callBase}/candidates`), null);
+            currentCallRef = ref(voiceDb, callBase);
+            set(ref(voiceDb, `${callBase}/candidates`), null);
 
-            set(ref(db, `${callBase}/offer`), {
+            set(ref(voiceDb, `${callBase}/offer`), {
                 caller: myBranchName,
                 sdp: JSON.stringify(peerConnection.localDescription),
                 timestamp: serverTimestamp()
             });
 
-            document.getElementById('callModal').classList.add('hidden');
-            document.getElementById('activeCallModal').classList.remove('hidden');
-            document.getElementById('activeCallTarget').innerText = "Calling " + targetBranch + "...";
+            // Update UI for Caller
+            document.getElementById('callPhase').classList.add('hidden'); // Hide buttons while calling
+            document.getElementById('voiceActiveState').classList.remove('hidden');
+            document.getElementById('callStatusText').innerText = "Calling " + targetBranch + "...";
+            document.getElementById('ringtone').play();
             
-            onValue(ref(db, `${callBase}/answer`), async (snapshot) => {
+            onValue(ref(voiceDb, `${callBase}/answer`), async (snapshot) => {
                 const data = snapshot.val();
                 if (data && !peerConnection.currentRemoteDescription) {
                     const desc = new RTCSessionDescription(JSON.parse(data.sdp));
@@ -462,7 +622,7 @@
                 }
             });
 
-            onChildAdded(ref(db, `${callBase}/candidates`), (snapshot) => {
+            onChildAdded(ref(voiceDb, `${callBase}/candidates`), (snapshot) => {
                 const data = snapshot.val();
                 if (data && data.sender !== myBranchName) {
                     const candidate = new RTCIceCandidate(JSON.parse(data.candidate));
@@ -472,6 +632,32 @@
             });
         };
 
+        // 2. LISTEN FOR CALLS (Auto-runs on Identity Change)
+        window.listenForCalls = function() {
+            myBranchName = localStorage.getItem('myBranchIdentity');
+            if(!myBranchName) return;
+
+            // Update UI State based on stored identity
+            document.getElementById('setupPhase').classList.add('hidden');
+            document.getElementById('callPhase').classList.remove('hidden');
+
+            const myOfferRef = ref(voiceDb, `biotech_calls/${myBranchName}/offer`);
+            
+            onValue(myOfferRef, (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    document.getElementById('callerName').innerText = data.caller;
+                    document.getElementById('incomingCallModal').classList.remove('hidden');
+                    document.getElementById('ringtone').play().catch(e => console.log("Ring blocked:", e));
+                } else {
+                    document.getElementById('incomingCallModal').classList.add('hidden');
+                    document.getElementById('ringtone').pause();
+                    document.getElementById('ringtone').currentTime = 0;
+                }
+            });
+        };
+
+        // 3. ANSWER CALL
         window.answerCall = async function() {
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -491,24 +677,30 @@
             };
             
             peerConnection.onconnectionstatechange = () => {
-                const status = document.getElementById('callStatus');
-                if(status) status.innerText = peerConnection.connectionState === 'connected' ? "Voice Connected" : peerConnection.connectionState;
+                const status = document.getElementById('callStatusText');
+                if(status) {
+                    if(peerConnection.connectionState === 'connected') {
+                         status.innerText = "Voice Connected";
+                         status.className = "text-[10px] font-bold text-green-600 uppercase mb-1";
+                         window.startTimer();
+                    }
+                }
             };
 
-            myBranchName = document.getElementById('branchIdentity').value;
+            myBranchName = localStorage.getItem('myBranchIdentity');
             const callBase = `biotech_calls/${myBranchName}`;
-            currentCallRef = ref(db, callBase);
+            currentCallRef = ref(voiceDb, callBase);
 
             peerConnection.onicecandidate = event => {
                 if (event.candidate) {
-                    push(ref(db, `${callBase}/candidates`), {
+                    push(ref(voiceDb, `${callBase}/candidates`), {
                         candidate: JSON.stringify(event.candidate),
                         sender: myBranchName
                     });
                 }
             };
             
-            onValue(ref(db, `${callBase}/offer`), async (snapshot) => {
+            onValue(ref(voiceDb, `${callBase}/offer`), async (snapshot) => {
                 const data = snapshot.val();
                 if (data && !peerConnection.currentRemoteDescription) {
                     const remoteDesc = new RTCSessionDescription(JSON.parse(data.sdp));
@@ -521,18 +713,20 @@
                     const answer = await peerConnection.createAnswer();
                     await peerConnection.setLocalDescription(answer);
                     
-                    set(ref(db, `${callBase}/answer`), {
+                    set(ref(voiceDb, `${callBase}/answer`), {
                         sdp: JSON.stringify(answer),
                         timestamp: serverTimestamp()
                     });
 
+                    // Update UI for Receiver
                     document.getElementById('incomingCallModal').classList.add('hidden');
-                    document.getElementById('activeCallModal').classList.remove('hidden');
-                    document.getElementById('activeCallTarget').innerText = data.caller;
+                    document.getElementById('callPhase').classList.add('hidden'); // Hide buttons
+                    document.getElementById('voiceActiveState').classList.remove('hidden');
+                    document.getElementById('callStatusText').innerText = "Connected to " + data.caller;
                 }
             }, { onlyOnce: true });
 
-            onChildAdded(ref(db, `${callBase}/candidates`), (snapshot) => {
+            onChildAdded(ref(voiceDb, `${callBase}/candidates`), (snapshot) => {
                 const data = snapshot.val();
                 if (data && data.sender !== myBranchName) {
                     const candidate = new RTCIceCandidate(JSON.parse(data.candidate));
@@ -541,326 +735,336 @@
                 }
             });
 
-            onValue(ref(db, `${callBase}/offer`), (snapshot) => {
+            onValue(ref(voiceDb, `${callBase}/offer`), (snapshot) => {
                  if(!snapshot.exists()) window.endCall();
             });
         };
 
+        // 4. REJECT CALL
         window.rejectCall = function() {
-            const ringAudio = document.getElementById('ringtone');
-            ringAudio.pause();
-            ringAudio.currentTime = 0;
-
-            myBranchName = document.getElementById('branchIdentity').value;
-            remove(ref(db, `biotech_calls/${myBranchName}`));
+            document.getElementById('ringtone').pause();
+            myBranchName = localStorage.getItem('myBranchIdentity');
+            remove(ref(voiceDb, `biotech_calls/${myBranchName}`));
             document.getElementById('incomingCallModal').classList.add('hidden');
         };
 
+        // 5. END CALL (CLEANUP)
         window.endCall = function() {
-            const ringAudio = document.getElementById('ringtone');
-            ringAudio.pause();
-            ringAudio.currentTime = 0;
+            document.getElementById('ringtone').pause();
+            document.getElementById('ringtone').currentTime = 0;
 
             if (peerConnection) peerConnection.close();
             if (localStream) localStream.getTracks().forEach(track => track.stop());
             if (currentCallRef) remove(currentCallRef);
             
-            document.getElementById('activeCallModal').classList.add('hidden');
+            // UI Reset
+            document.getElementById('voiceActiveState').classList.add('hidden');
             document.getElementById('incomingCallModal').classList.add('hidden');
-            setTimeout(() => location.reload(), 500);
-        };
-
-        function listenForCalls() {
-            myBranchName = document.getElementById('branchIdentity').value;
-            const myOfferRef = ref(db, `biotech_calls/${myBranchName}/offer`);
+            document.getElementById('callTimer').innerText = "00:00";
             
-            onValue(myOfferRef, (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    document.getElementById('callerName').innerText = data.caller;
-                    document.getElementById('incomingCallModal').classList.remove('hidden');
-                    const ringAudio = document.getElementById('ringtone');
-                    ringAudio.play().catch(e => console.log("Ring blocked:", e));
-                } else {
-                    document.getElementById('incomingCallModal').classList.add('hidden');
-                    const ringAudio = document.getElementById('ringtone');
-                    ringAudio.pause();
-                    ringAudio.currentTime = 0;
-                }
-            });
-        }
-
-        // --- TOGGLES ---
-        window.toggleMute = function() {
-            if(localStream) {
-                const audioTrack = localStream.getAudioTracks()[0];
-                isMuted = !isMuted;
-                audioTrack.enabled = !isMuted;
-                const btn = document.getElementById('muteBtn');
-                const icon = document.getElementById('muteIcon');
-                if(isMuted) {
-                    icon.className = "fa-solid fa-microphone-slash text-2xl text-red-400";
-                    btn.querySelector('div').classList.add('bg-gray-600');
-                } else {
-                    icon.className = "fa-solid fa-microphone text-2xl";
-                    btn.querySelector('div').classList.remove('bg-gray-600');
-                }
-            }
-        };
-
-        window.toggleSpeaker = function() {
-            isSpeaker = !isSpeaker;
-            const btn = document.getElementById('speakerBtn');
-            const icon = document.getElementById('speakerIcon');
-            if(isSpeaker) icon.className = "fa-solid fa-volume-high text-2xl text-green-400";
-            else icon.className = "fa-solid fa-ear-listen text-2xl";
-        };
-
-        // --- CHAT LOGIC ---
-        let firstLoad = true;
-        let lastMsgTimestamp = 0;
-
-        if ("Notification" in window) {
-            if (Notification.permission !== "granted") Notification.requestPermission();
-        }
-
-        window.sendRealtimeMessage = function() {
-            const input = document.getElementById('chatMsg');
-            const text = input.value.trim();
-            const branch = document.getElementById('branchIdentity').value;
-
-            if (text) {
-                push(chatRef, {
-                    sender: branch,
-                    text: text,
-                    type: 'text',
-                    timestamp: serverTimestamp()
-                });
-                input.value = "";
-                document.getElementById('emojiPicker').classList.add('hidden');
-            }
-        };
-
-        let mediaRecorder;
-        let audioChunks = [];
-        let isRecording = false;
-
-        window.toggleVoiceRecording = function() {
-            if (!isRecording) startRecording();
-            else stopRecording();
-        }
-
-        async function startRecording() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
-                mediaRecorder.start();
-                isRecording = true;
-                document.getElementById('micBtn').classList.add('recording-pulse');
-                document.getElementById('recordingOverlay').classList.remove('hidden');
-                audioChunks = [];
-                mediaRecorder.addEventListener("dataavailable", event => audioChunks.push(event.data));
-                mediaRecorder.addEventListener("stop", () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                    const reader = new FileReader();
-                    reader.readAsDataURL(audioBlob); 
-                    reader.onloadend = function() {
-                        const base64data = reader.result;
-                        push(chatRef, {
-                            sender: document.getElementById('branchIdentity').value,
-                            audio: base64data,
-                            type: 'audio',
-                            timestamp: serverTimestamp()
-                        });
-                        document.getElementById('uploadLoader').classList.add('hidden');
-                    }
-                });
-            } catch (err) { alert("Mic access denied"); }
-        }
-
-        function stopRecording() {
-            if (mediaRecorder && isRecording) {
-                document.getElementById('uploadLoader').classList.remove('hidden');
-                mediaRecorder.stop();
-                mediaRecorder.stream.getTracks().forEach(track => track.stop());
-                isRecording = false;
-                document.getElementById('micBtn').classList.remove('recording-pulse');
-                document.getElementById('recordingOverlay').classList.add('hidden');
-            }
-        }
-
-        window.clearChat = function() {
-            const pw = prompt("Password:");
-            if (pw === "12987654321") {
-                if(confirm("Delete all messages?")) set(chatRef, null);
-            } else if (pw !== null) alert("Wrong Password");
-        }
-
-        window.handleImageUpload = function(input) {
-            if (input.files && input.files[0]) {
-                const file = input.files[0];
-                document.getElementById('uploadLoader').classList.remove('hidden');
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const img = new Image();
-                    img.onload = function() {
-                        const canvas = document.createElement('canvas');
-                        let width = img.width; let height = img.height;
-                        const MAX = 800;
-                        if (width > MAX) { height *= MAX / width; width = MAX; }
-                        canvas.width = width; canvas.height = height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, width, height);
-                        push(chatRef, {
-                            sender: document.getElementById('branchIdentity').value,
-                            image: canvas.toDataURL('image/jpeg', 0.6),
-                            type: 'image',
-                            timestamp: serverTimestamp()
-                        });
-                        document.getElementById('uploadLoader').classList.add('hidden');
-                        input.value = ''; 
-                    };
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        window.handleEnter = function(e) {
-            if(e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                window.sendRealtimeMessage();
-            }
-        }
-
-        const recentMessagesQuery = query(chatRef, limitToLast(50));
-        onValue(recentMessagesQuery, (snapshot) => {
-            const container = document.getElementById('chatContainer');
-            if(firstLoad) { container.innerHTML = ""; firstLoad = false; }
-            const data = snapshot.val();
-            container.innerHTML = "";
-            if (!data) {
-                container.innerHTML = `<div class="absolute inset-0 flex flex-col items-center justify-center text-gray-400 opacity-40"><i class="fa-regular fa-comment-dots text-4xl mb-2"></i><span class="text-xs">No Messages</span></div>`;
-                return;
-            }
-            const messages = Object.values(data);
-            messages.forEach(msg => renderMessage(msg));
+            // Re-show buttons
+            document.getElementById('callPhase').classList.remove('hidden');
             
-            const lastMsg = messages[messages.length - 1];
-            if (lastMsg.timestamp > lastMsgTimestamp) {
-                lastMsgTimestamp = lastMsg.timestamp;
-                const myBranch = document.getElementById('branchIdentity').value;
-                if (lastMsg.sender !== myBranch && Date.now() - lastMsg.timestamp < 10000) {
-                    const msgAudio = document.getElementById('msgSound');
-                    msgAudio.play().catch(e => console.log("Msg Sound blocked"));
-                    if (Notification.permission === "granted") {
-                        new Notification(`Biotech: ${lastMsg.sender}`, { body: "New Message" });
-                    }
-                }
-            }
-            container.scrollTop = container.scrollHeight;
-        });
-
-        function renderMessage(msg) {
-            const container = document.getElementById('chatContainer');
-            const myBranch = document.getElementById('branchIdentity').value;
-            const isMe = msg.sender === myBranch;
-            const alignClass = isMe ? 'msg-sent' : 'msg-received';
-            const alignContainer = isMe ? 'items-end' : 'items-start';
-            let content = "";
-            if (msg.type === 'image') content = `<img src="${msg.image}" class="rounded-lg max-w-full h-auto border-2 border-white/20 mt-1">`;
-            else if (msg.type === 'audio') content = `<audio controls src="${msg.audio}" class="mt-1"></audio>`;
-            else content = `<p class="whitespace-pre-wrap">${msg.text || ''}</p>`;
-
-            const div = document.createElement('div');
-            div.className = `flex flex-col ${alignContainer} animate-enter w-full`;
-            div.innerHTML = `
-                <div class="max-w-[85%] rounded-xl px-3 py-2 ${alignClass} text-sm relative group mb-1">
-                    <div class="text-[9px] font-bold opacity-75 uppercase mb-0.5">${msg.sender}</div>
-                    ${content}
-                    <div class="text-[9px] opacity-60 text-right mt-1">${new Date(msg.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
-                </div>`;
-            container.appendChild(div);
-        }
-
-        window.updateIdentity = function() {
-            const selected = document.getElementById('branchIdentity').value;
-            localStorage.setItem("biotechBranch", selected);
-            location.reload(); 
-        }
-
-        const savedBranch = localStorage.getItem("biotechBranch");
-        if(savedBranch) document.getElementById('branchIdentity').value = savedBranch;
+            window.isMuted = false;
+            window.updateMuteBtn();
+            
+            window.listenForCalls(); // Re-attach listener
+        };
         
-        renderBranchList();
-        listenForCalls();
+        // Expose to global scope for HTML onclicks
+        window.voiceDb = voiceDb;
+        window.ref = ref;
+        window.push = push;
+        window.set = set;
+        window.remove = remove;
     </script>
 
-    <!-- STANDARD REPORT & UI JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js"></script>
+    <!-- CORE LOGIC & VOICE CONTROLLER -->
     <script>
-        window.toggleCallModal = function() { document.getElementById('callModal').classList.toggle('hidden'); }
-        window.toggleMobileChat = function() { document.getElementById('chatSidebar').classList.toggle('-translate-x-full'); }
+        let iti = null;
+        let finalRawNumber = "";
+        let isPreviewMode = false;
+
+        // --- VOICE VARIABLES ---
+        let callTimerInterval;
+        let isMuted = false;
         
-        const emojis = ["👍", "👋", "🧪", "✅", "❌", "😊", "😂", "🩸", "🦠", "🔬", "🏥", "🚑", "💊", "🧾", "💵", "❗", "❓", "📞"];
         document.addEventListener("DOMContentLoaded", function() {
-            document.getElementById('emojiGrid').innerHTML = emojis.map(e => `<div class="emoji-btn" onclick="insertEmoji('${e}')">${e}</div>`).join('');
-            document.getElementById('date').valueAsDate = new Date();
+            const dateInput = document.getElementById('date');
+            dateInput.valueAsDate = new Date();
             
-            const input = document.getElementById('phoneNum');
-            window.iti = window.intlTelInput(input, { initialCountry: "lk", separateDialCode: true, utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js" });
-            
-            input.addEventListener('input', function(e) {
-                let val = e.target.value.replace(/\D/g, '');
-                if (val.startsWith('0')) val = val.substring(1);
-                if (val.length > 9) val = val.substring(0, 9);
-                e.target.value = val;
-                window.finalRawNumber = val;
-                const err = document.getElementById('phoneError');
-                if(val.length > 0 && val.length < 9) err.classList.remove('hidden');
-                else err.classList.add('hidden');
-                updatePreview();
+            const updateTime = () => {
+                const now = new Date();
+                document.getElementById('msgTime').innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            }
+            updateTime();
+            setInterval(updateTime, 60000);
+
+            const phoneInput = document.getElementById("phoneNum");
+            iti = window.intlTelInput(phoneInput, {
+                initialCountry: "lk",
+                separateDialCode: true,
+                autoPlaceholder: "off",
+                utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js"
             });
-            ['vgSelection', 'vgNum', 'date'].forEach(id => document.getElementById(id).addEventListener('input', updatePreview));
-            updatePreview();
+
+            phoneInput.addEventListener('input', function(e) {
+                // If user types, exit preview mode
+                isPreviewMode = false;
+                document.getElementById('historyIndicator').classList.add('hidden');
+                handlePhoneInput(e.target.value);
+            });
+
+            ['vgSelection', 'vgNum', 'date'].forEach(id => {
+                document.getElementById(id).addEventListener('input', () => {
+                    // If user types, exit preview mode
+                    isPreviewMode = false;
+                    document.getElementById('historyIndicator').classList.add('hidden');
+                    updatePreviewFromInputs();
+                });
+            });
+            
+            // Load saved identity if exists
+            const savedId = localStorage.getItem('myBranchIdentity');
+            if(savedId) {
+                // document.getElementById('myIdentity').value = savedId; // No need to set value, we hide it
+                // Wait for module to load then listen
+                setTimeout(() => { if(window.listenForCalls) window.listenForCalls(); }, 1500);
+            } else {
+                 // Ensure setup is shown
+                 document.getElementById('setupPhase').classList.remove('hidden');
+                 document.getElementById('callPhase').classList.add('hidden');
+            }
+
+            updatePreviewFromInputs();
         });
 
-        window.toggleEmoji = function() { document.getElementById('emojiPicker').classList.toggle('hidden'); }
-        window.insertEmoji = function(e) { document.getElementById('chatMsg').value += e; document.getElementById('chatMsg').focus(); }
+        // --- VOICE UI WRAPPERS ---
+        function updateIdentity() {
+            const id = document.getElementById('myIdentity').value;
+            localStorage.setItem('myBranchIdentity', id);
+            if(window.listenForCalls) window.listenForCalls();
+        }
 
-        window.finalRawNumber = "";
-        function updatePreview() {
-            const sel = document.getElementById('vgSelection').value;
-            const num = document.getElementById('vgNum').value.trim();
-            const date = document.getElementById('date').value;
-            const btn = document.getElementById('sendBtn');
-            if (num && date && window.finalRawNumber.length === 9) {
-                btn.classList.remove('opacity-50', 'cursor-not-allowed');
-                const id = `${sel}${num}`;
-                const exp = new Date().getTime() + 1209600000;
-                const link = `https://biotechveyangoda.lk/report-preview.html?data=${btoa(`${id}|${date}|${exp}`)}`;
-                document.getElementById('messagePreview').value = `*Biotech Medical Laboratory Online Report*\n\n👤 *Patient ID:* ${id}\n📅 *Date:* ${date}\n⏳ *Expires in:* 2 Weeks\n\n● Click the link below to view and download your report.\n*(ඔබට පහලින් ලින්ක් එකක් දිස් නොවුනහොත් කරුණාකර අපගේ WHATSAPP NUMBER එක සේව් කරගන්න.)*\n\n👇\n🔗 ${link}\n\n𝙁𝙧𝙤𝙢 - 𝘽𝙄𝙊𝙏𝙀𝘾𝙃 𝙇𝘼𝘽𝙊𝙍𝘼𝙏𝙊𝙍𝙔`;
-                return link;
+        function startCall(target) {
+            if(!target) return;
+            if(window.initiateCall) window.initiateCall(target);
+        }
+        
+        // Timer Logic
+        window.startTimer = function() {
+            let seconds = 0;
+            const timerEl = document.getElementById('callTimer');
+            clearInterval(callTimerInterval);
+            callTimerInterval = setInterval(() => {
+                seconds++;
+                const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+                const secs = (seconds % 60).toString().padStart(2, '0');
+                timerEl.innerText = `${mins}:${secs}`;
+            }, 1000);
+        }
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            updateMuteBtn();
+        }
+
+        window.updateMuteBtn = function() {
+            const btn = document.getElementById('muteBtn');
+            if(isMuted) {
+                btn.innerHTML = `<i class="fa-solid fa-microphone-slash text-red-500"></i>`;
+                btn.classList.add('bg-red-50', 'border-red-200');
             } else {
-                btn.classList.add('opacity-50', 'cursor-not-allowed');
-                document.getElementById('messagePreview').value = "Waiting for input...\nPlease enter Patient Number and valid Phone Number.";
+                btn.innerHTML = `<i class="fa-solid fa-microphone"></i>`;
+                btn.classList.remove('bg-red-50', 'border-red-200');
+            }
+        }
+
+        // --- PREVIEW LOGIC ---
+
+        function handlePhoneInput(val) {
+            const errorDiv = document.getElementById('phoneError');
+            val = val.replace(/\D/g, '');
+            if (val.startsWith('0')) val = val.substring(1);
+
+            if (val.length > 9) {
+                val = val.substring(0, 9);
+                errorDiv.classList.remove('hidden');
+                errorDiv.classList.add('flex', 'shake'); 
+                setTimeout(() => errorDiv.classList.remove('shake'), 500);
+            } else {
+                errorDiv.classList.add('hidden');
+                errorDiv.classList.remove('flex');
+            }
+            
+            document.getElementById('phoneNum').value = val;
+            finalRawNumber = val;
+            updatePreviewFromInputs();
+        }
+
+        // Wrapper to update preview from actual DOM inputs
+        function updatePreviewFromInputs() {
+            if(isPreviewMode) return; // Don't auto-update if viewing history
+            
+            const vgSelection = document.getElementById('vgSelection').value;
+            const vgNum = document.getElementById('vgNum').value.trim();
+            const date = document.getElementById('date').value;
+            
+            renderPreview(vgSelection, vgNum, date, finalRawNumber);
+        }
+
+        // Core Render Function - Decoupled from Inputs
+        function renderPreview(prefix, num, dateStr, rawPhone) {
+            const sendBtn = document.getElementById('sendBtn');
+            const previewText = document.getElementById('previewText');
+            const linkCard = document.getElementById('linkCard');
+            const hiddenArea = document.getElementById('messagePreview');
+            const headerName = document.getElementById('headerContactName');
+
+            // Dynamic Header Name
+            if(rawPhone && rawPhone.length > 3) {
+                const formattedNum = "0" + rawPhone.replace(/(\d{2})(\d{3})(\d{4})/, '$1 $2 $3').trim();
+                headerName.innerHTML = `${formattedNum} <i class="fa-solid fa-certificate text-teal-500 text-[10px] ml-1"></i>`;
+            } else {
+                headerName.innerHTML = `Biotech Lab <i class="fa-solid fa-certificate text-teal-500 text-[10px] ml-1"></i>`;
+            }
+
+            if (num && dateStr && rawPhone && rawPhone.length === 9) {
+                // Enable Send Button ONLY if NOT in preview mode (prevents sending old history by accident)
+                if(!isPreviewMode) {
+                    sendBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    sendBtn.disabled = false;
+                } else {
+                    sendBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    sendBtn.disabled = true;
+                }
+                
+                const patientId = `${prefix}${num}`;
+                const now = new Date();
+                const expiryTimestamp = now.getTime() + (14 * 24 * 60 * 60 * 1000); 
+
+                const originalData = `${patientId}|${dateStr}|${expiryTimestamp}`;
+                const encodedData = btoa(originalData);
+                const link = `https://biotechveyangoda.lk/report-preview.html?data=${encodedData}`;
+
+                const displayMsg = `<strong>Biotech Medical Laboratory Online Report</strong>\n\n` + 
+                              `👤 <strong>Patient ID:</strong> ${patientId}\n` +
+                              `📅 <strong>Date:</strong> ${dateStr}\n` +
+                              `⏳ <strong>Expires in:</strong> 2 Weeks\n\n` + 
+                              `● Click the link below to view/download.\n\n` +
+                              `<span class="text-blue-500">${link}</span>\n\n` +
+                              `<em>From - BIOTECH LABORATORY</em>`;
+                
+                const rawMsg = `*Biotech Medical Laboratory Online Report*\n\n` + 
+                              `👤 *Patient ID:* ${patientId}\n` +
+                              `📅 *Date:* ${dateStr}\n` +
+                              `⏳ *Expires in:* 2 Weeks\n\n` + 
+                              `● Click the link below to view and download your report.\n` +
+                              `*(ඔබට පහලින් ලින්ක් එකක් දිස් නොවුනහොත් කරුණාකර අපගේ WHATSAPP NUMBER එක සේව් කරගන්න.)*\n\n` +
+                              `👇\n🔗 ${link}\n\n` +
+                              `𝙁𝙧𝙤𝙢 - 𝘽𝙄𝙊𝙏𝙀𝘾𝙃 𝙇𝘼𝘽𝙊𝙍𝘼𝙏𝙊𝙍𝙔`;
+                
+                previewText.innerHTML = displayMsg;
+                hiddenArea.value = rawMsg;
+                linkCard.classList.remove('hidden'); 
+                return link;
+
+            } else {
+                sendBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                sendBtn.disabled = true;
+                linkCard.classList.add('hidden');
+                
+                let warning = "Waiting for input...";
+                if(isPreviewMode) warning = "Incomplete History Data";
+
+                previewText.innerHTML = `<span class="text-slate-400 italic">${warning}</span>`;
+                hiddenArea.value = "";
                 return null;
             }
         }
-        window.sendReportWhatsApp = function() {
-            if(window.finalRawNumber.length !== 9) { alert("Check phone number"); return; }
-            const msg = document.getElementById("messagePreview").value;
-            window.open(`https://web.whatsapp.com/send?phone=94${window.finalRawNumber}&text=${encodeURIComponent(msg)}`, "_blank");
+
+        // Updated History Loader - PREVIEW ONLY
+        window.loadHistoryItem = (index) => {
+            const item = window.historyData[index];
+            if(!item) return;
+            
+            isPreviewMode = true; // Flag to stop input listeners from overwriting
+            document.getElementById('historyIndicator').classList.remove('hidden'); // Show indicator
+
+            // Parse ID (e.g. BN1005)
+            let prefix = "BN";
+            let num = "";
+            const match = item.id.match(/([a-zA-Z]+)(\d+)/);
+            if(match) {
+                prefix = match[1];
+                num = match[2];
+            } else {
+                num = item.id;
+            }
+
+            // Call render directly without touching DOM inputs
+            renderPreview(prefix, num, item.date, item.phoneNumber);
+            
+            // Visual feedback on mobile sidebar
+            if(window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.add('-translate-x-full');
+            }
+        };
+
+        function sendWhatsApp() {
+            if (finalRawNumber.length !== 9 || isPreviewMode) return;
+
+            const message = document.getElementById("messagePreview").value;
+            if (!message) return;
+
+            // Save to Firebase (History App)
+            if(window.firebasePush && window.historyPath) {
+                const now = new Date();
+                const newItem = {
+                    id: `${document.getElementById("vgSelection").value}${document.getElementById("vgNum").value}`,
+                    date: document.getElementById('date').value,
+                    phoneNumber: finalRawNumber,
+                    sendTime: now.toLocaleTimeString("en-US", {hour: '2-digit', minute:'2-digit'}),
+                    timestamp: now.getTime()
+                };
+                window.firebasePush(window.historyPath, newItem).catch(console.error);
+            }
+
+            const fullNumber = "94" + finalRawNumber;
+            const encodedMessage = encodeURIComponent(message);
+            window.open(`https://web.whatsapp.com/send?phone=${fullNumber}&text=${encodedMessage}`, "_blank");
         }
-        window.copyLinkOnly = function() {
-            const link = updatePreview();
-            if(link) navigator.clipboard.writeText(link).then(() => {
-                const btn = document.querySelector('button[onclick="copyLinkOnly()"]');
-                btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
-                setTimeout(() => btn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy Link', 2000);
-            });
-            else alert("Complete form first");
+
+        function copyLinkOnly() {
+            // Need to calculate link based on current mode
+            let link = null;
+            if(isPreviewMode) {
+                 const rawMsg = document.getElementById('messagePreview').value;
+                 const linkMatch = rawMsg.match(/https:\/\/biotechveyangoda\.lk[^\s]+/);
+                 if(linkMatch) link = linkMatch[0];
+            } else {
+                 const vgSelection = document.getElementById('vgSelection').value;
+                 const vgNum = document.getElementById('vgNum').value.trim();
+                 const date = document.getElementById('date').value;
+                 link = renderPreview(vgSelection, vgNum, date, finalRawNumber);
+            }
+
+            const btn = document.querySelector('button[onclick="copyLinkOnly()"]');
+            
+            if(link) {
+                navigator.clipboard.writeText(link).then(() => {
+                    const originalContent = btn.innerHTML;
+                    btn.innerHTML = `<i class="fa-solid fa-check text-green-500"></i> Copied!`;
+                    btn.classList.add('bg-green-50', 'text-green-600', 'border-green-200');
+                    setTimeout(() => {
+                        btn.innerHTML = originalContent;
+                        btn.classList.remove('bg-green-50', 'text-green-600', 'border-green-200');
+                    }, 2000);
+                });
+            } else {
+                btn.classList.add('shake');
+                setTimeout(() => btn.classList.remove('shake'), 500);
+            }
         }
     </script>
 </body>
