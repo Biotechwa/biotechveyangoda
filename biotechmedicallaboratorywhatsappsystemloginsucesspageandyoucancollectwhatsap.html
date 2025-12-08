@@ -226,12 +226,37 @@
                 <div id="callPhase" class="hidden">
                     <label class="text-[9px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Quick Call</label>
                     <div class="grid grid-cols-6 gap-1">
-                        <button onclick="startCall('BANDARANAYAKE')" class="aspect-square rounded-md bg-white border border-slate-200 hover:bg-teal-50 hover:border-teal-200 hover:text-teal-700 text-[10px] font-bold text-slate-600 transition-all shadow-sm flex items-center justify-center" title="Bandaranayake">BN</button>
-                        <button onclick="startCall('VEYANGODA')" class="aspect-square rounded-md bg-white border border-slate-200 hover:bg-teal-50 hover:border-teal-200 hover:text-teal-700 text-[10px] font-bold text-slate-600 transition-all shadow-sm flex items-center justify-center" title="Veyangoda">VG</button>
-                        <button onclick="startCall('BANDURAGODA')" class="aspect-square rounded-md bg-white border border-slate-200 hover:bg-teal-50 hover:border-teal-200 hover:text-teal-700 text-[10px] font-bold text-slate-600 transition-all shadow-sm flex items-center justify-center" title="Banduragoda">BR</button>
-                        <button onclick="startCall('Naiwala')" class="aspect-square rounded-md bg-white border border-slate-200 hover:bg-teal-50 hover:border-teal-200 hover:text-teal-700 text-[10px] font-bold text-slate-600 transition-all shadow-sm flex items-center justify-center" title="Naiwala">NI</button>
-                        <button onclick="startCall('HEAD OFFICE')" class="aspect-square rounded-md bg-white border border-slate-200 hover:bg-teal-50 hover:border-teal-200 hover:text-teal-700 text-[10px] font-bold text-slate-600 transition-all shadow-sm flex items-center justify-center" title="Head Office">HO</button>
-                        <button onclick="startCall('ADMIN')" class="aspect-square rounded-md bg-slate-100 border border-slate-300 hover:bg-slate-200 text-[10px] font-bold text-slate-700 transition-all shadow-sm flex items-center justify-center" title="Admin">AD</button>
+                        
+                        <button onclick="startCall('BANDARANAYAKE')" class="relative aspect-square rounded-md bg-white border border-slate-200 hover:bg-teal-50 hover:border-teal-200 hover:text-teal-700 text-[10px] font-bold text-slate-600 transition-all shadow-sm flex items-center justify-center group" title="Bandaranayake">
+                            BN
+                            <span id="dot-BANDARANAYAKE" class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-400 border border-white"></span>
+                        </button>
+                        
+                        <button onclick="startCall('VEYANGODA')" class="relative aspect-square rounded-md bg-white border border-slate-200 hover:bg-teal-50 hover:border-teal-200 hover:text-teal-700 text-[10px] font-bold text-slate-600 transition-all shadow-sm flex items-center justify-center group" title="Veyangoda">
+                            VG
+                            <span id="dot-VEYANGODA" class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-400 border border-white"></span>
+                        </button>
+                        
+                        <button onclick="startCall('BANDURAGODA')" class="relative aspect-square rounded-md bg-white border border-slate-200 hover:bg-teal-50 hover:border-teal-200 hover:text-teal-700 text-[10px] font-bold text-slate-600 transition-all shadow-sm flex items-center justify-center group" title="Banduragoda">
+                            BR
+                            <span id="dot-BANDURAGODA" class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-400 border border-white"></span>
+                        </button>
+                        
+                        <button onclick="startCall('Naiwala')" class="relative aspect-square rounded-md bg-white border border-slate-200 hover:bg-teal-50 hover:border-teal-200 hover:text-teal-700 text-[10px] font-bold text-slate-600 transition-all shadow-sm flex items-center justify-center group" title="Naiwala">
+                            NI
+                            <span id="dot-Naiwala" class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-400 border border-white"></span>
+                        </button>
+                        
+                        <button onclick="startCall('HEAD OFFICE')" class="relative aspect-square rounded-md bg-white border border-slate-200 hover:bg-teal-50 hover:border-teal-200 hover:text-teal-700 text-[10px] font-bold text-slate-600 transition-all shadow-sm flex items-center justify-center group" title="Head Office">
+                            HO
+                            <span id="dot-HEAD_OFFICE" class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-400 border border-white"></span>
+                        </button>
+                        
+                        <button onclick="startCall('ADMIN')" class="relative aspect-square rounded-md bg-slate-100 border border-slate-300 hover:bg-slate-200 text-[10px] font-bold text-slate-700 transition-all shadow-sm flex items-center justify-center group" title="Admin">
+                            AD
+                            <span id="dot-ADMIN" class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-400 border border-white"></span>
+                        </button>
+
                     </div>
                 </div>
 
@@ -459,7 +484,7 @@
     <!-- FIREBASE MODULES -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-        import { getDatabase, ref, push, set, onValue, serverTimestamp, query, limitToLast, remove, onChildAdded } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
+        import { getDatabase, ref, push, set, onValue, serverTimestamp, query, limitToLast, remove, onChildAdded, onDisconnect } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
         
         // --- 1. HISTORY APP CONFIG ---
         const historyConfig = {
@@ -542,6 +567,36 @@
         };
         
         document.getElementById('clearHistoryBtn').addEventListener('click', window.clearSentItemsFirebase);
+
+        // --- PRESENCE SYSTEM (ONLINE STATUS) ---
+        // Monitor all branches
+        onValue(ref(voiceDb, 'biotech_presence'), (snapshot) => {
+            const presences = snapshot.val() || {};
+            const branches = ['BANDARANAYAKE', 'VEYANGODA', 'BANDURAGODA', 'Naiwala', 'HEAD OFFICE', 'ADMIN'];
+            
+            branches.forEach(branch => {
+                const safeId = branch.replace(' ', '_'); // Handle "HEAD OFFICE" -> "HEAD_OFFICE"
+                const el = document.getElementById('dot-' + safeId);
+                if(el) {
+                    const isOnline = presences[branch]?.online === true;
+                    if(isOnline) {
+                        el.className = "absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)] border border-white transition-all";
+                    } else {
+                        el.className = "absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-400 border border-white transition-all";
+                    }
+                }
+            });
+        });
+
+        // Set Myself Online
+        window.setPresence = (branchId) => {
+            const presenceRef = ref(voiceDb, `biotech_presence/${branchId}`);
+            // Set online
+            set(presenceRef, { online: true, last_seen: serverTimestamp() });
+            // Auto remove on disconnect (tab close/internet loss)
+            onDisconnect(presenceRef).remove();
+        };
+
 
         // --- VOICE LOGIC (WebRTC) ---
         let localStream;
@@ -636,6 +691,9 @@
         window.listenForCalls = function() {
             myBranchName = localStorage.getItem('myBranchIdentity');
             if(!myBranchName) return;
+
+            // Mark user online
+            window.setPresence(myBranchName);
 
             // Update UI State based on stored identity
             document.getElementById('setupPhase').classList.add('hidden');
