@@ -115,7 +115,8 @@
         .phone-notch {
             position: absolute; top: 0; left: 50%; transform: translateX(-50%);
             width: 120px; height: 28px; background: #1e293b;
-            border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;
+            border-bottom-left-radius: 16px;
+            border-bottom-right-radius: 16px;
             z-index: 20;
         }
 
@@ -191,8 +192,9 @@
                 <div>
                     <h1 class="font-extrabold text-slate-800 text-sm tracking-wide">BIOTECH LABS</h1>
                     <div class="flex items-center gap-2 mt-1">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Online</span>
+                        <!-- Dynamic Status Dot -->
+                        <span id="connectionStatusDot" class="w-2 h-2 rounded-full bg-slate-300"></span>
+                        <span id="connectionStatusText" class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Connecting...</span>
                     </div>
                 </div>
             </div>
@@ -588,12 +590,37 @@
             });
         });
 
+        // --- IMPROVED PRESENCE LOGIC (FIX FOR OFFLINE ISSUE) ---
+        const connectedRef = ref(voiceDb, ".info/connected");
+        
+        onValue(connectedRef, (snap) => {
+            if (snap.val() === true) {
+                // We are connected to the internet/Firebase
+                document.getElementById('connectionStatusDot').classList.remove('bg-red-500', 'bg-slate-300');
+                document.getElementById('connectionStatusDot').classList.add('bg-emerald-500', 'animate-pulse');
+                document.getElementById('connectionStatusText').innerText = "Online";
+                
+                // CRITICAL FIX: Re-assert presence when connection comes back
+                const currentIdentity = localStorage.getItem('myBranchIdentity');
+                if(currentIdentity) {
+                    const presenceRef = ref(voiceDb, `biotech_presence/${currentIdentity}`);
+                    onDisconnect(presenceRef).remove();
+                    set(presenceRef, { online: true, last_seen: serverTimestamp() });
+                }
+            } else {
+                // We lost connection
+                document.getElementById('connectionStatusDot').classList.remove('bg-emerald-500', 'animate-pulse');
+                document.getElementById('connectionStatusDot').classList.add('bg-red-500');
+                document.getElementById('connectionStatusText').innerText = "Offline";
+            }
+        });
+
         // Set Myself Online
         window.setPresence = (branchId) => {
+            // Just trigger the logic; the onValue(.info/connected) above will handle the actual writing
+            // But we do a manual write here just in case we are already connected
             const presenceRef = ref(voiceDb, `biotech_presence/${branchId}`);
-            // Set online
             set(presenceRef, { online: true, last_seen: serverTimestamp() });
-            // Auto remove on disconnect (tab close/internet loss)
             onDisconnect(presenceRef).remove();
         };
 
