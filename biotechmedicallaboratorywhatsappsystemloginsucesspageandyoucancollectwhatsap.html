@@ -115,7 +115,8 @@
         .phone-notch {
             position: absolute; top: 0; left: 50%; transform: translateX(-50%);
             width: 120px; height: 28px; background: #1e293b;
-            border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;
+            border-bottom-left-radius: 16px;
+            border-bottom-right-radius: 16px;
             z-index: 20;
         }
 
@@ -191,8 +192,9 @@
                 <div>
                     <h1 class="font-extrabold text-slate-800 text-sm tracking-wide">BIOTECH LABS</h1>
                     <div class="flex items-center gap-2 mt-1">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Online</span>
+                        <!-- Dynamic Status Dot -->
+                        <span id="connectionStatusDot" class="w-2 h-2 rounded-full bg-slate-300"></span>
+                        <span id="connectionStatusText" class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Connecting...</span>
                     </div>
                 </div>
             </div>
@@ -385,8 +387,8 @@
 
                     <!-- Buttons -->
                     <div class="pt-4 flex gap-4">
-                        <button onclick="copyLinkOnly()" class="flex-1 py-4 rounded-2xl border-2 border-slate-100 bg-white text-slate-600 hover:border-teal-100 hover:text-teal-600 font-bold text-sm transition-all flex items-center justify-center gap-2 group">
-                            <i class="fa-regular fa-copy group-hover:scale-110 transition-transform"></i> Copy Link
+                        <button onclick="sendSMS()" class="flex-1 py-4 rounded-2xl border-2 border-slate-100 bg-white text-slate-600 hover:border-teal-100 hover:text-teal-600 font-bold text-sm transition-all flex items-center justify-center gap-2 group">
+                             <i class="fa-regular fa-comment-dots group-hover:scale-110 transition-transform"></i> Send SMS
                         </button>
                         
                         <button onclick="sendWhatsApp()" id="sendBtn" class="flex-[1.5] py-4 rounded-2xl gradient-btn text-white font-bold text-sm shadow-xl shadow-teal-500/20 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2 opacity-50 cursor-not-allowed disabled:opacity-50">
@@ -543,7 +545,12 @@
                      class="history-item bg-white p-3 rounded-2xl border border-slate-100 relative overflow-hidden group">
                     <div class="flex justify-between items-start mb-1">
                         <span class="font-bold text-slate-700 text-xs group-hover:text-teal-600 transition-colors tracking-wide">${item.id}</span>
-                        <span class="text-[9px] text-slate-400 bg-slate-50 px-2 py-1 rounded-md border border-slate-100 font-medium">${item.sendTime}</span>
+                        <div class="flex items-center gap-2">
+                             <button onclick="recallHistoryItem(${index}, event)" class="w-5 h-5 flex items-center justify-center rounded-full bg-slate-50 hover:bg-teal-50 text-slate-400 hover:text-teal-600 border border-slate-100 transition-all" title="Recall Record">
+                                <i class="fa-solid fa-reply-all text-[9px]"></i>
+                             </button>
+                             <span class="text-[9px] text-slate-400 bg-slate-50 px-2 py-1 rounded-md border border-slate-100 font-medium">${item.sendTime}</span>
+                        </div>
                     </div>
                     <div class="flex justify-between items-center text-[10px] text-slate-400 mt-2">
                          <div class="flex items-center gap-1.5">
@@ -588,12 +595,37 @@
             });
         });
 
+        // --- IMPROVED PRESENCE LOGIC (FIX FOR OFFLINE ISSUE) ---
+        const connectedRef = ref(voiceDb, ".info/connected");
+        
+        onValue(connectedRef, (snap) => {
+            if (snap.val() === true) {
+                // We are connected to the internet/Firebase
+                document.getElementById('connectionStatusDot').classList.remove('bg-red-500', 'bg-slate-300');
+                document.getElementById('connectionStatusDot').classList.add('bg-emerald-500', 'animate-pulse');
+                document.getElementById('connectionStatusText').innerText = "Online";
+                
+                // CRITICAL FIX: Re-assert presence when connection comes back
+                const currentIdentity = localStorage.getItem('myBranchIdentity');
+                if(currentIdentity) {
+                    const presenceRef = ref(voiceDb, `biotech_presence/${currentIdentity}`);
+                    onDisconnect(presenceRef).remove();
+                    set(presenceRef, { online: true, last_seen: serverTimestamp() });
+                }
+            } else {
+                // We lost connection
+                document.getElementById('connectionStatusDot').classList.remove('bg-emerald-500', 'animate-pulse');
+                document.getElementById('connectionStatusDot').classList.add('bg-red-500');
+                document.getElementById('connectionStatusText').innerText = "Offline";
+            }
+        });
+
         // Set Myself Online
         window.setPresence = (branchId) => {
+            // Just trigger the logic; the onValue(.info/connected) above will handle the actual writing
+            // But we do a manual write here just in case we are already connected
             const presenceRef = ref(voiceDb, `biotech_presence/${branchId}`);
-            // Set online
             set(presenceRef, { online: true, last_seen: serverTimestamp() });
-            // Auto remove on disconnect (tab close/internet loss)
             onDisconnect(presenceRef).remove();
         };
 
@@ -1103,6 +1135,47 @@
             }
         };
 
+        // NEW RECALL FUNCTIONALITY
+        window.recallHistoryItem = (index, event) => {
+            event.stopPropagation(); // Don't trigger the preview only mode
+            const item = window.historyData[index];
+            if(!item) return;
+
+            // 1. Populate Inputs
+            // Parse ID
+            let prefix = "BN";
+            let num = "";
+            const match = item.id.match(/([a-zA-Z]+)(\d+)/);
+            if(match) {
+                prefix = match[1];
+                num = match[2];
+            } else {
+                num = item.id;
+            }
+
+            document.getElementById('vgSelection').value = prefix;
+            document.getElementById('vgNum').value = num;
+            document.getElementById('date').value = item.date;
+            
+            // Phone
+            iti.setNumber("94" + item.phoneNumber); // Assuming local numbers stored without 94, adding it helps ITI format it
+            // Update the global var used by the renderer
+            finalRawNumber = item.phoneNumber; 
+            
+            // 2. Reset Modes
+            isPreviewMode = false;
+            document.getElementById('historyIndicator').classList.add('hidden');
+            
+            // 3. Render
+            updatePreviewFromInputs();
+            
+            // 4. Visual Feedback (Optional - scroll to form)
+            if(window.innerWidth < 1024) {
+                 // On mobile/tablet, form is on top or separate, maybe scroll to it
+                 document.getElementById('vgNum').scrollIntoView({behavior: 'smooth'});
+            }
+        };
+
         function sendWhatsApp() {
             if (finalRawNumber.length !== 9 || isPreviewMode) return;
 
@@ -1127,35 +1200,66 @@
             window.open(`https://web.whatsapp.com/send?phone=${fullNumber}&text=${encodedMessage}`, "_blank");
         }
 
-        function copyLinkOnly() {
-            // Need to calculate link based on current mode
-            let link = null;
-            if(isPreviewMode) {
-                 const rawMsg = document.getElementById('messagePreview').value;
-                 const linkMatch = rawMsg.match(/https:\/\/biotechveyangoda\.lk[^\s]+/);
-                 if(linkMatch) link = linkMatch[0];
-            } else {
-                 const vgSelection = document.getElementById('vgSelection').value;
-                 const vgNum = document.getElementById('vgNum').value.trim();
-                 const date = document.getElementById('date').value;
-                 link = renderPreview(vgSelection, vgNum, date, finalRawNumber);
-            }
-
-            const btn = document.querySelector('button[onclick="copyLinkOnly()"]');
-            
-            if(link) {
-                navigator.clipboard.writeText(link).then(() => {
-                    const originalContent = btn.innerHTML;
-                    btn.innerHTML = `<i class="fa-solid fa-check text-green-500"></i> Copied!`;
-                    btn.classList.add('bg-green-50', 'text-green-600', 'border-green-200');
-                    setTimeout(() => {
-                        btn.innerHTML = originalContent;
-                        btn.classList.remove('bg-green-50', 'text-green-600', 'border-green-200');
-                    }, 2000);
-                });
-            } else {
+        // --- SMS API INTEGRATION ---
+        async function sendSMS() {
+             const vgSelection = document.getElementById('vgSelection').value;
+             const vgNum = document.getElementById('vgNum').value.trim();
+             const dateStr = document.getElementById('date').value;
+             
+             // Ensure valid data
+             if(!vgNum || !dateStr || finalRawNumber.length !== 9) {
+                // Shake button
+                const btn = document.querySelector('button[onclick="sendSMS()"]');
                 btn.classList.add('shake');
                 setTimeout(() => btn.classList.remove('shake'), 500);
+                return;
+             }
+
+             // Re-calculate link to be sure
+             const patientId = `${vgSelection}${vgNum}`;
+             // Timestamp calc
+             const now = new Date();
+             const expiryTimestamp = now.getTime() + (14 * 24 * 60 * 60 * 1000); 
+             const originalData = `${patientId}|${dateStr}|${expiryTimestamp}`;
+             const encodedData = btoa(originalData);
+             const link = `https://biotechveyangoda.lk/report-preview.html?data=${encodedData}`;
+             
+             // Construct Message
+             const msg = `Biotech Medical Laboratory Online Report\n\n` + 
+                              ` Patient ID: ${patientId}\n` +
+                              ` Date: ${dateStr}\n` +
+                              `Expires in: 2 Weeks\n\n` + 
+                              `● Click the link below to view and download your report.\n` +
+                              `\n\n` +
+                              `${link}\n\n` +
+                              `From - BIOTECH LAB`;
+
+             const dest = "0" + finalRawNumber;
+             const url = `https://msg.text-ware.com/send_sms.php?username=TW01036_biotech_lab_tr&password=hGHA4S@eKQFOS&src=BIOTECH+Lab&dst=${dest}&msg=${encodeURIComponent(msg)}`;
+
+
+            const btn = document.querySelector('button[onclick="sendSMS()"]');
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Sending...`;
+            btn.disabled = true;
+
+            try {
+                // Use no-cors mode to allow sending despite potential CORS restrictions on response reading
+                await fetch(url, { mode: 'no-cors' });
+                
+                // Success UI
+                btn.innerHTML = `<i class="fa-solid fa-check text-green-500"></i> Sent!`;
+                btn.classList.add('bg-green-50', 'text-green-600', 'border-green-200');
+                
+            } catch (error) {
+                console.error(error);
+                btn.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-500"></i> Error`;
+            } finally {
+                 setTimeout(() => {
+                    btn.innerHTML = originalContent;
+                    btn.classList.remove('bg-green-50', 'text-green-600', 'border-green-200');
+                    btn.disabled = false;
+                }, 2000);
             }
         }
     </script>
