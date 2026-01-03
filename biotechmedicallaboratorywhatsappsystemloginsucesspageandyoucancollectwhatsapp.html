@@ -58,8 +58,6 @@
         }
         .history-item:hover {
             transform: translateX(4px);
-            border-color: #99f6e4; /* teal-200 */
-            background-color: #f0fdfa; /* teal-50 */
         }
         .history-item:active {
             transform: scale(0.98) translateX(4px);
@@ -486,7 +484,7 @@
     <!-- FIREBASE MODULES -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-        import { getDatabase, ref, push, set, onValue, serverTimestamp, query, limitToLast, remove, onChildAdded, onDisconnect } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
+        import { getDatabase, ref, push, set, update, onValue, serverTimestamp, query, limitToLast, remove, onChildAdded, onDisconnect } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
         
         // --- 1. HISTORY APP CONFIG ---
         const historyConfig = {
@@ -521,8 +519,11 @@
         const historyRef = ref(historyDb, 'history'); 
         window.firebasePush = push;
         window.firebaseSet = set;
+        window.firebaseUpdate = update;
         window.historyPath = historyRef;
+        window.historyDb = historyDb;
         window.historyData = [];
+        window.ref = ref;
 
         onValue(historyRef, (snapshot) => {
             const data = snapshot.val();
@@ -536,20 +537,36 @@
                 return;
             }
 
-            const itemsArray = Object.entries(data).map(([key, value]) => value).reverse();
+            // Map data to include the Firebase key for updates
+            const itemsArray = Object.entries(data).map(([key, value]) => ({...value, key})).reverse();
             window.historyData = itemsArray;
             badge.innerText = itemsArray.length;
             
-            const html = itemsArray.slice(0, 50).map((item, index) => `
+            const html = itemsArray.slice(0, 50).map((item, index) => {
+                // Color Logic
+                let cardColorClass = "bg-white border-slate-100 hover:border-teal-200 hover:bg-teal-50"; // Default (WhatsApp only or legacy)
+                let iconHtml = '<i class="fa-brands fa-whatsapp text-green-500"></i>';
+
+                if (item.smsSent && item.whatsappSent) {
+                    // Both Sent: Orange
+                    cardColorClass = "bg-orange-50 border-orange-200 hover:bg-orange-100 hover:border-orange-300";
+                    iconHtml = '<div class="flex gap-1"><i class="fa-solid fa-comment-dots text-purple-500"></i><i class="fa-brands fa-whatsapp text-green-500"></i></div>';
+                } else if (item.smsSent) {
+                    // SMS Only: Light Purple
+                    cardColorClass = "bg-purple-50 border-purple-200 hover:bg-purple-100 hover:border-purple-300";
+                    iconHtml = '<i class="fa-solid fa-comment-dots text-purple-500"></i>';
+                }
+
+                return `
                 <div onclick="loadHistoryItem(${index})" style="animation: fadeIn 0.3s ease forwards; animation-delay: ${index * 0.05}s; opacity: 0;" 
-                     class="history-item bg-white p-3 rounded-2xl border border-slate-100 relative overflow-hidden group">
+                     class="history-item ${cardColorClass} p-3 rounded-2xl border relative overflow-hidden group">
                     <div class="flex justify-between items-start mb-1">
-                        <span class="font-bold text-slate-700 text-xs group-hover:text-teal-600 transition-colors tracking-wide">${item.id}</span>
+                        <span class="font-bold text-slate-700 text-xs transition-colors tracking-wide">${item.id}</span>
                         <div class="flex items-center gap-2">
-                             <button onclick="recallHistoryItem(${index}, event)" class="w-5 h-5 flex items-center justify-center rounded-full bg-slate-50 hover:bg-teal-50 text-slate-400 hover:text-teal-600 border border-slate-100 transition-all" title="Recall Record">
+                             <button onclick="recallHistoryItem(${index}, event)" class="w-5 h-5 flex items-center justify-center rounded-full bg-white/50 hover:bg-white text-slate-400 hover:text-teal-600 border border-transparent hover:border-slate-200 transition-all shadow-sm" title="Recall Record">
                                 <i class="fa-solid fa-reply-all text-[9px]"></i>
                              </button>
-                             <span class="text-[9px] text-slate-400 bg-slate-50 px-2 py-1 rounded-md border border-slate-100 font-medium">${item.sendTime}</span>
+                             <span class="text-[9px] text-slate-400 bg-white/60 px-2 py-1 rounded-md border border-slate-100/50 font-medium">${item.sendTime}</span>
                         </div>
                     </div>
                     <div class="flex justify-between items-center text-[10px] text-slate-400 mt-2">
@@ -557,12 +574,13 @@
                             <i class="fa-solid fa-phone text-teal-500/50"></i>
                             <span class="font-mono text-slate-500">${item.phoneNumber || 'No Number'}</span>
                         </div>
-                        <div class="flex items-center gap-1.5 opacity-60">
-                            <i class="fa-regular fa-calendar"></i> ${item.date}
+                        <div class="flex items-center gap-1.5 opacity-80">
+                            ${iconHtml}
+                            <span>${item.date}</span>
                         </div>
                     </div>
                 </div>
-            `).join("");
+            `}).join("");
 
             listContainer.innerHTML = html;
         });
@@ -897,10 +915,7 @@
         
         // Expose to global scope for HTML onclicks
         window.voiceDb = voiceDb;
-        window.ref = ref;
-        window.push = push;
-        window.set = set;
-        window.remove = remove;
+        // window.ref, push, set, remove are already set above
     </script>
 
     <!-- CORE LOGIC & VOICE CONTROLLER -->
@@ -1176,24 +1191,53 @@
             }
         };
 
+        // --- NEW: History Helper ---
+        async function addToHistory(type) {
+            // type = 'sms' or 'whatsapp'
+            if(!window.firebasePush || !window.historyPath) return;
+
+            const id = `${document.getElementById("vgSelection").value}${document.getElementById("vgNum").value}`;
+            const date = document.getElementById('date').value;
+            const phone = finalRawNumber;
+            const now = new Date();
+            const timeString = now.toLocaleTimeString("en-US", {hour: '2-digit', minute:'2-digit'});
+
+            // Check if record exists (Merged Logic)
+            // We search the local window.historyData to find a matching ID + Date
+            const existing = window.historyData.find(item => item.id === id && item.date === date);
+
+            if (existing && existing.key) {
+                // UPDATE existing record
+                const updatePath = window.ref(window.historyDb, `history/${existing.key}`);
+                const updates = {};
+                if(type === 'sms') updates.smsSent = true;
+                if(type === 'whatsapp') updates.whatsappSent = true;
+                // We keep the original timestamp to prevent jumping, or update lastActionTime if needed
+                
+                await window.firebaseUpdate(updatePath, updates).catch(console.error);
+            } else {
+                // CREATE new record
+                const newItem = {
+                    id: id,
+                    date: date,
+                    phoneNumber: phone,
+                    sendTime: timeString,
+                    timestamp: now.getTime(),
+                    smsSent: (type === 'sms'),
+                    whatsappSent: (type === 'whatsapp')
+                };
+                await window.firebasePush(window.historyPath, newItem).catch(console.error);
+            }
+        }
+
         function sendWhatsApp() {
             if (finalRawNumber.length !== 9 || isPreviewMode) return;
 
             const message = document.getElementById("messagePreview").value;
             if (!message) return;
 
-            // Save to Firebase (History App)
-            if(window.firebasePush && window.historyPath) {
-                const now = new Date();
-                const newItem = {
-                    id: `${document.getElementById("vgSelection").value}${document.getElementById("vgNum").value}`,
-                    date: document.getElementById('date').value,
-                    phoneNumber: finalRawNumber,
-                    sendTime: now.toLocaleTimeString("en-US", {hour: '2-digit', minute:'2-digit'}),
-                    timestamp: now.getTime()
-                };
-                window.firebasePush(window.historyPath, newItem).catch(console.error);
-            }
+            // Save to Firebase (History App) using new Helper
+            addToHistory('whatsapp');
 
             const fullNumber = "94" + finalRawNumber;
             const encodedMessage = encodeURIComponent(message);
@@ -1247,6 +1291,9 @@
                 // Use no-cors mode to allow sending despite potential CORS restrictions on response reading
                 await fetch(url, { mode: 'no-cors' });
                 
+                // LOG TO FIREBASE
+                addToHistory('sms');
+
                 // Success UI
                 btn.innerHTML = `<i class="fa-solid fa-check text-green-500"></i> Sent!`;
                 btn.classList.add('bg-green-50', 'text-green-600', 'border-green-200');
