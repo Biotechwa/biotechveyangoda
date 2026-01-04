@@ -925,11 +925,12 @@
         // Your IDs provided:
         // WABA ID: 557108420815993 (Meta)
         // Meta Business ID: 1145114556960406
-        // Template ID: HXbe20d892dbe1ed11a9af5f9838677ea6 (Twilio Content SID)
+        // Template ID: HX471b0272dbbd686bff78f6ef52821877 (Twilio Content SID)
 
         const TWILIO_ACCOUNT_SID = "AC8573797da12b063892096aaece06456b";
         const TWILIO_AUTH_TOKEN = "0cb1e356b71a953721daba01f6459a38";
-        const TWILIO_FROM_NUMBER = "+94768896370"; // e.g. +14155238886 (Must be a Twilio WhatsApp Sender)
+        // const TWILIO_FROM_NUMBER = "+94768896370"; // REPLACED BY MESSAGING SERVICE
+        const TWILIO_MESSAGING_SERVICE_SID = "MG4aa751e793fd312d715d9623daea6966"; 
         const TWILIO_CONTENT_SID = "HX471b0272dbbd686bff78f6ef52821877";
 
         let iti = null;
@@ -1288,12 +1289,13 @@
             
             const formData = new URLSearchParams();
             formData.append('To', `whatsapp:+94${finalRawNumber}`);
-            formData.append('From', `whatsapp:${TWILIO_FROM_NUMBER}`);
+            // USE MESSAGING SERVICE SID INSTEAD OF FROM NUMBER
+            formData.append('MessagingServiceSid', TWILIO_MESSAGING_SERVICE_SID);
             formData.append('ContentSid', TWILIO_CONTENT_SID);
             formData.append('ContentVariables', contentVariables);
 
             console.log("Sending to:", `whatsapp:+94${finalRawNumber}`);
-            console.log("From:", `whatsapp:${TWILIO_FROM_NUMBER}`);
+            console.log("Using Messaging Service:", TWILIO_MESSAGING_SERVICE_SID);
 
             try {
                 // NOTE: This fetch call will likely trigger a CORS error in a standard browser environment 
@@ -1312,6 +1314,10 @@
                     const json = await response.json();
                     console.log("Twilio Success:", json);
                     addToHistory('whatsapp');
+                    
+                    // Show SID for debugging delivery issues
+                    alert(`Message Successfully Queued!\n\nSID: ${json.sid}\nStatus: ${json.status}\n\nIf the message does not arrive, search for this SID in your Twilio Console Logs.`);
+
                     btn.innerHTML = `<i class="fa-solid fa-check text-white"></i> Sent!`;
                     btn.classList.remove('gradient-btn');
                     btn.classList.add('bg-green-500');
@@ -1325,7 +1331,7 @@
                     if (errorCode === 20003) {
                         helpMsg = "Authentication Failed. Check SID/Token.";
                     } else if (errorCode === 63007) {
-                        helpMsg = "Sender/Template Mismatch. Ensure +94 number is a registered WhatsApp Sender.";
+                        helpMsg = "Sender/Template Mismatch. Ensure your Messaging Service contains a registered WhatsApp Sender.";
                     } else if (errorCode === 63016) {
                         helpMsg = "Failed to send template. Check variable constraints.";
                     }
