@@ -1321,12 +1321,21 @@
                     const errorMsg = err.message || response.statusText;
                     const errorCode = err.code || response.status;
                     
+                    let helpMsg = "";
                     if (errorCode === 20003) {
-                        alert(`Twilio Authentication Error (20003)!\n\nYour Account SID or Auth Token is incorrect.\nPlease check your Twilio Console.`);
+                        helpMsg = "Authentication Failed. Check SID/Token.";
                     } else if (errorCode === 63007) {
-                        alert(`Twilio Error 63007: Template Mismatch\n\nThe Sender Number (${TWILIO_FROM_NUMBER}) is not authorized to use this Template (${TWILIO_CONTENT_SID}).\n\nSolutions:\n1. Ensure your sender number is a registered 'WhatsApp Sender'.\n2. If using Sandbox, you CANNOT use custom templates (HX...).\n3. Check if the template is approved.`);
-                    } else {
-                        alert(`Twilio Error: ${errorMsg}\nCode: ${errorCode}`);
+                        helpMsg = "Sender/Template Mismatch. Ensure +94 number is a registered WhatsApp Sender.";
+                    } else if (errorCode === 63016) {
+                        helpMsg = "Failed to send template. Check variable constraints.";
+                    }
+
+                    const fallback = confirm(`Twilio API Error (${errorCode}): ${errorMsg}\n${helpMsg}\n\nDo you want to send via WhatsApp Web instead?`);
+                    if(fallback) {
+                         const fullNumber = "94" + finalRawNumber;
+                         const message = document.getElementById("messagePreview").value;
+                         const encodedMessage = encodeURIComponent(message);
+                         window.open(`https://web.whatsapp.com/send?phone=${fullNumber}&text=${encodedMessage}`, "_blank");
                     }
 
                     btn.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Failed`;
@@ -1334,7 +1343,13 @@
                 }
             } catch (error) {
                 console.error("Fetch/Network Error:", error);
-                alert("Network Error (Possible CORS). Check Console (F12).");
+                const fallback = confirm("Network/CORS Error: The browser blocked the API call.\n\nDo you want to send via WhatsApp Web instead?");
+                if(fallback) {
+                        const fullNumber = "94" + finalRawNumber;
+                        const message = document.getElementById("messagePreview").value;
+                        const encodedMessage = encodeURIComponent(message);
+                        window.open(`https://web.whatsapp.com/send?phone=${fullNumber}&text=${encodedMessage}`, "_blank");
+                }
                 btn.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Error`;
             } finally {
                 setTimeout(() => {
