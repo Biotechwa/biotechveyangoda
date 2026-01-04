@@ -929,7 +929,7 @@
 
         const TWILIO_ACCOUNT_SID = "AC8573797da12b063892096aaece06456b";
         const TWILIO_AUTH_TOKEN = "6c5425ded820422dcce1a5d3ebe305a6";
-        const TWILIO_FROM_NUMBER = "+94768896370"; // e.g. +14155238886 (Must be a Twilio WhatsApp Sender)
+        const TWILIO_FROM_NUMBER = "+17652956630"; // e.g. +14155238886 (Must be a Twilio WhatsApp Sender)
         const TWILIO_CONTENT_SID = "HX4cdbb045d65ec3705b3421219395129d";
 
         let iti = null;
@@ -1262,6 +1262,9 @@
             // We must strip 'https://' from the link so it doesn't become 'http://https://...'
             const linkForTemplate = link.replace(/^https?:\/\//, '');
 
+            console.log("Preparing WhatsApp...");
+            console.log("Link for Template:", linkForTemplate);
+
             // Construct ContentVariables
             // 1: VG Num, 2: Date, 3: Link (Domain + Path)
             const contentVariables = JSON.stringify({
@@ -1276,14 +1279,21 @@
             btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Sending...`;
             btn.disabled = true;
 
-            const url = `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`;
-            const auth = btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`);
+            // Clean credentials to remove accidental whitespace
+            const sid = TWILIO_ACCOUNT_SID.trim();
+            const token = TWILIO_AUTH_TOKEN.trim();
+
+            const url = `https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`;
+            const auth = btoa(`${sid}:${token}`);
             
             const formData = new URLSearchParams();
             formData.append('To', `whatsapp:+94${finalRawNumber}`);
             formData.append('From', `whatsapp:${TWILIO_FROM_NUMBER}`);
             formData.append('ContentSid', TWILIO_CONTENT_SID);
             formData.append('ContentVariables', contentVariables);
+
+            console.log("Sending to:", `whatsapp:+94${finalRawNumber}`);
+            console.log("From:", `whatsapp:${TWILIO_FROM_NUMBER}`);
 
             try {
                 // NOTE: This fetch call will likely trigger a CORS error in a standard browser environment 
@@ -1299,20 +1309,24 @@
                 });
                 
                 if (response.ok) {
+                    const json = await response.json();
+                    console.log("Twilio Success:", json);
                     addToHistory('whatsapp');
                     btn.innerHTML = `<i class="fa-solid fa-check text-white"></i> Sent!`;
                     btn.classList.remove('gradient-btn');
                     btn.classList.add('bg-green-500');
                 } else {
                     const err = await response.json();
-                    console.error("Twilio Error:", err);
-                    alert("Error sending WhatsApp: " + (err.message || response.statusText));
+                    console.error("Twilio Error Response:", err);
+                    const errorMsg = err.message || response.statusText;
+                    const errorCode = err.code || response.status;
+                    alert(`Twilio Authentication Error!\n\nCode: ${errorCode}\nMessage: ${errorMsg}\n\nPlease check your SID and Auth Token.`);
                     btn.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Failed`;
                     btn.classList.add('bg-red-500');
                 }
             } catch (error) {
-                console.error("Fetch Error:", error);
-                alert("Network/CORS Error. Check console for details.");
+                console.error("Fetch/Network Error:", error);
+                alert("Network Error (Possible CORS). Check Console (F12).");
                 btn.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Error`;
             } finally {
                 setTimeout(() => {
