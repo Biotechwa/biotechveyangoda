@@ -929,8 +929,8 @@
 
         const TWILIO_ACCOUNT_SID = "AC8573797da12b063892096aaece06456b";
         const TWILIO_AUTH_TOKEN = "0cb1e356b71a953721daba01f6459a38";
-        const TWILIO_FROM_NUMBER = "+17652956630"; // e.g. +14155238886 (Must be a Twilio WhatsApp Sender)
-        const TWILIO_CONTENT_SID = "HX4cdbb045d65ec3705b3421219395129d";
+        const TWILIO_FROM_NUMBER = "+94768896370"; // e.g. +14155238886 (Must be a Twilio WhatsApp Sender)
+        const TWILIO_CONTENT_SID = "HX471b0272dbbd686bff78f6ef52821877";
 
         let iti = null;
         let finalRawNumber = "";
@@ -1320,7 +1320,15 @@
                     console.error("Twilio Error Response:", err);
                     const errorMsg = err.message || response.statusText;
                     const errorCode = err.code || response.status;
-                    alert(`Twilio Authentication Error!\n\nCode: ${errorCode}\nMessage: ${errorMsg}\n\nPlease check your SID and Auth Token.`);
+                    
+                    if (errorCode === 20003) {
+                        alert(`Twilio Authentication Error (20003)!\n\nYour Account SID or Auth Token is incorrect.\nPlease check your Twilio Console.`);
+                    } else if (errorCode === 63007) {
+                        alert(`Twilio Error 63007: Template Mismatch\n\nThe Sender Number (${TWILIO_FROM_NUMBER}) is not authorized to use this Template (${TWILIO_CONTENT_SID}).\n\nSolutions:\n1. Ensure your sender number is a registered 'WhatsApp Sender'.\n2. If using Sandbox, you CANNOT use custom templates (HX...).\n3. Check if the template is approved.`);
+                    } else {
+                        alert(`Twilio Error: ${errorMsg}\nCode: ${errorCode}`);
+                    }
+
                     btn.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Failed`;
                     btn.classList.add('bg-red-500');
                 }
