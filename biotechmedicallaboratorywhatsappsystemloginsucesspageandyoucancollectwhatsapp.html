@@ -390,7 +390,7 @@
                         </button>
                         
                         <button onclick="sendWhatsApp()" id="sendBtn" class="flex-[1.5] py-4 rounded-2xl gradient-btn text-white font-bold text-sm shadow-xl shadow-teal-500/20 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2 opacity-50 cursor-not-allowed disabled:opacity-50">
-                            <i class="fa-brands fa-whatsapp text-xl"></i> Send Message
+                            <i class="fa-brands fa-whatsapp text-xl"></i> Send WhatsApp
                         </button>
                     </div>
 
@@ -483,8 +483,9 @@
 
     <!-- FIREBASE MODULES -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-        import { getDatabase, ref, push, set, update, onValue, serverTimestamp, query, limitToLast, remove, onChildAdded, onDisconnect } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getDatabase, ref, push, set, update, onValue, serverTimestamp, query, limitToLast, remove, onChildAdded, onDisconnect } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
         
         // --- 1. HISTORY APP CONFIG ---
         const historyConfig = {
@@ -515,6 +516,30 @@
         const historyDb = getDatabase(historyApp);
         const voiceDb = getDatabase(voiceApp);
 
+        // Auth for both apps to ensure DB access
+        const historyAuth = getAuth(historyApp);
+        const voiceAuth = getAuth(voiceApp);
+        
+        // Helper to handle Auth gracefully
+        const handleAuth = async (authInstance, appName) => {
+            try {
+                await signInAnonymously(authInstance);
+                console.log(`[${appName}] Signed in anonymously.`);
+            } catch (err) {
+                if (err.code === 'auth/configuration-not-found') {
+                    console.warn(`[${appName}] Warning: Anonymous Auth not enabled in Firebase Console. Database operations may fail if rules require auth.`);
+                } else if (err.code === 'auth/operation-not-allowed') {
+                    console.warn(`[${appName}] Warning: Anonymous Auth provider is disabled in Firebase Console.`);
+                } else {
+                    console.error(`[${appName}] Auth Error:`, err);
+                }
+            }
+        };
+
+        handleAuth(historyAuth, "HistoryApp");
+        handleAuth(voiceAuth, "VoiceApp");
+
+
         // --- HISTORY LOGIC ---
         const historyRef = ref(historyDb, 'history'); 
         window.firebasePush = push;
@@ -541,20 +566,35 @@
             const itemsArray = Object.entries(data).map(([key, value]) => ({...value, key})).reverse();
             window.historyData = itemsArray;
             badge.innerText = itemsArray.length;
+
+            // --- AUTO DELETE LIMIT (200) ---
+            if (itemsArray.length > 200) {
+                const itemsToDelete = itemsArray.slice(200);
+                itemsToDelete.forEach(item => {
+                    if (item.key) {
+                         const deleteRef = ref(historyDb, `history/${item.key}`);
+                         remove(deleteRef).catch(err => console.error("Cleanup Error:", err));
+                    }
+                });
+            }
             
             const html = itemsArray.slice(0, 50).map((item, index) => {
                 // Color Logic
-                let cardColorClass = "bg-white border-slate-100 hover:border-teal-200 hover:bg-teal-50"; // Default (WhatsApp only or legacy)
-                let iconHtml = '<i class="fa-brands fa-whatsapp text-green-500"></i>';
+                let cardColorClass = "bg-white border-slate-100 hover:border-teal-200 hover:bg-teal-50"; // Default / Fallback
+                let iconHtml = '<i class="fa-solid fa-check text-slate-300"></i>';
 
                 if (item.smsSent && item.whatsappSent) {
-                    // Both Sent: Orange
-                    cardColorClass = "bg-orange-50 border-orange-200 hover:bg-orange-100 hover:border-orange-300";
-                    iconHtml = '<div class="flex gap-1"><i class="fa-solid fa-comment-dots text-purple-500"></i><i class="fa-brands fa-whatsapp text-green-500"></i></div>';
+                    // Both Sent: Blue (Distinct from single actions)
+                    cardColorClass = "bg-blue-50 border-blue-200 hover:bg-blue-100 hover:border-blue-300";
+                    iconHtml = '<div class="flex gap-1"><i class="fa-solid fa-comment-dots text-yellow-600"></i><i class="fa-brands fa-whatsapp text-green-600"></i></div>';
+                } else if (item.whatsappSent) {
+                    // WhatsApp (Twilio): Green
+                    cardColorClass = "bg-green-50 border-green-200 hover:bg-green-100 hover:border-green-300";
+                    iconHtml = '<i class="fa-brands fa-whatsapp text-green-600"></i>';
                 } else if (item.smsSent) {
-                    // SMS Only: Light Purple
-                    cardColorClass = "bg-purple-50 border-purple-200 hover:bg-purple-100 hover:border-purple-300";
-                    iconHtml = '<i class="fa-solid fa-comment-dots text-purple-500"></i>';
+                    // SMS Only: Yellow
+                    cardColorClass = "bg-yellow-50 border-yellow-200 hover:bg-yellow-100 hover:border-yellow-300";
+                    iconHtml = '<i class="fa-solid fa-comment-dots text-yellow-600"></i>';
                 }
 
                 return `
@@ -821,6 +861,7 @@
                         statusEl.classList.remove('text-red-500', 'animate-pulse');
                         statusEl.classList.add('text-green-600');
                         window.startTimer();
+                        document.getElementById('ringtone').pause();
                     }
                     if(window.disconnectTimer) clearTimeout(window.disconnectTimer);
                 }
@@ -920,6 +961,23 @@
 
     <!-- CORE LOGIC & VOICE CONTROLLER -->
     <script>
+        // --- TWILIO CONFIGURATION (YOU MUST FILL THESE) ---
+        // Your IDs provided:
+        // WABA ID: 557108420815993 (Meta)
+        // Meta Business ID: 1145114556960406
+        // Template ID: HX6ebcf98b42e8129e58cdf4c1d323f911 (Twilio Content SID)
+
+        const TWILIO_ACCOUNT_SID = "AC8573797da12b063892096aaece06456b";
+        // const TWILIO_AUTH_TOKEN = "0cb1e356b71a953721daba01f6459a38"; // Replaced by API Key
+        
+        // NEW API KEY AUTHENTICATION
+        const TWILIO_API_KEY = "SK5a736baa108570f16ed6e3d10a6cc70f";
+        const TWILIO_API_SECRET = "aKWrUUcv02WCvZzYlAIVYwE5BZuoQrwM";
+        
+        const TWILIO_FROM_NUMBER = "+94768896370"; // Using specific US number as requested
+        // const TWILIO_MESSAGING_SERVICE_SID = "MG4aa751e793fd312d715d9623daea6966"; 
+        const TWILIO_CONTENT_SID = "HX06f184ba35e05d64c20ae4320f748a43";
+
         let iti = null;
         let finalRawNumber = "";
         let isPreviewMode = false;
@@ -1087,20 +1145,21 @@
                 const link = `https://biotechveyangoda.lk/report-preview.html?data=${encodedData}`;
 
                 const displayMsg = `<strong>Biotech Medical Laboratory Online Report</strong>\n\n` + 
-                              `👤 <strong>Patient ID:</strong> ${patientId}\n` +
-                              `📅 <strong>Date:</strong> ${dateStr}\n` +
-                              `⏳ <strong>Expires in:</strong> 2 Weeks\n\n` + 
-                              `● Click the link below to view/download.\n\n` +
-                              `<span class="text-blue-500">${link}</span>\n\n` +
-                              `<em>From - BIOTECH LABORATORY</em>`;
+                              `👤 Patient ID: ${patientId}\n` +
+                              `📅 Date: ${dateStr}\n` +
+                              `⏳ Expires in: 2 Weeks\n\n` + 
+                              `● Click the link below to view and download your report.\n\n` +
+                              `👇\n` +
+                              `🔗 ${link}\n\n` +
+                              `𝙁𝙧𝙤𝙢 - 𝘽𝙄𝙊𝙏𝙀𝘾𝙃 𝙇𝘼𝘽𝙊𝙍𝘼𝙏𝙊𝙍𝙔`;
                 
-                const rawMsg = `*Biotech Medical Laboratory Online Report*\n\n` + 
-                              `👤 *Patient ID:* ${patientId}\n` +
-                              `📅 *Date:* ${dateStr}\n` +
-                              `⏳ *Expires in:* 2 Weeks\n\n` + 
-                              `● Click the link below to view and download your report.\n` +
-                              `*(ඔබට පහලින් ලින්ක් එකක් දිස් නොවුනහොත් කරුණාකර අපගේ WHATSAPP NUMBER එක සේව් කරගන්න.)*\n\n` +
-                              `👇\n🔗 ${link}\n\n` +
+                const rawMsg = `Biotech Medical Laboratory Online Report\n\n` + 
+                              `👤 Patient ID: ${patientId}\n` +
+                              `📅 Date: ${dateStr}\n` +
+                              `⏳ Expires in: 2 Weeks\n\n` + 
+                              `● Click the link below to view and download your report.\n\n` +
+                              `👇\n` +
+                              `🔗 ${link}\n\n` +
                               `𝙁𝙧𝙤𝙢 - 𝘽𝙄𝙊𝙏𝙀𝘾𝙃 𝙇𝘼𝘽𝙊𝙍𝘼𝙏𝙊𝙍𝙔`;
                 
                 previewText.innerHTML = displayMsg;
@@ -1230,18 +1289,136 @@
             }
         }
 
-        function sendWhatsApp() {
+        async function sendWhatsApp() {
             if (finalRawNumber.length !== 9 || isPreviewMode) return;
 
-            const message = document.getElementById("messagePreview").value;
-            if (!message) return;
+            // --- RE-CALCULATE DATA FOR TEMPLATE ---
+            const vgSelection = document.getElementById('vgSelection').value;
+            const vgNum = document.getElementById('vgNum').value.trim();
+            const dateStr = document.getElementById('date').value;
+            const patientId = `${vgSelection}${vgNum}`;
+            
+            const now = new Date();
+            const expiryTimestamp = now.getTime() + (14 * 24 * 60 * 60 * 1000); 
+            const originalData = `${patientId}|${dateStr}|${expiryTimestamp}`;
+            const encodedData = btoa(originalData);
+            const link = `https://biotechveyangoda.lk/report-preview.html?data=${encodedData}`;
 
-            // Save to Firebase (History App) using new Helper
-            addToHistory('whatsapp');
+            console.log("Preparing WhatsApp...");
 
-            const fullNumber = "94" + finalRawNumber;
-            const encodedMessage = encodeURIComponent(message);
-            window.open(`https://web.whatsapp.com/send?phone=${fullNumber}&text=${encodedMessage}`, "_blank");
+            // Construct ContentVariables
+            // Template:
+            // Biotech Medical Laboratory Online Report
+            // 👤 Patient ID: {{1}}
+            // 📅 Date: {{2}}
+            // ⏳ Expires in: 2 Weeks
+            // ● Click the link below to view and download your report.
+            // 👇
+            // 🔗{{3}}
+            // 𝙁𝙧𝙤𝙢 - 𝘽𝙄𝙊𝙏𝙀𝘾𝙃 𝙇𝘼𝘽𝙊𝙍𝘼𝙏𝙊𝙍𝙔
+
+            const contentVariables = JSON.stringify({
+                "1": patientId,
+                "2": dateStr,
+                "3": link
+            });
+
+            // UI Loading
+            const btn = document.getElementById('sendBtn');
+            const originalBtnContent = btn.innerHTML;
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Sending...`;
+            btn.disabled = true;
+
+            // Clean credentials to remove accidental whitespace
+            const sid = TWILIO_ACCOUNT_SID.trim();
+            const apiKey = TWILIO_API_KEY.trim();
+            const apiSecret = TWILIO_API_SECRET.trim();
+
+            const url = `https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`;
+            
+            // USE API KEY + SECRET FOR AUTHENTICATION
+            const auth = btoa(`${apiKey}:${apiSecret}`);
+            
+            const formData = new URLSearchParams();
+            formData.append('To', `whatsapp:+94${finalRawNumber}`);
+            // Use specific FROM number
+            formData.append('From', `whatsapp:${TWILIO_FROM_NUMBER}`); 
+            // formData.append('MessagingServiceSid', TWILIO_MESSAGING_SERVICE_SID); // Disabled
+            formData.append('ContentSid', TWILIO_CONTENT_SID);
+            formData.append('ContentVariables', contentVariables);
+
+            console.log("Sending to:", `whatsapp:+94${finalRawNumber}`);
+            console.log("From:", `whatsapp:${TWILIO_FROM_NUMBER}`);
+            console.log("Variables:", contentVariables);
+
+            try {
+                // NOTE: This fetch call will likely trigger a CORS error in a standard browser environment 
+                // because Twilio does not allow direct client-side API calls for security reasons.
+                // To test this, you may need a browser extension to Disable CORS or run this via a backend proxy.
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Basic ' + auth,
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    const json = await response.json();
+                    console.log("Twilio Success:", json);
+                    addToHistory('whatsapp');
+                    
+                    // Show SID for debugging delivery issues
+                    alert(`Message Successfully Queued!\n\nSID: ${json.sid}\nStatus: ${json.status}\n\nIf the message does not arrive, search for this SID in your Twilio Console Logs.`);
+
+                    btn.innerHTML = `<i class="fa-solid fa-check text-white"></i> Sent!`;
+                    btn.classList.remove('gradient-btn');
+                    btn.classList.add('bg-green-500');
+                } else {
+                    const err = await response.json();
+                    console.error("Twilio Error Response:", err);
+                    const errorMsg = err.message || response.statusText;
+                    const errorCode = err.code || response.status;
+                    
+                    let helpMsg = "";
+                    if (errorCode === 20003) {
+                        helpMsg = "Authentication Failed. Check SID/Token.";
+                    } else if (errorCode === 63007) {
+                        helpMsg = "Sender/Template Mismatch. Ensure your sender number matches the template approval.";
+                    } else if (errorCode === 63016) {
+                        helpMsg = "Failed to send template. Check variable constraints.";
+                    }
+
+                    const fallback = confirm(`Twilio API Error (${errorCode}): ${errorMsg}\n${helpMsg}\n\nDo you want to send via WhatsApp Web instead?`);
+                    if(fallback) {
+                          const fullNumber = "94" + finalRawNumber;
+                          const message = document.getElementById("messagePreview").value;
+                          const encodedMessage = encodeURIComponent(message);
+                          window.open(`https://web.whatsapp.com/send?phone=${fullNumber}&text=${encodedMessage}`, "_blank");
+                    }
+
+                    btn.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Failed`;
+                    btn.classList.add('bg-red-500');
+                }
+            } catch (error) {
+                console.error("Fetch/Network Error:", error);
+                const fallback = confirm("Network/CORS Error: The browser blocked the API call.\n\nDo you want to send via WhatsApp Web instead?");
+                if(fallback) {
+                        const fullNumber = "94" + finalRawNumber;
+                        const message = document.getElementById("messagePreview").value;
+                        const encodedMessage = encodeURIComponent(message);
+                        window.open(`https://web.whatsapp.com/send?phone=${fullNumber}&text=${encodedMessage}`, "_blank");
+                }
+                btn.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Error`;
+            } finally {
+                setTimeout(() => {
+                    btn.innerHTML = originalBtnContent;
+                    btn.classList.add('gradient-btn');
+                    btn.classList.remove('bg-green-500', 'bg-red-500');
+                    btn.disabled = false;
+                }, 3000);
+            }
         }
 
         // --- SMS API INTEGRATION ---
@@ -1278,9 +1455,18 @@
                               `${link}\n\n` +
                               `From - BIOTECH LAB`;
 
-             const dest = "0" + finalRawNumber;
-             const url = `https://msg.text-ware.com/send_sms.php?username=TW01036_biotech_lab_tr&password=hGHA4S@eKQFOS&src=BIOTECH+Lab&dst=${dest}&msg=${encodeURIComponent(msg)}`;
+             // UPDATED: Use 94 format instead of 0 for better gateway acceptance
+             const dest = "94" + finalRawNumber;
+             
+             // UPDATED: Properly encode all parameters to prevent URL breaks
+             const username = "TW01036_biotech_lab_tr";
+             const password = "hGHA4S@eKQFOS";
+             const src = "BIOTECH Lab"; // Ensure this matches your registered Sender ID exactly
+             
+             const url = `https://msg.text-ware.com/send_sms.php?username=${username}&password=${encodeURIComponent(password)}&src=${encodeURIComponent(src)}&dst=${dest}&msg=${encodeURIComponent(msg)}`;
 
+             console.log("Attempting SMS to:", dest);
+             console.log("Gateway URL:", url);
 
             const btn = document.querySelector('button[onclick="sendSMS()"]');
             const originalContent = btn.innerHTML;
@@ -1289,6 +1475,7 @@
 
             try {
                 // Use no-cors mode to allow sending despite potential CORS restrictions on response reading
+                // Note: response.ok will always be false-y in no-cors, but the request is sent.
                 await fetch(url, { mode: 'no-cors' });
                 
                 // LOG TO FIREBASE
@@ -1299,7 +1486,7 @@
                 btn.classList.add('bg-green-50', 'text-green-600', 'border-green-200');
                 
             } catch (error) {
-                console.error(error);
+                console.error("SMS Error:", error);
                 btn.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-500"></i> Error`;
             } finally {
                  setTimeout(() => {
