@@ -442,6 +442,11 @@
 
                             <!-- Message Bubble -->
                             <div class="wa-bubble">
+                                <!-- HEADER IMAGE FOR MEDIA TEMPLATE -->
+                                <div id="mediaHeader" class="hidden">
+                                    <img src="https://img.freepik.com/free-vector/medical-healthcare-blue-background-with-cardiograph_1017-14923.jpg" class="w-full h-32 object-cover rounded-lg mb-2 shadow-sm border border-green-200">
+                                </div>
+
                                 <div id="previewText" class="whitespace-pre-line text-slate-800">
                                     <span class="text-slate-400 italic">Enter patient details to preview message...</span>
                                 </div>
@@ -957,30 +962,113 @@
         // Expose to global scope for HTML onclicks
         window.voiceDb = voiceDb;
         // window.ref, push, set, remove are already set above
+        
+        // --- UPDATED HISTORY LOADERS ---
+        // Load Item to Preview (ReadOnly)
+        window.loadHistoryItem = (index) => {
+            const item = window.historyData[index];
+            if(!item) return;
+            
+            // Set flag in global window object (accessed by other script)
+            if(typeof window.setPreviewMode === 'function') {
+                window.setPreviewMode(true);
+            }
+            document.getElementById('historyIndicator').classList.remove('hidden');
+
+            // Parse ID (e.g. BN1005)
+            let prefix = "BN";
+            let num = "";
+            const match = item.id.match(/([a-zA-Z]+)(\d+)/);
+            if(match) {
+                prefix = match[1];
+                num = match[2];
+            } else {
+                num = item.id;
+            }
+
+            if(window.renderPreview) {
+                window.renderPreview(prefix, num, item.date, item.phoneNumber);
+            }
+            
+            // Visual feedback on mobile sidebar
+            if(window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.add('-translate-x-full');
+            }
+        };
+
+        // FIXED RECALL FUNCTIONALITY
+        window.recallHistoryItem = (index, event) => {
+            event.stopPropagation();
+            const item = window.historyData[index];
+            if(!item) return;
+
+            // 1. Populate Inputs
+            let prefix = "BN";
+            let num = "";
+            const match = item.id.match(/([a-zA-Z]+)(\d+)/);
+            if(match) {
+                prefix = match[1];
+                num = match[2];
+            } else {
+                num = item.id;
+            }
+
+            document.getElementById('vgSelection').value = prefix;
+            document.getElementById('vgNum').value = num;
+            document.getElementById('date').value = item.date;
+            
+            // 2. Phone Logic
+            // Directly set value to the stored local number (e.g. 76...)
+            // We bypass ITI's formatting here because the handlePhoneInput 
+            // stripper logic expects raw digits.
+            document.getElementById('phoneNum').value = item.phoneNumber;
+            
+            // Update the global state in the other script
+            if(typeof window.setRawNumber === 'function') {
+                window.setRawNumber(item.phoneNumber);
+            }
+            
+            // 3. Reset Modes (Global state in other script)
+            if(typeof window.setPreviewMode === 'function') {
+                window.setPreviewMode(false);
+            }
+            document.getElementById('historyIndicator').classList.add('hidden');
+            
+            // 4. Render
+            if(window.updatePreviewFromInputs) {
+                window.updatePreviewFromInputs();
+            }
+            
+            // 5. Scroll (Mobile)
+            if(window.innerWidth < 1024) {
+                 const el = document.getElementById('vgNum');
+                 if(el) el.scrollIntoView({behavior: 'smooth'});
+            }
+        };
+
     </script>
 
     <!-- CORE LOGIC & VOICE CONTROLLER -->
     <script>
         // --- TWILIO CONFIGURATION ---
-        // Your IDs provided:
-        // WABA ID: 557108420815993 (Meta)
-        // Meta Business ID: 1145114556960406
-        // Template ID: HX37ed99b40b21baca622587f2c617df5d (Twilio Content SID)
-
         const TWILIO_ACCOUNT_SID = "AC8573797da12b063892096aaece06456b";
-        // const TWILIO_AUTH_TOKEN = "0cb1e356b71a953721daba01f6459a38"; // Replaced by API Key
-        
-        // NEW API KEY AUTHENTICATION
         const TWILIO_API_KEY = "SK5a736baa108570f16ed6e3d10a6cc70f";
         const TWILIO_API_SECRET = "aKWrUUcv02WCvZzYlAIVYwE5BZuoQrwM";
-        
-        const TWILIO_FROM_NUMBER = "+94768896370"; // Using specific US number as requested
-        // const TWILIO_MESSAGING_SERVICE_SID = "MG4aa751e793fd312d715d9623daea6966"; 
-        const TWILIO_CONTENT_SID = "HX8558e8fa601a8dfbacd46e64910eac36";
+        const TWILIO_FROM_NUMBER = "+94768896370"; 
+        const TWILIO_CONTENT_SID = "HX52de3da4a12d4fa2de0a4a753a94951f";
 
-        let iti = null;
-        let finalRawNumber = "";
-        let isPreviewMode = false;
+        // GLOBAL STATE exposed to window for Module Script access
+        window.iti = null;
+        window.finalRawNumber = "";
+        window.isPreviewMode = false;
+
+        // Helpers for external access
+        window.setRawNumber = function(val) {
+            window.finalRawNumber = val;
+        }
+        window.setPreviewMode = function(val) {
+            window.isPreviewMode = val;
+        }
 
         // --- VOICE VARIABLES ---
         let callTimerInterval;
@@ -998,7 +1086,7 @@
             setInterval(updateTime, 60000);
 
             const phoneInput = document.getElementById("phoneNum");
-            iti = window.intlTelInput(phoneInput, {
+            window.iti = window.intlTelInput(phoneInput, {
                 initialCountry: "lk",
                 separateDialCode: true,
                 autoPlaceholder: "off",
@@ -1007,7 +1095,7 @@
 
             phoneInput.addEventListener('input', function(e) {
                 // If user types, exit preview mode
-                isPreviewMode = false;
+                window.isPreviewMode = false;
                 document.getElementById('historyIndicator').classList.add('hidden');
                 handlePhoneInput(e.target.value);
             });
@@ -1015,7 +1103,7 @@
             ['vgSelection', 'vgNum', 'date'].forEach(id => {
                 document.getElementById(id).addEventListener('input', () => {
                     // If user types, exit preview mode
-                    isPreviewMode = false;
+                    window.isPreviewMode = false;
                     document.getElementById('historyIndicator').classList.add('hidden');
                     updatePreviewFromInputs();
                 });
@@ -1024,11 +1112,8 @@
             // Load saved identity if exists
             const savedId = localStorage.getItem('myBranchIdentity');
             if(savedId) {
-                // document.getElementById('myIdentity').value = savedId; // No need to set value, we hide it
-                // Wait for module to load then listen
                 setTimeout(() => { if(window.listenForCalls) window.listenForCalls(); }, 1500);
             } else {
-                 // Ensure setup is shown
                  document.getElementById('setupPhase').classList.remove('hidden');
                  document.getElementById('callPhase').classList.add('hidden');
             }
@@ -1095,20 +1180,23 @@
             }
             
             document.getElementById('phoneNum').value = val;
-            finalRawNumber = val;
+            window.finalRawNumber = val;
             updatePreviewFromInputs();
         }
+        // Expose handlePhoneInput
+        window.handlePhoneInput = handlePhoneInput;
 
         // Wrapper to update preview from actual DOM inputs
         function updatePreviewFromInputs() {
-            if(isPreviewMode) return; // Don't auto-update if viewing history
+            if(window.isPreviewMode) return; // Don't auto-update if viewing history
             
             const vgSelection = document.getElementById('vgSelection').value;
             const vgNum = document.getElementById('vgNum').value.trim();
             const date = document.getElementById('date').value;
             
-            renderPreview(vgSelection, vgNum, date, finalRawNumber);
+            renderPreview(vgSelection, vgNum, date, window.finalRawNumber);
         }
+        window.updatePreviewFromInputs = updatePreviewFromInputs;
 
         // Core Render Function - Decoupled from Inputs
         function renderPreview(prefix, num, dateStr, rawPhone) {
@@ -1117,6 +1205,7 @@
             const linkCard = document.getElementById('linkCard');
             const hiddenArea = document.getElementById('messagePreview');
             const headerName = document.getElementById('headerContactName');
+            const mediaHeader = document.getElementById('mediaHeader');
 
             // Dynamic Header Name
             if(rawPhone && rawPhone.length > 3) {
@@ -1128,7 +1217,7 @@
 
             if (num && dateStr && rawPhone && rawPhone.length === 9) {
                 // Enable Send Button ONLY if NOT in preview mode (prevents sending old history by accident)
-                if(!isPreviewMode) {
+                if(!window.isPreviewMode) {
                     sendBtn.classList.remove('opacity-50', 'cursor-not-allowed');
                     sendBtn.disabled = false;
                 } else {
@@ -1144,112 +1233,49 @@
                 const encodedData = btoa(originalData);
                 const link = `https://biotechveyangoda.lk/report-preview.html?data=${encodedData}`;
 
-                // UPDATED PREVIEW: Removed explicit link text as it is now a button
                 const displayMsg = `<strong>Biotech Medical Laboratory Online Report</strong>\n\n` + 
-                                  `👤 Patient ID: ${patientId}\n` +
-                                  `📅 Date: ${dateStr}\n` +
-                                  `⏳ Expires in: 2 Weeks\n\n` + 
-                                  `● Click the link below to view and download your report.\n\n` +
-                                  `𝙁𝙧𝙤𝙢 - 𝘽𝙄𝙊𝙏𝙀𝘾𝙃 𝙇𝘼𝘽𝙊𝙍𝘼𝙏𝙊𝙍𝙔`;
-                
-                // Add a fake button visual to the preview
-                const buttonHtml = `<div class="mt-3 bg-white border border-gray-200 rounded text-center py-2 text-teal-600 font-bold text-sm shadow-sm cursor-pointer hover:bg-gray-50"><i class="fa-solid fa-link mr-2"></i>View Report</div>`;
+                              `👤 Patient ID: ${patientId}\n` +
+                              `📅 Date: ${dateStr}\n` +
+                              `⏳ Expires in: 2 Weeks\n\n` + 
+                              `● Click the link below to view and download your report.\n\n` +
+                              `👇\n` +
+                              `🔗 ${link}\n\n` +
+                              `𝙁𝙧𝙤𝙢 - 𝘽𝙄𝙊𝙏𝙀𝘾𝙃 𝙇𝘼𝘽𝙊𝙍𝘼𝙏𝙊𝙍𝙔`;
                 
                 const rawMsg = `Biotech Medical Laboratory Online Report\n\n` + 
                               `👤 Patient ID: ${patientId}\n` +
                               `📅 Date: ${dateStr}\n` +
                               `⏳ Expires in: 2 Weeks\n\n` + 
                               `● Click the link below to view and download your report.\n\n` +
+                              `👇\n` +
+                              `🔗 ${link}\n\n` +
                               `𝙁𝙧𝙤𝙢 - 𝘽𝙄𝙊𝙏𝙀𝘾𝙃 𝙇𝘼𝘽𝙊𝙍𝘼𝙏𝙊𝙍𝙔`;
                 
-                previewText.innerHTML = displayMsg + buttonHtml;
+                previewText.innerHTML = displayMsg;
                 hiddenArea.value = rawMsg;
-                // We hide the standard link card preview since we have the button now, or keep it as metadata preview
-                linkCard.classList.remove('hidden'); 
+                linkCard.classList.remove('hidden');
+                
+                // Show Media Header for Preview
+                if(mediaHeader) mediaHeader.classList.remove('hidden');
+
                 return link;
 
             } else {
                 sendBtn.classList.add('opacity-50', 'cursor-not-allowed');
                 sendBtn.disabled = true;
                 linkCard.classList.add('hidden');
+                if(mediaHeader) mediaHeader.classList.add('hidden');
                 
                 let warning = "Waiting for input...";
-                if(isPreviewMode) warning = "Incomplete History Data";
+                if(window.isPreviewMode) warning = "Incomplete History Data";
 
                 previewText.innerHTML = `<span class="text-slate-400 italic">${warning}</span>`;
                 hiddenArea.value = "";
                 return null;
             }
         }
-
-        // Updated History Loader - PREVIEW ONLY
-        window.loadHistoryItem = (index) => {
-            const item = window.historyData[index];
-            if(!item) return;
-            
-            isPreviewMode = true; // Flag to stop input listeners from overwriting
-            document.getElementById('historyIndicator').classList.remove('hidden'); // Show indicator
-
-            // Parse ID (e.g. BN1005)
-            let prefix = "BN";
-            let num = "";
-            const match = item.id.match(/([a-zA-Z]+)(\d+)/);
-            if(match) {
-                prefix = match[1];
-                num = match[2];
-            } else {
-                num = item.id;
-            }
-
-            // Call render directly without touching DOM inputs
-            renderPreview(prefix, num, item.date, item.phoneNumber);
-            
-            // Visual feedback on mobile sidebar
-            if(window.innerWidth < 768) {
-                document.getElementById('sidebar').classList.add('-translate-x-full');
-            }
-        };
-
-        // NEW RECALL FUNCTIONALITY
-        window.recallHistoryItem = (index, event) => {
-            event.stopPropagation(); // Don't trigger the preview only mode
-            const item = window.historyData[index];
-            if(!item) return;
-
-            // 1. Populate Inputs
-            // Parse ID
-            let prefix = "BN";
-            let num = "";
-            const match = item.id.match(/([a-zA-Z]+)(\d+)/);
-            if(match) {
-                prefix = match[1];
-                num = match[2];
-            } else {
-                num = item.id;
-            }
-
-            document.getElementById('vgSelection').value = prefix;
-            document.getElementById('vgNum').value = num;
-            document.getElementById('date').value = item.date;
-            
-            // Phone
-            iti.setNumber("94" + item.phoneNumber); // Assuming local numbers stored without 94, adding it helps ITI format it
-            // Update the global var used by the renderer
-            finalRawNumber = item.phoneNumber; 
-            
-            // 2. Reset Modes
-            isPreviewMode = false;
-            document.getElementById('historyIndicator').classList.add('hidden');
-            
-            // 3. Render
-            updatePreviewFromInputs();
-            
-            // 4. Visual Feedback (Optional - scroll to form)
-            if(window.innerWidth < 1024) {
-                 // On mobile/tablet, form is on top or separate, maybe scroll to it
-                 document.getElementById('vgNum').scrollIntoView({behavior: 'smooth'});
-            }
-        };
+        // Expose renderPreview
+        window.renderPreview = renderPreview;
 
         // --- NEW: History Helper ---
         async function addToHistory(type) {
@@ -1258,7 +1284,7 @@
 
             const id = `${document.getElementById("vgSelection").value}${document.getElementById("vgNum").value}`;
             const date = document.getElementById('date').value;
-            const phone = finalRawNumber;
+            const phone = window.finalRawNumber;
             const now = new Date();
             const timeString = now.toLocaleTimeString("en-US", {hour: '2-digit', minute:'2-digit'});
 
@@ -1272,7 +1298,6 @@
                 const updates = {};
                 if(type === 'sms') updates.smsSent = true;
                 if(type === 'whatsapp') updates.whatsappSent = true;
-                // We keep the original timestamp to prevent jumping, or update lastActionTime if needed
                 
                 await window.firebaseUpdate(updatePath, updates).catch(console.error);
             } else {
@@ -1291,7 +1316,7 @@
         }
 
         async function sendWhatsApp() {
-            if (finalRawNumber.length !== 9 || isPreviewMode) return;
+            if (window.finalRawNumber.length !== 9 || window.isPreviewMode) return;
 
             // --- RE-CALCULATE DATA FOR TEMPLATE ---
             const vgSelection = document.getElementById('vgSelection').value;
@@ -1303,27 +1328,14 @@
             const expiryTimestamp = now.getTime() + (14 * 24 * 60 * 60 * 1000); 
             const originalData = `${patientId}|${dateStr}|${expiryTimestamp}`;
             const encodedData = btoa(originalData);
-            // Full link for history/fallback
             const link = `https://biotechveyangoda.lk/report-preview.html?data=${encodedData}`;
-            // Suffix for CTA Template Variable {{3}}
-            const linkSuffix = `report-preview.html?data=${encodedData}`;
 
             console.log("Preparing WhatsApp...");
-
-            // Construct ContentVariables
-            // Template:
-            // Biotech Medical Laboratory Online Report
-            // 👤 Patient ID: {{1}}
-            // 📅 Date: {{2}}
-            // ⏳ Expires in: 2 Weeks
-            // ● Click the link below to view and download your report.
-            // 𝙁𝙧𝙤𝙢 - 𝘽𝙄𝙊𝙏𝙀𝘾𝙃 𝙇𝘼𝘽𝙊𝙍𝘼𝙏𝙊𝙍𝙔
-            // Button Link: https://biotechveyangoda.lk/{{3}}
 
             const contentVariables = JSON.stringify({
                 "1": patientId,
                 "2": dateStr,
-                "3": linkSuffix // ONLY PASSING THE SUFFIX
+                "3": link
             });
 
             // UI Loading
@@ -1332,7 +1344,6 @@
             btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Sending...`;
             btn.disabled = true;
 
-            // Clean credentials to remove accidental whitespace
             const sid = TWILIO_ACCOUNT_SID.trim();
             const apiKey = TWILIO_API_KEY.trim();
             const apiSecret = TWILIO_API_SECRET.trim();
@@ -1343,21 +1354,12 @@
             const auth = btoa(`${apiKey}:${apiSecret}`);
             
             const formData = new URLSearchParams();
-            formData.append('To', `whatsapp:+94${finalRawNumber}`);
-            // Use specific FROM number
+            formData.append('To', `whatsapp:+94${window.finalRawNumber}`);
             formData.append('From', `whatsapp:${TWILIO_FROM_NUMBER}`); 
-            // formData.append('MessagingServiceSid', TWILIO_MESSAGING_SERVICE_SID); // Disabled
             formData.append('ContentSid', TWILIO_CONTENT_SID);
             formData.append('ContentVariables', contentVariables);
 
-            console.log("Sending to:", `whatsapp:+94${finalRawNumber}`);
-            console.log("From:", `whatsapp:${TWILIO_FROM_NUMBER}`);
-            console.log("Variables:", contentVariables);
-
             try {
-                // NOTE: This fetch call will likely trigger a CORS error in a standard browser environment 
-                // because Twilio does not allow direct client-side API calls for security reasons.
-                // To test this, you may need a browser extension to Disable CORS or run this via a backend proxy.
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: {
@@ -1369,11 +1371,8 @@
                 
                 if (response.ok) {
                     const json = await response.json();
-                    console.log("Twilio Success:", json);
                     addToHistory('whatsapp');
-                    
-                    // Show SID for debugging delivery issues
-                    alert(`Message Successfully Queued!\n\nSID: ${json.sid}\nStatus: ${json.status}\n\nIf the message does not arrive, search for this SID in your Twilio Console Logs.`);
+                    alert(`Message Successfully Queued!\n\nSID: ${json.sid}`);
 
                     btn.innerHTML = `<i class="fa-solid fa-check text-white"></i> Sent!`;
                     btn.classList.remove('gradient-btn');
@@ -1381,21 +1380,10 @@
                 } else {
                     const err = await response.json();
                     console.error("Twilio Error Response:", err);
-                    const errorMsg = err.message || response.statusText;
-                    const errorCode = err.code || response.status;
                     
-                    let helpMsg = "";
-                    if (errorCode === 20003) {
-                        helpMsg = "Authentication Failed. Check SID/Token.";
-                    } else if (errorCode === 63007) {
-                        helpMsg = "Sender/Template Mismatch. Ensure your sender number matches the template approval.";
-                    } else if (errorCode === 63016) {
-                        helpMsg = "Failed to send template. Check variable constraints.";
-                    }
-
-                    const fallback = confirm(`Twilio API Error (${errorCode}): ${errorMsg}\n${helpMsg}\n\nDo you want to send via WhatsApp Web instead?`);
+                    const fallback = confirm(`Twilio API Error: ${err.message}\n\nDo you want to send via WhatsApp Web instead?`);
                     if(fallback) {
-                          const fullNumber = "94" + finalRawNumber;
+                          const fullNumber = "94" + window.finalRawNumber;
                           const message = document.getElementById("messagePreview").value;
                           const encodedMessage = encodeURIComponent(message);
                           window.open(`https://web.whatsapp.com/send?phone=${fullNumber}&text=${encodedMessage}`, "_blank");
@@ -1408,7 +1396,7 @@
                 console.error("Fetch/Network Error:", error);
                 const fallback = confirm("Network/CORS Error: The browser blocked the API call.\n\nDo you want to send via WhatsApp Web instead?");
                 if(fallback) {
-                        const fullNumber = "94" + finalRawNumber;
+                        const fullNumber = "94" + window.finalRawNumber;
                         const message = document.getElementById("messagePreview").value;
                         const encodedMessage = encodeURIComponent(message);
                         window.open(`https://web.whatsapp.com/send?phone=${fullNumber}&text=${encodedMessage}`, "_blank");
@@ -1430,25 +1418,20 @@
              const vgNum = document.getElementById('vgNum').value.trim();
              const dateStr = document.getElementById('date').value;
              
-             // Ensure valid data
-             if(!vgNum || !dateStr || finalRawNumber.length !== 9) {
-                // Shake button
+             if(!vgNum || !dateStr || window.finalRawNumber.length !== 9) {
                 const btn = document.querySelector('button[onclick="sendSMS()"]');
                 btn.classList.add('shake');
                 setTimeout(() => btn.classList.remove('shake'), 500);
                 return;
              }
 
-             // Re-calculate link to be sure
              const patientId = `${vgSelection}${vgNum}`;
-             // Timestamp calc
              const now = new Date();
              const expiryTimestamp = now.getTime() + (14 * 24 * 60 * 60 * 1000); 
              const originalData = `${patientId}|${dateStr}|${expiryTimestamp}`;
              const encodedData = btoa(originalData);
              const link = `https://biotechveyangoda.lk/report-preview.html?data=${encodedData}`;
              
-             // Construct Message
              const msg = `Biotech Medical Laboratory Online Report\n\n` + 
                               ` Patient ID: ${patientId}\n` +
                               ` Date: ${dateStr}\n` +
@@ -1458,18 +1441,13 @@
                               `${link}\n\n` +
                               `From - BIOTECH LAB`;
 
-             // UPDATED: Use 94 format instead of 0 for better gateway acceptance
-             const dest = "94" + finalRawNumber;
+             const dest = "94" + window.finalRawNumber;
              
-             // UPDATED: Properly encode all parameters to prevent URL breaks
              const username = "TW01036_biotech_lab_tr";
              const password = "hGHA4S@eKQFOS";
-             const src = "BIOTECH Lab"; // Ensure this matches your registered Sender ID exactly
+             const src = "BIOTECH Lab"; 
              
              const url = `https://msg.text-ware.com/send_sms.php?username=${username}&password=${encodeURIComponent(password)}&src=${encodeURIComponent(src)}&dst=${dest}&msg=${encodeURIComponent(msg)}`;
-
-             console.log("Attempting SMS to:", dest);
-             console.log("Gateway URL:", url);
 
             const btn = document.querySelector('button[onclick="sendSMS()"]');
             const originalContent = btn.innerHTML;
@@ -1477,14 +1455,9 @@
             btn.disabled = true;
 
             try {
-                // Use no-cors mode to allow sending despite potential CORS restrictions on response reading
-                // Note: response.ok will always be false-y in no-cors, but the request is sent.
                 await fetch(url, { mode: 'no-cors' });
-                
-                // LOG TO FIREBASE
                 addToHistory('sms');
 
-                // Success UI
                 btn.innerHTML = `<i class="fa-solid fa-check text-green-500"></i> Sent!`;
                 btn.classList.add('bg-green-50', 'text-green-600', 'border-green-200');
                 
