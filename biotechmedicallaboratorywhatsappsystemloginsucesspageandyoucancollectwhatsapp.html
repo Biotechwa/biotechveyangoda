@@ -961,11 +961,11 @@
 
     <!-- CORE LOGIC & VOICE CONTROLLER -->
     <script>
-        // --- TWILIO CONFIGURATION (YOU MUST FILL THESE) ---
+        // --- TWILIO CONFIGURATION ---
         // Your IDs provided:
         // WABA ID: 557108420815993 (Meta)
         // Meta Business ID: 1145114556960406
-        // Template ID: HX6ebcf98b42e8129e58cdf4c1d323f911 (Twilio Content SID)
+        // Template ID: HX37ed99b40b21baca622587f2c617df5d (Twilio Content SID)
 
         const TWILIO_ACCOUNT_SID = "AC8573797da12b063892096aaece06456b";
         // const TWILIO_AUTH_TOKEN = "0cb1e356b71a953721daba01f6459a38"; // Replaced by API Key
@@ -976,7 +976,7 @@
         
         const TWILIO_FROM_NUMBER = "+94768896370"; // Using specific US number as requested
         // const TWILIO_MESSAGING_SERVICE_SID = "MG4aa751e793fd312d715d9623daea6966"; 
-        const TWILIO_CONTENT_SID = "HX06f184ba35e05d64c20ae4320f748a43";
+        const TWILIO_CONTENT_SID = "HX8558e8fa601a8dfbacd46e64910eac36";
 
         let iti = null;
         let finalRawNumber = "";
@@ -1144,26 +1144,27 @@
                 const encodedData = btoa(originalData);
                 const link = `https://biotechveyangoda.lk/report-preview.html?data=${encodedData}`;
 
+                // UPDATED PREVIEW: Removed explicit link text as it is now a button
                 const displayMsg = `<strong>Biotech Medical Laboratory Online Report</strong>\n\n` + 
-                              `👤 Patient ID: ${patientId}\n` +
-                              `📅 Date: ${dateStr}\n` +
-                              `⏳ Expires in: 2 Weeks\n\n` + 
-                              `● Click the link below to view and download your report.\n\n` +
-                              `👇\n` +
-                              `🔗 ${link}\n\n` +
-                              `𝙁𝙧𝙤𝙢 - 𝘽𝙄𝙊𝙏𝙀𝘾𝙃 𝙇𝘼𝘽𝙊𝙍𝘼𝙏𝙊𝙍𝙔`;
+                                  `👤 Patient ID: ${patientId}\n` +
+                                  `📅 Date: ${dateStr}\n` +
+                                  `⏳ Expires in: 2 Weeks\n\n` + 
+                                  `● Click the link below to view and download your report.\n\n` +
+                                  `𝙁𝙧𝙤𝙢 - 𝘽𝙄𝙊𝙏𝙀𝘾𝙃 𝙇𝘼𝘽𝙊𝙍𝘼𝙏𝙊𝙍𝙔`;
+                
+                // Add a fake button visual to the preview
+                const buttonHtml = `<div class="mt-3 bg-white border border-gray-200 rounded text-center py-2 text-teal-600 font-bold text-sm shadow-sm cursor-pointer hover:bg-gray-50"><i class="fa-solid fa-link mr-2"></i>View Report</div>`;
                 
                 const rawMsg = `Biotech Medical Laboratory Online Report\n\n` + 
                               `👤 Patient ID: ${patientId}\n` +
                               `📅 Date: ${dateStr}\n` +
                               `⏳ Expires in: 2 Weeks\n\n` + 
                               `● Click the link below to view and download your report.\n\n` +
-                              `👇\n` +
-                              `🔗 ${link}\n\n` +
                               `𝙁𝙧𝙤𝙢 - 𝘽𝙄𝙊𝙏𝙀𝘾𝙃 𝙇𝘼𝘽𝙊𝙍𝘼𝙏𝙊𝙍𝙔`;
                 
-                previewText.innerHTML = displayMsg;
+                previewText.innerHTML = displayMsg + buttonHtml;
                 hiddenArea.value = rawMsg;
+                // We hide the standard link card preview since we have the button now, or keep it as metadata preview
                 linkCard.classList.remove('hidden'); 
                 return link;
 
@@ -1302,7 +1303,10 @@
             const expiryTimestamp = now.getTime() + (14 * 24 * 60 * 60 * 1000); 
             const originalData = `${patientId}|${dateStr}|${expiryTimestamp}`;
             const encodedData = btoa(originalData);
+            // Full link for history/fallback
             const link = `https://biotechveyangoda.lk/report-preview.html?data=${encodedData}`;
+            // Suffix for CTA Template Variable {{3}}
+            const linkSuffix = `report-preview.html?data=${encodedData}`;
 
             console.log("Preparing WhatsApp...");
 
@@ -1313,14 +1317,13 @@
             // 📅 Date: {{2}}
             // ⏳ Expires in: 2 Weeks
             // ● Click the link below to view and download your report.
-            // 👇
-            // 🔗{{3}}
             // 𝙁𝙧𝙤𝙢 - 𝘽𝙄𝙊𝙏𝙀𝘾𝙃 𝙇𝘼𝘽𝙊𝙍𝘼𝙏𝙊𝙍𝙔
+            // Button Link: https://biotechveyangoda.lk/{{3}}
 
             const contentVariables = JSON.stringify({
                 "1": patientId,
                 "2": dateStr,
-                "3": link
+                "3": linkSuffix // ONLY PASSING THE SUFFIX
             });
 
             // UI Loading
