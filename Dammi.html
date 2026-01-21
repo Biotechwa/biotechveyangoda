@@ -3,771 +3,513 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DNA Transcription - For My Love</title>
+    <title>A Surprise For You ❤️</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+    <!-- Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
     <style>
         body {
-            font-family: 'Quicksand', sans-serif;
-            cursor: none; /* Hide default cursor */
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #fdf2f8 0%, #fbcfe8 100%);
             overflow-x: hidden;
-            background: linear-gradient(180deg, #fff0f5 0%, #ffe4e1 100%);
-            min-height: 100vh;
+            touch-action: manipulation;
         }
 
-        h1, h2, h3, .romantic-font {
-            font-family: 'Dancing Script', cursive;
+        h1, h2, .handwriting {
+            font-family: 'Pacifico', cursive;
         }
 
-        /* Custom Heart Cursor */
-        .cursor-dot,
-        .cursor-outline {
-            position: fixed;
-            top: 0;
-            left: 0;
-            transform: translate(-50%, -50%);
-            border-radius: 50%;
-            z-index: 9999;
-            pointer-events: none;
-        }
-
-        .cursor-dot {
-            width: 8px;
-            height: 8px;
-            background-color: #ff4d6d;
-        }
-
-        .cursor-outline {
-            width: 40px;
-            height: 40px;
-            border: 2px solid #ff4d6d;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: width 0.2s, height 0.2s;
-        }
-        
-        .cursor-outline::after {
-            content: '❤';
-            font-size: 20px;
-            color: #ff4d6d;
-            opacity: 0.5;
-        }
-
-        /* Falling Hearts Background */
-        .heart-bg {
+        /* Floating Hearts Animation Background */
+        .bg-heart {
             position: fixed;
             top: -10vh;
-            color: #ffb3c1;
-            opacity: 0.6;
-            animation: fall linear infinite;
+            color: rgba(255, 182, 193, 0.4);
+            animation: float-down linear infinite;
             z-index: 0;
             pointer-events: none;
         }
 
-        @keyframes fall {
-            to {
-                transform: translateY(110vh) rotate(360deg);
-            }
+        @keyframes float-down {
+            0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
         }
 
-        /* Interactive Cards */
-        .note-card {
-            background: rgba(255, 255, 255, 0.9);
+        /* Glassmorphism Card */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(10px);
-            transition: all 0.3s ease;
-            border: 1px solid #ffccd5;
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
         }
 
-        .note-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(255, 77, 109, 0.2);
-            border-color: #ff4d6d;
+        /* Heart Beat Animation */
+        .heart-beat {
+            animation: beat 1s infinite alternate;
         }
 
-        /* Quiz Styles */
-        .option-btn {
-            transition: all 0.2s;
-        }
-        .option-btn:hover {
-            background-color: #ffe4e6;
-            transform: scale(1.02);
-        }
-        .option-btn.correct {
-            background-color: #dcfce7; /* Green-100 */
-            border-color: #22c55e;
-            color: #15803d;
-        }
-        .option-btn.wrong {
-            background-color: #fee2e2; /* Red-100 */
-            border-color: #ef4444;
-            color: #b91c1c;
+        @keyframes beat {
+            to { transform: scale(1.1); }
         }
 
-        /* Animation Canvas Container */
-        #canvas-container {
-            position: relative;
-            background: #fff;
-            border-radius: 1rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            border: 2px solid #ffccd5;
+        /* Game Elements */
+        .game-heart {
+            position: absolute;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.1s;
+        }
+        .game-heart:active {
+            transform: scale(1.5);
         }
 
-        /* Scrollbar */
-        ::-webkit-scrollbar {
-            width: 10px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #fff0f5;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #ff8fa3;
-            border-radius: 5px;
-        }
-        
-        /* Secret Login Styles */
-        .hidden-content {
-            display: none;
+        /* Smooth Transition for Sections */
+        .section-content {
             opacity: 0;
-            transition: opacity 1s ease-in;
+            transform: translateY(20px);
+            transition: all 0.8s ease-out;
         }
-        .fade-in-content {
-            display: block;
+        .section-content.visible {
             opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Typing Effect Cursor */
+        .typing-cursor::after {
+            content: '|';
+            animation: blink 1s infinite;
+        }
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+
+        /* Music Control Button */
+        .music-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.8);
+            border: 2px solid #fbcfe8;
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        .music-btn:active {
+            transform: scale(0.9);
         }
     </style>
 </head>
-<body class="text-gray-800">
+<body class="min-h-screen text-pink-900 overflow-x-hidden">
 
-    <!-- Custom Cursor (Global) -->
-    <div class="cursor-dot" id="cursor-dot"></div>
-    <div class="cursor-outline" id="cursor-outline"></div>
+    <!-- AUDIO PLAYER -->
+    <!-- REPLACE THE SRC BELOW WITH YOUR "DAMPATA HANDAWE" MP3 LINK -->
+    <audio id="bg-music" loop>
+        <source src="img/Dampata Handawe - Sachin , Rakitha , Eranga.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
 
-    <!-- Falling Hearts Container (Global) -->
-    <div id="hearts-container"></div>
+    <!-- Background Animation Elements (Generated by JS) -->
+    <div id="bg-hearts-container"></div>
 
-    <!-- SECRET LOGIN SCREEN -->
-    <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center flex-col p-4 bg-gradient-to-b from-pink-50 to-rose-100">
-        <div class="bg-white/80 p-10 rounded-3xl shadow-2xl border-2 border-rose-300 text-center max-w-md w-full backdrop-blur-md relative overflow-hidden">
-            <!-- Decorative heart behind form -->
-            <div class="absolute -top-10 -right-10 text-9xl text-pink-100 opacity-50 romantic-font select-none pointer-events-none">❤</div>
-            
-            <h1 class="text-5xl text-rose-500 mb-2 romantic-font">Secret Garden</h1>
-            <p class="text-gray-500 mb-8 font-medium italic">Enter the secret password to unlock my heart...</p>
-            
-            <div class="relative mb-6">
-                <input type="password" id="secret-code" placeholder="Type secret code here..." 
-                    class="w-full bg-pink-50 border-2 border-pink-200 rounded-full px-6 py-4 text-center text-rose-600 placeholder-pink-300 focus:outline-none focus:border-rose-400 focus:ring-2 focus:ring-pink-200 transition-all text-xl shadow-inner">
+    <!-- ENTRY SCREEN (Secret Code Login) -->
+    <div id="intro-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-pink-50 transition-all duration-1000">
+        
+        <div class="bg-white/80 p-8 rounded-2xl shadow-xl backdrop-blur-md max-w-xs w-full text-center border border-pink-200 mx-4">
+            <div class="mb-4 text-pink-500 flex justify-center">
+                <i data-lucide="lock-keyhole" class="w-12 h-12"></i>
             </div>
+            <h2 class="text-2xl font-bold text-pink-600 mb-2 handwriting">Private Access</h2>
+            <p class="text-sm text-pink-400 mb-6">Enter the secret code to enter my heart.</p>
             
-            <button onclick="checkCode()" class="w-full bg-rose-500 hover:bg-rose-600 text-white font-bold py-3 rounded-full shadow-lg transform transition hover:scale-105 active:scale-95 flex items-center justify-center gap-2 text-lg">
-                <i class="fas fa-heart"></i> Enter Love
+            <input type="password" id="passcode" placeholder="Enter code..." 
+                class="w-full p-3 rounded-lg border border-pink-300 bg-pink-50 focus:outline-none focus:ring-2 focus:ring-pink-400 text-center text-pink-700 mb-4 placeholder-pink-300 font-bold"
+                onkeypress="handleEnter(event)">
+            
+            <button onclick="checkPasscode()" 
+                class="w-full bg-gradient-to-r from-pink-500 to-rose-400 hover:from-pink-600 hover:to-rose-500 text-white font-bold py-3 rounded-lg transition-all shadow-md active:scale-95">
+                Unlock Surprise
             </button>
             
-            <p id="login-error" class="text-red-500 mt-4 h-6 text-sm font-bold opacity-0 transition-opacity">
-                <!-- Error message placeholder -->
-            </p>
+            <p id="error-msg" class="hidden text-red-500 text-sm mt-3 font-bold animate-pulse">Wrong code! Try again 😢</p>
+            <p class="mt-6 text-pink-300 text-xs">Turn up your volume 🔊</p>
         </div>
     </div>
 
-    <!-- MAIN APP CONTENT (Initially Hidden) -->
-    <div id="app-content" class="hidden-content">
-        <!-- Header -->
-        <header class="relative z-10 text-center py-10 px-4">
-            <h1 class="text-5xl md:text-7xl font-bold text-rose-500 mb-4 animate-bounce-slow">
-                DNA Transcription <span class="text-3xl align-top">❤</span>
-            </h1>
-            <p class="text-xl text-rose-400 romantic-font font-semibold">
-                Learning with love, just for you...
-            </p>
-        </header>
+    <!-- MAIN CONTENT (Hidden initially) -->
+    <main id="main-content" class="relative z-10 hidden pb-20">
+        
+        <!-- Music Toggle Button -->
+        <button id="music-toggle" onclick="toggleMusic()" class="music-btn hidden">
+            <i data-lucide="music" class="w-6 h-6 text-pink-500"></i>
+        </button>
 
-        <main class="relative z-10 container mx-auto px-4 pb-20 max-w-5xl space-y-16">
+        <!-- Hero Header -->
+        <div class="text-center pt-10 pb-6 px-4">
+            <div class="w-20 h-20 bg-pink-200 rounded-full mx-auto flex items-center justify-center mb-4 shadow-lg heart-beat">
+                <i data-lucide="heart" class="w-10 h-10 text-pink-600 fill-current"></i>
+            </div>
+            <h1 class="text-4xl font-bold text-pink-600 mb-2">Hey Beautiful</h1>
+            <p class="text-lg text-pink-800 opacity-80">Just a little something to make you smile.</p>
+        </div>
 
-            <!-- Interactive Animation Section -->
-            <section id="animation" class="bg-white/80 rounded-3xl p-6 md:p-8 shadow-xl border border-pink-200">
-                <h2 class="text-4xl text-rose-500 text-center mb-6 romantic-font">How it works, Sweetie</h2>
-                <p class="text-center text-gray-600 mb-4">Click "Start Process" to see how DNA turns into RNA!</p>
+        <!-- Section 1: Love Letter -->
+        <div class="max-w-md mx-auto px-4 mb-8 section-content" id="section-1">
+            <div class="glass-card rounded-2xl p-6 shadow-xl relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-4 opacity-10">
+                    <i data-lucide="quote" class="w-16 h-16"></i>
+                </div>
+                <h2 class="text-2xl text-pink-600 mb-4">My Message to You</h2>
+                <div id="typewriter-text" class="text-lg leading-relaxed text-gray-700 min-h-[120px] typing-cursor"></div>
+            </div>
+        </div>
+
+        <!-- Section 2: Days Counter -->
+        <div class="max-w-md mx-auto px-4 mb-8 section-content" id="section-2">
+            <div class="bg-white rounded-2xl p-6 shadow-lg text-center border-2 border-pink-100">
+                <h2 class="text-2xl mb-4">We've been together for...</h2>
+                <div class="grid grid-cols-4 gap-2">
+                    <div class="bg-pink-100 rounded-lg p-3">
+                        <span id="days-count" class="block text-2xl font-bold text-pink-600">0</span>
+                        <span class="text-xs text-pink-800">Days</span>
+                    </div>
+                    <div class="bg-pink-100 rounded-lg p-3">
+                        <span id="hours-count" class="block text-2xl font-bold text-pink-600">0</span>
+                        <span class="text-xs text-pink-800">Hours</span>
+                    </div>
+                    <div class="bg-pink-100 rounded-lg p-3">
+                        <span id="minutes-count" class="block text-2xl font-bold text-pink-600">0</span>
+                        <span class="text-xs text-pink-800">Mins</span>
+                    </div>
+                    <div class="bg-pink-100 rounded-lg p-3">
+                        <span id="seconds-count" class="block text-2xl font-bold text-pink-600">0</span>
+                        <span class="text-xs text-pink-800">Secs</span>
+                    </div>
+                </div>
+                <p class="mt-4 text-sm text-gray-500">...and I've loved every second.</p>
+            </div>
+        </div>
+
+        <!-- Section 3: The Game -->
+        <div class="max-w-md mx-auto px-4 mb-8 section-content" id="section-3">
+            <div class="glass-card rounded-2xl p-6 shadow-xl text-center">
+                <h2 class="text-2xl text-pink-600 mb-2">Catch My Heart! 🎮</h2>
+                <p class="mb-4 text-sm text-gray-600">Tap the hearts before they disappear! <br>Goal: <span class="font-bold">10 Points</span></p>
                 
-                <div id="canvas-container" class="h-80 w-full mb-4 relative">
-                    <canvas id="transcriptionCanvas"></canvas>
-                    
-                    <!-- Animation Controls Overlay -->
-                    <div class="absolute bottom-4 left-0 right-0 flex justify-center space-x-4">
-                        <button onclick="startAnimation()" class="bg-rose-500 hover:bg-rose-600 text-white font-bold py-2 px-6 rounded-full shadow-lg transform transition hover:scale-105 flex items-center gap-2">
-                            <i class="fas fa-play"></i> Start Process
-                        </button>
-                        <button onclick="resetAnimation()" class="bg-pink-300 hover:bg-pink-400 text-white font-bold py-2 px-6 rounded-full shadow-lg transform transition hover:scale-105 flex items-center gap-2">
-                            <i class="fas fa-redo"></i> Reset
+                <div id="game-area" class="relative w-full h-64 bg-pink-50 rounded-xl overflow-hidden border-2 border-dashed border-pink-300 mb-4">
+                    <div id="start-game-overlay" class="absolute inset-0 flex items-center justify-center bg-white/60 z-10">
+                        <button onclick="startGame()" class="bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 px-6 rounded-full shadow-lg transform transition hover:scale-105">
+                            Play Game
                         </button>
                     </div>
-                    
-                    <!-- Labels -->
-                    <div id="anim-label" class="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white/90 px-4 py-2 rounded-xl text-rose-600 font-bold shadow-md opacity-0 transition-opacity duration-300">
-                        Process Info
+                    <div id="score-board" class="absolute top-2 right-2 bg-white/80 px-3 py-1 rounded-full text-sm font-bold text-pink-600 z-10">
+                        Score: <span id="score">0</span>
                     </div>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center text-sm text-gray-600 mt-4">
-                    <div class="p-2 bg-pink-50 rounded-lg"><strong class="text-rose-500">1. Initiation:</strong><br>RNA Polymerase binds to Promoter</div>
-                    <div class="p-2 bg-pink-50 rounded-lg"><strong class="text-rose-500">2. Elongation:</strong><br>New mRNA strand grows (5' to 3')</div>
-                    <div class="p-2 bg-pink-50 rounded-lg"><strong class="text-rose-500">3. Termination:</strong><br>Process stops, RNA releases</div>
+                
+                <div id="win-message" class="hidden animate-bounce text-pink-600 font-bold text-xl">
+                    You caught my heart! ❤️
                 </div>
-            </section>
+            </div>
+        </div>
 
-            <!-- Short Notes Section -->
-            <section id="notes">
-                <div class="flex items-center justify-center mb-10">
-                    <div class="h-px bg-rose-300 flex-1"></div>
-                    <h2 class="text-4xl text-rose-500 mx-6 romantic-font">Important Notes</h2>
-                    <div class="h-px bg-rose-300 flex-1"></div>
+        <!-- Section 4: Why I Love You Generator -->
+        <div class="max-w-md mx-auto px-4 mb-12 section-content" id="section-4">
+            <div class="bg-gradient-to-br from-red-400 to-pink-500 rounded-2xl p-6 shadow-xl text-white text-center">
+                <h2 class="text-2xl mb-6 handwriting text-white">Why I Love You</h2>
+                <div id="reason-display" class="min-h-[80px] flex items-center justify-center text-lg font-semibold italic mb-6">
+                    "Click the button below..."
                 </div>
+                <button onclick="generateReason()" class="bg-white text-pink-500 font-bold py-3 px-8 rounded-full shadow-lg active:scale-95 transition-transform flex items-center justify-center gap-2 mx-auto">
+                    <i data-lucide="sparkles" class="w-4 h-4"></i> Tell Me Why
+                </button>
+            </div>
+        </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Note 1 -->
-                    <div class="note-card p-6 rounded-2xl">
-                        <div class="flex items-center gap-3 mb-3">
-                            <div class="bg-rose-100 p-3 rounded-full text-rose-500"><i class="fas fa-dna"></i></div>
-                            <h3 class="text-xl font-bold text-gray-800">The Central Dogma</h3>
-                        </div>
-                        <p class="text-gray-600 leading-relaxed">
-                            DNA is the master molecule. The flow of information is: <br>
-                            <span class="font-bold text-rose-500">DNA ➔ RNA ➔ Protein</span>.<br>
-                            <span class="text-sm italic text-gray-500">"Like a recipe (DNA) copied to a note (RNA) to cook a meal (Protein)!"</span>
-                        </p>
-                    </div>
-
-                    <!-- Note 2 -->
-                    <div class="note-card p-6 rounded-2xl">
-                        <div class="flex items-center gap-3 mb-3">
-                            <div class="bg-rose-100 p-3 rounded-full text-rose-500"><i class="fas fa-cogs"></i></div>
-                            <h3 class="text-xl font-bold text-gray-800">The Machinery</h3>
-                        </div>
-                        <p class="text-gray-600 leading-relaxed">
-                            The key enzyme is <span class="font-bold text-rose-500">Prokaryotic RNA Polymerase</span>.<br>
-                            It has 5 subunits (α₂, β, β', ω) called the <strong>Core Enzyme</strong>.<br>
-                            Add the <strong>Sigma factor (σ)</strong> and it becomes the <span class="font-bold text-rose-500">Holoenzyme</span> (needed for initiation!).
-                        </p>
-                    </div>
-
-                    <!-- Note 3 -->
-                    <div class="note-card p-6 rounded-2xl">
-                        <div class="flex items-center gap-3 mb-3">
-                            <div class="bg-rose-100 p-3 rounded-full text-rose-500"><i class="fas fa-play-circle"></i></div>
-                            <h3 class="text-xl font-bold text-gray-800">Phase 1: Initiation</h3>
-                        </div>
-                        <p class="text-gray-600 leading-relaxed">
-                            1. RNA Polymerase binds to the <strong>Promoter</strong> region.<br>
-                            2. Sigma factor recognizes the <strong>-35 and -10 regions</strong>.<br>
-                            3. DNA unwinds ("melts") to form an <strong>Open Complex</strong>.<br>
-                            4. <em>Abortive Initiation:</em> Short RNA strands are made and discarded before the real work starts.
-                        </p>
-                    </div>
-
-                    <!-- Note 4 -->
-                    <div class="note-card p-6 rounded-2xl">
-                        <div class="flex items-center gap-3 mb-3">
-                            <div class="bg-rose-100 p-3 rounded-full text-rose-500"><i class="fas fa-forward"></i></div>
-                            <h3 class="text-xl font-bold text-gray-800">Phase 2: Elongation</h3>
-                        </div>
-                        <p class="text-gray-600 leading-relaxed">
-                            The Sigma factor falls off! 👋<br>
-                            RNA Polymerase moves along the DNA, adding nucleotides in the <strong>5' to 3' direction</strong>.<br>
-                            The <strong>Gre factor</strong> helps proofread errors (like a spellchecker!).
-                        </p>
-                    </div>
-
-                    <!-- Note 5 -->
-                    <div class="note-card p-6 rounded-2xl md:col-span-2">
-                        <div class="flex items-center gap-3 mb-3">
-                            <div class="bg-rose-100 p-3 rounded-full text-rose-500"><i class="fas fa-stop-circle"></i></div>
-                            <h3 class="text-xl font-bold text-gray-800">Phase 3: Termination</h3>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="bg-pink-50 p-4 rounded-xl border border-pink-100">
-                                <h4 class="font-bold text-rose-600 mb-2">Rho-Dependent</h4>
-                                <p class="text-sm text-gray-600">Needs the <strong>Rho protein</strong>. It chases the polymerase and knocks it off using ATP energy.</p>
-                            </div>
-                            <div class="bg-pink-50 p-4 rounded-xl border border-pink-100">
-                                <h4 class="font-bold text-rose-600 mb-2">Rho-Independent</h4>
-                                <p class="text-sm text-gray-600">No protein needed! The RNA forms a <strong>GC-rich Hairpin Loop</strong> followed by a Poly-U tail. The loop pulls the RNA off the DNA.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Video Section -->
-            <section id="video" class="bg-white rounded-3xl overflow-hidden shadow-xl border-4 border-rose-200">
-                <div class="bg-rose-500 p-4 text-center">
-                    <h2 class="text-2xl text-white font-bold romantic-font">Let's Watch Together ❤</h2>
-                </div>
-                <div class="relative w-full bg-gray-100" style="padding-bottom: 56.25%;"> <!-- 16:9 Aspect Ratio -->
-                    <iframe 
-                        class="absolute top-0 left-0 w-full h-full"
-                        src="https://drive.google.com/file/d/1TX5cF3dnBWV0Hf7kZTTYTsaF1TgeWzTJ/preview" 
-                        title="DNA Transcription Resource" 
-                        style="border:0;" 
-                        allow="autoplay" 
-                        allowfullscreen>
-                    </iframe>
-                </div>
-                <!-- Fallback button in case of playback error -->
-                <div class="bg-rose-50 p-4 text-center border-t border-rose-100">
-                    <p class="text-sm text-gray-500 mb-2">Having trouble viewing? Open it directly.</p>
-                    <a href="https://drive.google.com/file/d/1TX5cF3dnBWV0Hf7kZTTYTsaF1TgeWzTJ/view?usp=sharing" target="_blank" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-full text-sm transition transform hover:scale-105">
-                        <i class="fab fa-google-drive"></i> Open in Google Drive
-                    </a>
-                </div>
-            </section>
-
-            <!-- Quiz Section -->
-            <section id="quiz" class="max-w-3xl mx-auto">
-                 <div class="text-center mb-8">
-                    <span class="inline-block bg-rose-100 text-rose-500 px-4 py-1 rounded-full text-sm font-semibold mb-2">Knowledge Check</span>
-                    <h2 class="text-4xl text-rose-500 romantic-font">Quiz for my Smart Girl</h2>
-                </div>
-
-                <div class="bg-white/90 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-pink-200 relative overflow-hidden">
-                    <!-- Hearts decorative background inside card -->
-                    <div class="absolute -right-10 -top-10 text-9xl text-pink-50 opacity-50 romantic-font">❤</div>
-
-                    <!-- Progress Bar -->
-                    <div class="w-full bg-gray-200 rounded-full h-2.5 mb-6">
-                        <div id="progress-bar" class="bg-rose-500 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
-                    </div>
-
-                    <div id="quiz-container">
-                        <!-- Question injected by JS -->
-                    </div>
-
-                    <div id="result-container" class="hidden text-center py-10">
-                        <div class="text-6xl mb-4">🏆</div>
-                        <h3 class="text-3xl font-bold text-gray-800 mb-2">Quiz Completed!</h3>
-                        <p class="text-xl text-rose-500 romantic-font mb-6" id="final-message"></p>
-                        <p class="text-gray-600 mb-8">Your Score: <span id="final-score" class="font-bold text-2xl text-rose-600"></span>/10</p>
-                        <button onclick="resetQuiz()" class="bg-rose-500 hover:bg-rose-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transition transform hover:scale-105">
-                            Try Again, my love?
-                        </button>
-                    </div>
-                </div>
-            </section>
-
-        </main>
-
-        <footer class="text-center py-8 text-rose-400 relative z-10">
-            <p class="romantic-font text-2xl">Made with infinite love ❤</p>
+        <footer class="text-center text-pink-400 text-sm pb-8">
+            <p>Made with all my love ❤️</p>
         </footer>
-    </div>
 
+    </main>
+
+    <!-- JS Logic -->
     <script>
-        // --- LOGIN LOGIC ---
-        function checkCode() {
-            const input = document.getElementById('secret-code');
-            const error = document.getElementById('login-error');
-            const loginScreen = document.getElementById('login-screen');
-            const appContent = document.getElementById('app-content');
-            
-            if (input.value === "Baba") { // The Secret Code
-                // Success
-                error.style.opacity = '0';
-                
-                // Animate Login Screen Out
-                gsap.to(loginScreen, {
-                    opacity: 0,
-                    duration: 0.8,
-                    ease: "power2.inOut",
-                    onComplete: () => {
-                        loginScreen.style.display = 'none';
-                        appContent.style.display = 'block';
-                        
-                        // Fix Canvas Sizing now that it is visible
-                        resizeCanvas();
-                        
-                        // Animate Main Content In
-                        gsap.to(appContent, { 
-                            opacity: 1, 
-                            duration: 1.5,
-                            ease: "power2.out"
-                        });
-                    }
-                });
-                
-            } else {
-                // Error
-                error.innerText = "Wrong password, sweetie! Try again ❤";
-                error.style.opacity = '1';
-                
-                // Shake animation for input
-                gsap.fromTo(input, 
-                    { x: -10, borderColor: '#ef4444' }, 
-                    { x: 10, borderColor: '#ef4444', duration: 0.1, repeat: 5, yoyo: true, onComplete: () => {
-                        gsap.to(input, { x: 0, borderColor: '#fbcfe8', duration: 0.2 });
-                    }}
-                );
-            }
-        }
+        // --- Configuration ---
+        // Change this date to when you started dating (Year, Month (0-11), Day)
+        // October is Month 9 (0 = Jan, 9 = Oct)
+        const startDate = new Date(2025, 9, 1); 
         
-        // Listen for "Enter" key on password field
-        document.getElementById('secret-code').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                checkCode();
-            }
-        });
+        const loveLetter = "To the girl who stole my heart... Thank you for being the most amazing person in my world. Every day with you is a new adventure, and I fall in love with you more and more. I made this little site just to remind you how special you are to me.";
 
-
-        // --- 1. FALLING HEARTS ANIMATION ---
-        function createHearts() {
-            const container = document.getElementById('hearts-container');
-            const heartCount = 30; // Number of concurrent hearts
-
-            for (let i = 0; i < heartCount; i++) {
-                setTimeout(() => {
-                    generateHeart(container);
-                }, i * 500);
-            }
-        }
-
-        function generateHeart(container) {
-            const heart = document.createElement('div');
-            heart.classList.add('heart-bg');
-            heart.innerHTML = ['❤', '💖', '💕', '🌸'][Math.floor(Math.random() * 4)];
-            heart.style.left = Math.random() * 100 + 'vw';
-            heart.style.animationDuration = (Math.random() * 3 + 5) + 's'; // 5-8s duration
-            heart.style.fontSize = (Math.random() * 20 + 10) + 'px';
-            
-            container.appendChild(heart);
-
-            // Remove after animation finishes to prevent memory leak
-            setTimeout(() => {
-                heart.remove();
-                generateHeart(container); // Create a new one to replace it
-            }, 8000);
-        }
-
-        createHearts();
-
-        // --- 2. CUSTOM MOUSE CURSOR ---
-        const cursorDot = document.getElementById('cursor-dot');
-        const cursorOutline = document.getElementById('cursor-outline');
-
-        window.addEventListener('mousemove', function(e) {
-            const posX = e.clientX;
-            const posY = e.clientY;
-
-            // Dot follows instantly
-            cursorDot.style.left = `${posX}px`;
-            cursorDot.style.top = `${posY}px`;
-
-            // Outline follows with slight delay (animation via CSS transition)
-            // But for smoother GSAP effect:
-            cursorOutline.animate({
-                left: `${posX}px`,
-                top: `${posY}px`
-            }, { duration: 500, fill: "forwards" });
-        });
-
-        // Add hover effect to interactive elements
-        // Need to delegate or re-attach since some elements are hidden initially? 
-        // Actually CSS hover works fine, but JS cursor sizing needs event listeners.
-        // We will attach to body to catch all bubbling events for simplicity in a dynamic app
-        document.body.addEventListener('mouseover', function(e) {
-            if (e.target.closest('button') || e.target.closest('a') || e.target.closest('.note-card') || e.target.closest('input')) {
-                cursorOutline.style.width = '60px';
-                cursorOutline.style.height = '60px';
-            }
-        });
-        
-        document.body.addEventListener('mouseout', function(e) {
-             if (e.target.closest('button') || e.target.closest('a') || e.target.closest('.note-card') || e.target.closest('input')) {
-                cursorOutline.style.width = '40px';
-                cursorOutline.style.height = '40px';
-            }
-        });
-
-
-        // --- 3. TRANSCRIPTION ANIMATION (CANVAS) ---
-        const canvas = document.getElementById('transcriptionCanvas');
-        const ctx = canvas.getContext('2d');
-        let animId;
-        let progress = 0; // 0 to 100
-
-        function resizeCanvas() {
-            // Only resize if visible to avoid 0 height issues
-            const container = document.getElementById('canvas-container');
-            if (container.offsetParent !== null) {
-                canvas.width = container.clientWidth;
-                canvas.height = container.clientHeight;
-                drawDNA(); // Redraw immediately after resize
-            }
-        }
-        window.addEventListener('resize', resizeCanvas);
-        // Initial resize handled in checkCode() success callback
-
-        function drawDNA(offset) {
-            const yMid = canvas.height / 2;
-            const width = canvas.width;
-            
-            ctx.strokeStyle = '#e5e7eb'; // Light gray
-            ctx.lineWidth = 4;
-            
-            // Top strand
-            ctx.beginPath();
-            ctx.moveTo(0, yMid - 20);
-            ctx.lineTo(width, yMid - 20);
-            ctx.stroke();
-
-            // Bottom strand
-            ctx.beginPath();
-            ctx.moveTo(0, yMid + 20);
-            ctx.lineTo(width, yMid + 20);
-            ctx.stroke();
-
-            // Bases
-            ctx.lineWidth = 1;
-            for(let x=0; x<width; x+=30) {
-                ctx.beginPath();
-                ctx.moveTo(x, yMid - 20);
-                ctx.lineTo(x, yMid + 20);
-                ctx.stroke();
-            }
-        }
-
-        function animateProcess() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            const width = canvas.width;
-            const yMid = canvas.height / 2;
-            
-            drawDNA();
-
-            // Calculate Position
-            const xPos = (progress / 100) * (width - 100) + 50;
-
-            // Draw mRNA (The growing red tail)
-            if (progress > 5) {
-                ctx.beginPath();
-                ctx.strokeStyle = '#ff4d6d'; // Hot pink
-                ctx.lineWidth = 6;
-                ctx.lineCap = 'round';
-                
-                // Draw a squiggly line originating from xPos
-                ctx.moveTo(xPos, yMid);
-                
-                // Simulate growing tail hanging down/back
-                const tailLength = progress * 2; 
-                ctx.bezierCurveTo(
-                    xPos - tailLength/2, yMid + 30, 
-                    xPos - tailLength, yMid - 10, 
-                    xPos - tailLength - 20, yMid + 40
-                );
-                ctx.stroke();
-
-                ctx.fillStyle = '#ff4d6d';
-                ctx.font = '14px Quicksand';
-                ctx.fillText("mRNA (5')", xPos - tailLength - 20, yMid + 60);
-            }
-
-            // Draw RNA Polymerase (The blob)
-            ctx.fillStyle = '#fbcfe8'; // Pink-200
-            ctx.beginPath();
-            ctx.ellipse(xPos, yMid, 40, 30, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.strokeStyle = '#db2777'; // Pink-600
-            ctx.lineWidth = 2;
-            ctx.stroke();
-
-            ctx.fillStyle = '#be185d';
-            ctx.font = 'bold 12px Quicksand';
-            ctx.textAlign = 'center';
-            ctx.fillText("RNA Polymerase", xPos, yMid - 40);
-
-            // Update Label based on progress
-            const label = document.getElementById('anim-label');
-            label.style.opacity = '1';
-            
-            if (progress < 15) {
-                label.innerText = "Initiation: Binding to Promoter";
-            } else if (progress < 85) {
-                label.innerText = "Elongation: Adding Nucleotides";
-            } else {
-                label.innerText = "Termination: Releasing RNA";
-            }
-
-            if (progress < 100) {
-                progress += 0.1;
-                animId = requestAnimationFrame(animateProcess);
-            } else {
-                // End state
-                cancelAnimationFrame(animId);
-            }
-        }
-
-        function startAnimation() {
-            cancelAnimationFrame(animId);
-            progress = 0;
-            animateProcess();
-        }
-
-        function resetAnimation() {
-            cancelAnimationFrame(animId);
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawDNA();
-            document.getElementById('anim-label').style.opacity = '0';
-            progress = 0;
-        }
-        
-        // Initial static draw if visible, otherwise wait for login
-        // setTimeout(() => { drawDNA(); }, 100); 
-
-
-        // --- 4. QUIZ LOGIC ---
-        const questions = [
-            {
-                q: "What is the main enzyme used in transcription?",
-                options: ["DNA Polymerase", "RNA Polymerase", "Helicase", "Ligase"],
-                correct: 1,
-                note: "Correct! Specifically, DNA-dependent RNA polymerase."
-            },
-            {
-                q: "Which factor helps RNA Polymerase bind to the promoter to START?",
-                options: ["Rho factor", "Gre factor", "Sigma factor", "Beta factor"],
-                correct: 2,
-                note: "Yes! Sigma factor recognizes the -35 and -10 regions."
-            },
-            {
-                q: "Which DNA strand is actually read to make RNA?",
-                options: ["Coding Strand", "Template (Antisense) Strand", "Both Strands", "None"],
-                correct: 1,
-                note: "Perfect! It reads the template strand 3' to 5'."
-            },
-            {
-                q: "In which direction is the new RNA built?",
-                options: ["3' to 5'", "5' to 3'", "Left to Right", "Randomly"],
-                correct: 1,
-                note: "Exactly! 5' to 3' is the universal synthesis direction."
-            },
-            {
-                q: "What makes up the 'Holoenzyme'?",
-                options: ["Core enzyme only", "Core enzyme + Sigma factor", "Sigma factor only", "Core enzyme + Rho"],
-                correct: 1,
-                note: "Smart! The Core enzyme does the work, Sigma helps it start."
-            },
-            {
-                q: "What happens in 'Abortive Initiation'?",
-                options: ["The enzyme quits", "Short RNAs (<10 nt) are made & released", "DNA breaks", "Protein is made"],
-                correct: 1,
-                note: "Correct! It's like a false start before it gets going properly."
-            },
-            {
-                q: "Which factor helps with PROOFREADING?",
-                options: ["Sigma factor", "Rho factor", "Gre factor", "Alpha subunit"],
-                correct: 2,
-                note: "Yes! The Gre factor helps fix mistakes."
-            },
-            {
-                q: "Rho-Dependent termination requires what?",
-                options: ["A Hairpin loop", "The Rho protein & ATP", "Only ATP", "Poly-U tail"],
-                correct: 1,
-                note: "Right! Rho chases the polymerase to stop it."
-            },
-            {
-                q: "Rho-Independent termination relies on...?",
-                options: ["Rho protein", "External enzymes", "A Hairpin Loop & Poly-U tail", "DNA cutting"],
-                correct: 2,
-                note: "Yes! The structure itself causes the RNA to fall off."
-            },
-            {
-                q: "The Central Dogma is:",
-                options: ["RNA -> DNA -> Protein", "Protein -> RNA -> DNA", "DNA -> RNA -> Protein", "DNA -> Protein -> RNA"],
-                correct: 2,
-                note: "You got it! The fundamental rule of life."
-            }
+        const reasons = [
+            "Your smile lights up my entire world.",
+            "You make even the boring days fun.",
+            "You have the kindest heart I know.",
+            "The way you laugh makes me melt.",
+            "You are my best friend and my love.",
+            "You support me in everything I do.",
+            "Just hearing your voice makes my day better.",
+            "You make me want to be a better person.",
+            "Your hugs are my favorite place to be.",
+            "I love the way you look at me."
         ];
 
-        let currentQuestion = 0;
-        let score = 0;
+        // --- Icon Initialization ---
+        lucide.createIcons();
 
-        function loadQuestion() {
-            const container = document.getElementById('quiz-container');
-            const qData = questions[currentQuestion];
+        // --- Background Animation ---
+        function createFloatingHearts() {
+            const container = document.getElementById('bg-hearts-container');
+            const heartCount = 15;
+            const colors = ['#ffccd5', '#ffb3c1', '#ff8fa3', '#fff0f3'];
+
+            for (let i = 0; i < heartCount; i++) {
+                const heart = document.createElement('div');
+                heart.classList.add('bg-heart');
+                heart.innerHTML = '❤';
+                heart.style.left = Math.random() * 100 + 'vw';
+                heart.style.fontSize = (Math.random() * 20 + 10) + 'px';
+                heart.style.animationDuration = (Math.random() * 10 + 10) + 's';
+                heart.style.animationDelay = (Math.random() * 5) + 's';
+                heart.style.color = colors[Math.floor(Math.random() * colors.length)];
+                container.appendChild(heart);
+            }
+        }
+        createFloatingHearts();
+
+        // --- Music Controls ---
+        const bgMusic = document.getElementById('bg-music');
+        let isMusicPlaying = false;
+
+        function toggleMusic() {
+            if (isMusicPlaying) {
+                bgMusic.pause();
+                isMusicPlaying = false;
+                document.querySelector('#music-toggle i').setAttribute('data-lucide', 'music');
+            } else {
+                bgMusic.play().then(() => {
+                    isMusicPlaying = true;
+                    document.querySelector('#music-toggle i').setAttribute('data-lucide', 'volume-2');
+                }).catch(e => console.log("Audio play failed:", e));
+            }
+            lucide.createIcons();
+        }
+
+        // --- Entry Sequence (PASSCODE CHECK) ---
+        function handleEnter(e) {
+            if(e.key === 'Enter') checkPasscode();
+        }
+
+        function checkPasscode() {
+            const input = document.getElementById('passcode');
+            const errorMsg = document.getElementById('error-msg');
             
-            // Update Progress
-            const progress = ((currentQuestion) / questions.length) * 100;
-            document.getElementById('progress-bar').style.width = `${progress}%`;
+            // Password is "Babe"
+            if(input.value.trim() === "Babe") {
+                startExperience();
+            } else {
+                errorMsg.classList.remove('hidden');
+                input.classList.add('border-red-500');
+                input.value = '';
+                setTimeout(() => {
+                    errorMsg.classList.add('hidden');
+                    input.classList.remove('border-red-500');
+                }, 2000);
+            }
+        }
 
-            let html = `
-                <div class="mb-6 fade-in">
-                    <h3 class="text-xl font-bold text-gray-800 mb-4">${currentQuestion + 1}. ${qData.q}</h3>
-                    <div class="space-y-3">
-            `;
-
-            qData.options.forEach((opt, index) => {
-                html += `
-                    <button onclick="checkAnswer(${index})" class="option-btn w-full text-left p-4 rounded-xl border border-gray-200 bg-white font-medium hover:shadow-md transition-all">
-                        ${opt}
-                    </button>
-                `;
+        function startExperience() {
+            const intro = document.getElementById('intro-screen');
+            const main = document.getElementById('main-content');
+            const musicBtn = document.getElementById('music-toggle');
+            
+            // Trigger confetti
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#ff69b4', '#ff1493', '#ffffff']
             });
 
-            html += `</div><div id="feedback" class="mt-4 min-h-[50px]"></div></div>`;
-            container.innerHTML = html;
-        }
+            // Try to play music automatically after interaction
+            bgMusic.volume = 0.5;
+            bgMusic.play().then(() => {
+                isMusicPlaying = true;
+                document.querySelector('#music-toggle i').setAttribute('data-lucide', 'volume-2');
+                lucide.createIcons();
+            }).catch(e => {
+                console.log("Auto-play blocked, waiting for user click");
+            });
 
-        function checkAnswer(selectedIndex) {
-            const qData = questions[currentQuestion];
-            const buttons = document.querySelectorAll('.option-btn');
-            const feedback = document.getElementById('feedback');
-
-            // Disable all buttons
-            buttons.forEach(btn => btn.disabled = true);
-
-            if (selectedIndex === qData.correct) {
-                score++;
-                buttons[selectedIndex].classList.add('correct');
-                feedback.innerHTML = `<p class="text-green-600 font-bold flex items-center gap-2"><i class="fas fa-check-circle"></i> ${qData.note} ❤</p>`;
-            } else {
-                buttons[selectedIndex].classList.add('wrong');
-                buttons[qData.correct].classList.add('correct');
-                feedback.innerHTML = `<p class="text-red-500 font-bold flex items-center gap-2"><i class="fas fa-times-circle"></i> Oops! The correct answer was: ${qData.options[qData.correct]}</p>`;
-            }
-
+            // Fade out intro
+            intro.style.opacity = '0';
             setTimeout(() => {
-                currentQuestion++;
-                if (currentQuestion < questions.length) {
-                    loadQuestion();
-                } else {
-                    showResults();
-                }
-            }, 2500);
+                intro.style.display = 'none';
+                main.classList.remove('hidden');
+                musicBtn.classList.remove('hidden');
+                
+                // Animate sections in
+                const sections = document.querySelectorAll('.section-content');
+                sections.forEach((sec, index) => {
+                    setTimeout(() => {
+                        sec.classList.add('visible');
+                    }, index * 300);
+                });
+
+                // Start Typewriter
+                typeWriter();
+                // Start Timer
+                setInterval(updateTimer, 1000);
+            }, 800);
         }
 
-        function showResults() {
-            document.getElementById('quiz-container').classList.add('hidden');
-            const resultContainer = document.getElementById('result-container');
-            resultContainer.classList.remove('hidden');
-            
-            document.getElementById('progress-bar').style.width = '100%';
-            document.getElementById('final-score').innerText = score;
-
-            const msg = document.getElementById('final-message');
-            if (score === 10) msg.innerText = "Perfect Score! You're a Genius, babe! 😍";
-            else if (score >= 7) msg.innerText = "Great job! You know your stuff! 😘";
-            else msg.innerText = "Good try! Let's watch the video again together? 🥰";
+        // --- Typewriter Effect ---
+        let i = 0;
+        function typeWriter() {
+            if (i < loveLetter.length) {
+                document.getElementById("typewriter-text").innerHTML += loveLetter.charAt(i);
+                i++;
+                setTimeout(typeWriter, 50); // Speed of typing
+            } else {
+                document.querySelector('.typing-cursor').classList.remove('typing-cursor');
+            }
         }
 
-        function resetQuiz() {
-            currentQuestion = 0;
+        // --- Relationship Timer ---
+        function updateTimer() {
+            const now = new Date();
+            const diff = now - startDate;
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+            const minutes = Math.floor((diff / 1000 / 60) % 60);
+            const seconds = Math.floor((diff / 1000) % 60);
+
+            document.getElementById('days-count').innerText = days;
+            document.getElementById('hours-count').innerText = hours;
+            document.getElementById('minutes-count').innerText = minutes;
+            document.getElementById('seconds-count').innerText = seconds;
+        }
+
+        // --- Game Logic ---
+        let score = 0;
+        let gameActive = false;
+        let gameInterval;
+
+        function startGame() {
+            if(gameActive) return;
+            gameActive = true;
             score = 0;
-            document.getElementById('quiz-container').classList.remove('hidden');
-            document.getElementById('result-container').classList.add('hidden');
-            loadQuestion();
+            document.getElementById('score').innerText = score;
+            document.getElementById('start-game-overlay').style.display = 'none';
+            document.getElementById('win-message').classList.add('hidden');
+            
+            // Spawn hearts every 600ms
+            gameInterval = setInterval(spawnGameHeart, 600);
         }
 
-        // Start Quiz on Load
-        loadQuestion();
+        function spawnGameHeart() {
+            if (!gameActive) return;
+
+            const gameArea = document.getElementById('game-area');
+            const heart = document.createElement('div');
+            const emojis = ['❤️', '💖', '💝', '💕'];
+            
+            heart.classList.add('game-heart');
+            heart.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+            heart.style.fontSize = '24px';
+            heart.style.left = Math.random() * (gameArea.clientWidth - 30) + 'px';
+            heart.style.top = '-30px';
+            
+            // Click event
+            heart.onclick = function() {
+                if(!gameActive) return;
+                score++;
+                document.getElementById('score').innerText = score;
+                this.remove();
+                
+                // Win Condition
+                if(score >= 10) {
+                    endGame(true);
+                }
+            };
+
+            gameArea.appendChild(heart);
+
+            // Animate falling
+            let pos = -30;
+            const fallInterval = setInterval(() => {
+                if(!gameActive) {
+                    clearInterval(fallInterval);
+                    heart.remove();
+                    return;
+                }
+                pos += 2; // Speed
+                heart.style.top = pos + 'px';
+
+                if (pos > gameArea.clientHeight) {
+                    clearInterval(fallInterval);
+                    if(heart.parentNode) heart.remove();
+                }
+            }, 20);
+        }
+
+        function endGame(win) {
+            gameActive = false;
+            clearInterval(gameInterval);
+            
+            const gameArea = document.getElementById('game-area');
+            // Clear remaining hearts
+            const hearts = document.querySelectorAll('.game-heart');
+            hearts.forEach(h => h.remove());
+
+            if (win) {
+                document.getElementById('win-message').classList.remove('hidden');
+                // Big Confetti explosion
+                var duration = 3 * 1000;
+                var animationEnd = Date.now() + duration;
+                var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+                var randomInRange = (min, max) => Math.random() * (max - min) + min;
+
+                var interval = setInterval(function() {
+                    var timeLeft = animationEnd - Date.now();
+
+                    if (timeLeft <= 0) {
+                        return clearInterval(interval);
+                    }
+
+                    var particleCount = 50 * (timeLeft / duration);
+                    confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                    confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+                }, 250);
+            } else {
+                document.getElementById('start-game-overlay').style.display = 'flex';
+            }
+        }
+
+        // --- Reason Generator ---
+        function generateReason() {
+            const display = document.getElementById('reason-display');
+            // Fade out
+            display.style.opacity = 0;
+            
+            setTimeout(() => {
+                const randomReason = reasons[Math.floor(Math.random() * reasons.length)];
+                display.innerText = `"${randomReason}"`;
+                // Fade in
+                display.style.opacity = 1;
+                display.style.transition = 'opacity 0.5s';
+            }, 300);
+        }
 
     </script>
 </body>
