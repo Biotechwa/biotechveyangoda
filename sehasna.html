@@ -3,513 +3,198 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A Surprise For You ❤️</title>
-    <!-- Tailwind CSS -->
+    <title>Will You Be My Valentine?</title>
+    <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
-    <!-- Confetti Library -->
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <!-- Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    
     <style>
         body {
             font-family: 'Nunito', sans-serif;
-            background: linear-gradient(135deg, #fdf2f8 0%, #fbcfe8 100%);
-            overflow-x: hidden;
-            touch-action: manipulation;
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            overflow: hidden; /* Prevent scrolling when button gets huge */
+        }
+        
+        .romantic-bg {
+            background: linear-gradient(to bottom right, #ffdde1, #ee9ca7);
+            min-height: 100vh;
         }
 
-        h1, h2, .handwriting {
+        h1 {
             font-family: 'Pacifico', cursive;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
         }
 
-        /* Floating Hearts Animation Background */
-        .bg-heart {
-            position: fixed;
-            top: -10vh;
-            color: rgba(255, 182, 193, 0.4);
-            animation: float-down linear infinite;
-            z-index: 0;
-            pointer-events: none;
+        .btn-transition {
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
 
-        @keyframes float-down {
-            0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; }
-            10% { opacity: 1; }
-            100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
-        }
-
-        /* Glassmorphism Card */
-        .glass-card {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-        }
-
-        /* Heart Beat Animation */
-        .heart-beat {
-            animation: beat 1s infinite alternate;
-        }
-
-        @keyframes beat {
-            to { transform: scale(1.1); }
-        }
-
-        /* Game Elements */
-        .game-heart {
+        /* Floating Hearts Animation */
+        .heart {
             position: absolute;
-            cursor: pointer;
-            user-select: none;
-            transition: transform 0.1s;
-        }
-        .game-heart:active {
-            transform: scale(1.5);
-        }
-
-        /* Smooth Transition for Sections */
-        .section-content {
+            color: #ff4b4b;
+            animation: float 4s ease-in infinite;
             opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.8s ease-out;
-        }
-        .section-content.visible {
-            opacity: 1;
-            transform: translateY(0);
+            z-index: 0;
         }
 
-        /* Typing Effect Cursor */
-        .typing-cursor::after {
-            content: '|';
-            animation: blink 1s infinite;
-        }
-        @keyframes blink {
-            50% { opacity: 0; }
+        @keyframes float {
+            0% { transform: translateY(100vh) scale(0); opacity: 1; }
+            100% { transform: translateY(-10vh) scale(1.5); opacity: 0; }
         }
 
-        /* Music Control Button */
-        .music-btn {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 100;
-            background: rgba(255, 255, 255, 0.8);
-            border: 2px solid #fbcfe8;
-            padding: 10px;
-            border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: transform 0.2s;
+        /* Pulse animation for the yes button initially */
+        @keyframes pulse-soft {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 75, 75, 0.7); }
+            50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(255, 75, 75, 0); }
         }
-        .music-btn:active {
-            transform: scale(0.9);
+        
+        .pulse {
+            animation: pulse-soft 2s infinite;
+        }
+
+        .hidden-page {
+            display: none;
         }
     </style>
 </head>
-<body class="min-h-screen text-pink-900 overflow-x-hidden">
+<body class="romantic-bg flex flex-col items-center justify-center min-h-screen text-center p-4">
 
-    <!-- AUDIO PLAYER -->
-    <!-- REPLACE THE SRC BELOW WITH YOUR "DAMPATA HANDAWE" MP3 LINK -->
-    <audio id="bg-music" loop>
-        <source src="img/ath-alla-durak-gewala-kasun-tharindra.mp3" type="audio/mpeg">
-        Your browser does not support the audio element.
-    </audio>
-
-    <!-- Background Animation Elements (Generated by JS) -->
-    <div id="bg-hearts-container"></div>
-
-    <!-- ENTRY SCREEN (Secret Code Login) -->
-    <div id="intro-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-pink-50 transition-all duration-1000">
+    <!-- Screen 1: The Question -->
+    <div id="question-container" class="z-10 relative bg-white/80 backdrop-blur-sm p-8 rounded-3xl shadow-2xl max-w-lg w-full transition-all duration-500">
+        <!-- Cute starting GIF -->
+        <img id="main-image" src="https://media.tenor.com/I7kd7vPRyX8AAAAM/cute-bears.gif" alt="Cute Bear" class="w-48 h-48 object-cover mx-auto rounded-xl mb-6 shadow-md mix-blend-multiply">
         
-        <div class="bg-white/80 p-8 rounded-2xl shadow-xl backdrop-blur-md max-w-xs w-full text-center border border-pink-200 mx-4">
-            <div class="mb-4 text-pink-500 flex justify-center">
-                <i data-lucide="lock-keyhole" class="w-12 h-12"></i>
-            </div>
-            <h2 class="text-2xl font-bold text-pink-600 mb-2 handwriting">Private Access</h2>
-            <p class="text-sm text-pink-400 mb-6">Enter the secret code to enter my heart.</p>
-            
-            <input type="password" id="passcode" placeholder="Enter code..." 
-                class="w-full p-3 rounded-lg border border-pink-300 bg-pink-50 focus:outline-none focus:ring-2 focus:ring-pink-400 text-center text-pink-700 mb-4 placeholder-pink-300 font-bold"
-                onkeypress="handleEnter(event)">
-            
-            <button onclick="checkPasscode()" 
-                class="w-full bg-gradient-to-r from-pink-500 to-rose-400 hover:from-pink-600 hover:to-rose-500 text-white font-bold py-3 rounded-lg transition-all shadow-md active:scale-95">
-                Unlock Surprise
+        <h1 class="text-4xl md:text-5xl text-red-500 mb-8 leading-tight">Will you be my Valentine? 🌹</h1>
+
+        <div class="flex flex-wrap justify-center items-center gap-4 relative w-full h-32">
+            <!-- YES Button -->
+            <button id="yes-btn" class="btn-transition pulse bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-full text-xl shadow-lg transform hover:-translate-y-1 z-20">
+                Yes! ❤️
             </button>
-            
-            <p id="error-msg" class="hidden text-red-500 text-sm mt-3 font-bold animate-pulse">Wrong code! Try again 😢</p>
-            <p class="mt-6 text-pink-300 text-xs">Turn up your volume 🔊</p>
+
+            <!-- NO Button -->
+            <button id="no-btn" class="btn-transition bg-red-400 hover:bg-red-500 text-white font-bold py-3 px-8 rounded-full text-xl shadow-lg z-20">
+                No
+            </button>
         </div>
     </div>
 
-    <!-- MAIN CONTENT (Hidden initially) -->
-    <main id="main-content" class="relative z-10 hidden pb-20">
+    <!-- Screen 2: The Celebration (Hidden initially) -->
+    <div id="success-container" class="hidden-page z-20 flex-col items-center justify-center w-full h-full absolute top-0 left-0 bg-pink-100">
+        <div class="z-30 p-6 bg-white/60 backdrop-blur-md rounded-3xl shadow-xl text-center">
+            <h1 class="text-5xl md:text-6xl text-pink-600 mb-6 animate-bounce">Yaaay! I knew it! 🎉</h1>
+            
+            <!-- Minion Kissing GIF -->
+            <img src="https://media.tenor.com/7T1c0e3xXyoAAAAM/minion-kiss.gif" alt="Minion Kiss" class="w-64 h-64 object-contain mx-auto rounded-lg mb-6 border-4 border-white shadow-lg">
+            
+            <p class="text-2xl text-gray-700 font-bold mb-4">You are the best! 💖</p>
+            
+            <div class="mt-4 p-4 bg-white rounded-xl shadow-inner inline-block">
+                <p class="text-sm text-gray-500 mb-2">Playing our song...</p>
+                <!-- Audio Player -->
+                <audio id="love-song" controls class="mx-auto">
+                    <!-- The specific path requested -->
+                    <source src="img/ath-alla-durak-gewala-kasun-tharindra.mp3" type="audio/mpeg">
+                    Your browser does not support the audio element.
+                </audio>
+            </div>
+        </div>
         
-        <!-- Music Toggle Button -->
-        <button id="music-toggle" onclick="toggleMusic()" class="music-btn hidden">
-            <i data-lucide="music" class="w-6 h-6 text-pink-500"></i>
-        </button>
+        <!-- Background decorative elements -->
+        <div id="hearts-container" class="absolute inset-0 pointer-events-none overflow-hidden"></div>
+    </div>
 
-        <!-- Hero Header -->
-        <div class="text-center pt-10 pb-6 px-4">
-            <div class="w-20 h-20 bg-pink-200 rounded-full mx-auto flex items-center justify-center mb-4 shadow-lg heart-beat">
-                <i data-lucide="heart" class="w-10 h-10 text-pink-600 fill-current"></i>
-            </div>
-            <h1 class="text-4xl font-bold text-pink-600 mb-2">Hey Beautiful</h1>
-            <p class="text-lg text-pink-800 opacity-80">Just a little something to make you smile.</p>
-        </div>
-
-        <!-- Section 1: Love Letter -->
-        <div class="max-w-md mx-auto px-4 mb-8 section-content" id="section-1">
-            <div class="glass-card rounded-2xl p-6 shadow-xl relative overflow-hidden">
-                <div class="absolute top-0 right-0 p-4 opacity-10">
-                    <i data-lucide="quote" class="w-16 h-16"></i>
-                </div>
-                <h2 class="text-2xl text-pink-600 mb-4">My Message to You</h2>
-                <div id="typewriter-text" class="text-lg leading-relaxed text-gray-700 min-h-[120px] typing-cursor"></div>
-            </div>
-        </div>
-
-        <!-- Section 2: Days Counter -->
-        <div class="max-w-md mx-auto px-4 mb-8 section-content" id="section-2">
-            <div class="bg-white rounded-2xl p-6 shadow-lg text-center border-2 border-pink-100">
-                <h2 class="text-2xl mb-4">We've been together for...</h2>
-                <div class="grid grid-cols-4 gap-2">
-                    <div class="bg-pink-100 rounded-lg p-3">
-                        <span id="days-count" class="block text-2xl font-bold text-pink-600">0</span>
-                        <span class="text-xs text-pink-800">Days</span>
-                    </div>
-                    <div class="bg-pink-100 rounded-lg p-3">
-                        <span id="hours-count" class="block text-2xl font-bold text-pink-600">0</span>
-                        <span class="text-xs text-pink-800">Hours</span>
-                    </div>
-                    <div class="bg-pink-100 rounded-lg p-3">
-                        <span id="minutes-count" class="block text-2xl font-bold text-pink-600">0</span>
-                        <span class="text-xs text-pink-800">Mins</span>
-                    </div>
-                    <div class="bg-pink-100 rounded-lg p-3">
-                        <span id="seconds-count" class="block text-2xl font-bold text-pink-600">0</span>
-                        <span class="text-xs text-pink-800">Secs</span>
-                    </div>
-                </div>
-                <p class="mt-4 text-sm text-gray-500">...and I've loved every second.</p>
-            </div>
-        </div>
-
-        <!-- Section 3: The Game -->
-        <div class="max-w-md mx-auto px-4 mb-8 section-content" id="section-3">
-            <div class="glass-card rounded-2xl p-6 shadow-xl text-center">
-                <h2 class="text-2xl text-pink-600 mb-2">Catch My Heart! 🎮</h2>
-                <p class="mb-4 text-sm text-gray-600">Tap the hearts before they disappear! <br>Goal: <span class="font-bold">10 Points</span></p>
-                
-                <div id="game-area" class="relative w-full h-64 bg-pink-50 rounded-xl overflow-hidden border-2 border-dashed border-pink-300 mb-4">
-                    <div id="start-game-overlay" class="absolute inset-0 flex items-center justify-center bg-white/60 z-10">
-                        <button onclick="startGame()" class="bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 px-6 rounded-full shadow-lg transform transition hover:scale-105">
-                            Play Game
-                        </button>
-                    </div>
-                    <div id="score-board" class="absolute top-2 right-2 bg-white/80 px-3 py-1 rounded-full text-sm font-bold text-pink-600 z-10">
-                        Score: <span id="score">0</span>
-                    </div>
-                </div>
-                
-                <div id="win-message" class="hidden animate-bounce text-pink-600 font-bold text-xl">
-                    You caught my heart! ❤️
-                </div>
-            </div>
-        </div>
-
-        <!-- Section 4: Why I Love You Generator -->
-        <div class="max-w-md mx-auto px-4 mb-12 section-content" id="section-4">
-            <div class="bg-gradient-to-br from-red-400 to-pink-500 rounded-2xl p-6 shadow-xl text-white text-center">
-                <h2 class="text-2xl mb-6 handwriting text-white">Why I Love You</h2>
-                <div id="reason-display" class="min-h-[80px] flex items-center justify-center text-lg font-semibold italic mb-6">
-                    "Click the button below..."
-                </div>
-                <button onclick="generateReason()" class="bg-white text-pink-500 font-bold py-3 px-8 rounded-full shadow-lg active:scale-95 transition-transform flex items-center justify-center gap-2 mx-auto">
-                    <i data-lucide="sparkles" class="w-4 h-4"></i> Tell Me Why
-                </button>
-            </div>
-        </div>
-
-        <footer class="text-center text-pink-400 text-sm pb-8">
-            <p>Made with all my love ❤️</p>
-        </footer>
-
-    </main>
-
-    <!-- JS Logic -->
     <script>
-        // --- Configuration ---
-        // Change this date to when you started dating (Year, Month (0-11), Day)
-        // October is Month 9 (0 = Jan, 9 = Oct)
-        const startDate = new Date(2025, 9, 1); 
-        
-        const loveLetter = "To the girl who stole my heart... Thank you for being the most amazing person in my world. Every day with you is a new adventure, and I fall in love with you more and more. I made this little site just to remind you how special you are to me.";
+        const questionContainer = document.getElementById('question-container');
+        const successContainer = document.getElementById('success-container');
+        const yesBtn = document.getElementById('yes-btn');
+        const noBtn = document.getElementById('no-btn');
+        const mainImage = document.getElementById('main-image');
+        const audio = document.getElementById('love-song');
+        const heartsContainer = document.getElementById('hearts-container');
 
-        const reasons = [
-            "Your smile lights up my entire world.",
-            "You make even the boring days fun.",
-            "You have the kindest heart I know.",
-            "The way you laugh makes me melt.",
-            "You are my best friend and my love.",
-            "You support me in everything I do.",
-            "Just hearing your voice makes my day better.",
-            "You make me want to be a better person.",
-            "Your hugs are my favorite place to be.",
-            "I love the way you look at me."
+        let noClickCount = 0;
+        // Phrases to cycle through when "No" is clicked
+        const phrases = [
+            "No",
+            "Are you sure?",
+            "Really sure?",
+            "Think again!",
+            "Last chance!",
+            "Surely not?",
+            "You might regret this!",
+            "Give it another thought!",
+            "Are you absolutely certain?",
+            "This could be a mistake!",
+            "Have a heart!",
+            "Don't be so cold!",
+            "Change of heart?",
+            "Wouldn't you reconsider?",
+            "Is that your final answer?",
+            "You're breaking my heart ;("
         ];
 
-        // --- Icon Initialization ---
-        lucide.createIcons();
-
-        // --- Background Animation ---
-        function createFloatingHearts() {
-            const container = document.getElementById('bg-hearts-container');
-            const heartCount = 15;
-            const colors = ['#ffccd5', '#ffb3c1', '#ff8fa3', '#fff0f3'];
-
-            for (let i = 0; i < heartCount; i++) {
-                const heart = document.createElement('div');
-                heart.classList.add('bg-heart');
-                heart.innerHTML = '❤';
-                heart.style.left = Math.random() * 100 + 'vw';
-                heart.style.fontSize = (Math.random() * 20 + 10) + 'px';
-                heart.style.animationDuration = (Math.random() * 10 + 10) + 's';
-                heart.style.animationDelay = (Math.random() * 5) + 's';
-                heart.style.color = colors[Math.floor(Math.random() * colors.length)];
-                container.appendChild(heart);
-            }
-        }
-        createFloatingHearts();
-
-        // --- Music Controls ---
-        const bgMusic = document.getElementById('bg-music');
-        let isMusicPlaying = false;
-
-        function toggleMusic() {
-            if (isMusicPlaying) {
-                bgMusic.pause();
-                isMusicPlaying = false;
-                document.querySelector('#music-toggle i').setAttribute('data-lucide', 'music');
-            } else {
-                bgMusic.play().then(() => {
-                    isMusicPlaying = true;
-                    document.querySelector('#music-toggle i').setAttribute('data-lucide', 'volume-2');
-                }).catch(e => console.log("Audio play failed:", e));
-            }
-            lucide.createIcons();
-        }
-
-        // --- Entry Sequence (PASSCODE CHECK) ---
-        function handleEnter(e) {
-            if(e.key === 'Enter') checkPasscode();
-        }
-
-        function checkPasscode() {
-            const input = document.getElementById('passcode');
-            const errorMsg = document.getElementById('error-msg');
-            
-            // Password is "Babe"
-            if(input.value.trim() === "Babe") {
-                startExperience();
-            } else {
-                errorMsg.classList.remove('hidden');
-                input.classList.add('border-red-500');
-                input.value = '';
-                setTimeout(() => {
-                    errorMsg.classList.add('hidden');
-                    input.classList.remove('border-red-500');
-                }, 2000);
-            }
-        }
-
-        function startExperience() {
-            const intro = document.getElementById('intro-screen');
-            const main = document.getElementById('main-content');
-            const musicBtn = document.getElementById('music-toggle');
-            
-            // Trigger confetti
-            confetti({
-                particleCount: 100,
-                spread: 70,
-                origin: { y: 0.6 },
-                colors: ['#ff69b4', '#ff1493', '#ffffff']
-            });
-
-            // Try to play music automatically after interaction
-            bgMusic.volume = 0.5;
-            bgMusic.play().then(() => {
-                isMusicPlaying = true;
-                document.querySelector('#music-toggle i').setAttribute('data-lucide', 'volume-2');
-                lucide.createIcons();
-            }).catch(e => {
-                console.log("Auto-play blocked, waiting for user click");
-            });
-
-            // Fade out intro
-            intro.style.opacity = '0';
-            setTimeout(() => {
-                intro.style.display = 'none';
-                main.classList.remove('hidden');
-                musicBtn.classList.remove('hidden');
-                
-                // Animate sections in
-                const sections = document.querySelectorAll('.section-content');
-                sections.forEach((sec, index) => {
-                    setTimeout(() => {
-                        sec.classList.add('visible');
-                    }, index * 300);
-                });
-
-                // Start Typewriter
-                typeWriter();
-                // Start Timer
-                setInterval(updateTimer, 1000);
-            }, 800);
-        }
-
-        // --- Typewriter Effect ---
-        let i = 0;
-        function typeWriter() {
-            if (i < loveLetter.length) {
-                document.getElementById("typewriter-text").innerHTML += loveLetter.charAt(i);
-                i++;
-                setTimeout(typeWriter, 50); // Speed of typing
-            } else {
-                document.querySelector('.typing-cursor').classList.remove('typing-cursor');
-            }
-        }
-
-        // --- Relationship Timer ---
-        function updateTimer() {
-            const now = new Date();
-            const diff = now - startDate;
-
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-            const minutes = Math.floor((diff / 1000 / 60) % 60);
-            const seconds = Math.floor((diff / 1000) % 60);
-
-            document.getElementById('days-count').innerText = days;
-            document.getElementById('hours-count').innerText = hours;
-            document.getElementById('minutes-count').innerText = minutes;
-            document.getElementById('seconds-count').innerText = seconds;
-        }
-
-        // --- Game Logic ---
-        let score = 0;
-        let gameActive = false;
-        let gameInterval;
-
-        function startGame() {
-            if(gameActive) return;
-            gameActive = true;
-            score = 0;
-            document.getElementById('score').innerText = score;
-            document.getElementById('start-game-overlay').style.display = 'none';
-            document.getElementById('win-message').classList.add('hidden');
-            
-            // Spawn hearts every 600ms
-            gameInterval = setInterval(spawnGameHeart, 600);
-        }
-
-        function spawnGameHeart() {
-            if (!gameActive) return;
-
-            const gameArea = document.getElementById('game-area');
+        // Function to spawn floating hearts
+        function createHeart() {
             const heart = document.createElement('div');
-            const emojis = ['❤️', '💖', '💝', '💕'];
+            heart.classList.add('heart');
+            heart.innerHTML = '❤️';
+            heart.style.left = Math.random() * 100 + "vw";
+            heart.style.animationDuration = Math.random() * 2 + 3 + "s";
+            heart.style.fontSize = Math.random() * 20 + 20 + "px";
             
-            heart.classList.add('game-heart');
-            heart.innerText = emojis[Math.floor(Math.random() * emojis.length)];
-            heart.style.fontSize = '24px';
-            heart.style.left = Math.random() * (gameArea.clientWidth - 30) + 'px';
-            heart.style.top = '-30px';
-            
-            // Click event
-            heart.onclick = function() {
-                if(!gameActive) return;
-                score++;
-                document.getElementById('score').innerText = score;
-                this.remove();
-                
-                // Win Condition
-                if(score >= 10) {
-                    endGame(true);
-                }
-            };
-
-            gameArea.appendChild(heart);
-
-            // Animate falling
-            let pos = -30;
-            const fallInterval = setInterval(() => {
-                if(!gameActive) {
-                    clearInterval(fallInterval);
-                    heart.remove();
-                    return;
-                }
-                pos += 2; // Speed
-                heart.style.top = pos + 'px';
-
-                if (pos > gameArea.clientHeight) {
-                    clearInterval(fallInterval);
-                    if(heart.parentNode) heart.remove();
-                }
-            }, 20);
-        }
-
-        function endGame(win) {
-            gameActive = false;
-            clearInterval(gameInterval);
-            
-            const gameArea = document.getElementById('game-area');
-            // Clear remaining hearts
-            const hearts = document.querySelectorAll('.game-heart');
-            hearts.forEach(h => h.remove());
-
-            if (win) {
-                document.getElementById('win-message').classList.remove('hidden');
-                // Big Confetti explosion
-                var duration = 3 * 1000;
-                var animationEnd = Date.now() + duration;
-                var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
-
-                var randomInRange = (min, max) => Math.random() * (max - min) + min;
-
-                var interval = setInterval(function() {
-                    var timeLeft = animationEnd - Date.now();
-
-                    if (timeLeft <= 0) {
-                        return clearInterval(interval);
-                    }
-
-                    var particleCount = 50 * (timeLeft / duration);
-                    confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
-                    confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
-                }, 250);
-            } else {
-                document.getElementById('start-game-overlay').style.display = 'flex';
-            }
-        }
-
-        // --- Reason Generator ---
-        function generateReason() {
-            const display = document.getElementById('reason-display');
-            // Fade out
-            display.style.opacity = 0;
+            heartsContainer.appendChild(heart);
             
             setTimeout(() => {
-                const randomReason = reasons[Math.floor(Math.random() * reasons.length)];
-                display.innerText = `"${randomReason}"`;
-                // Fade in
-                display.style.opacity = 1;
-                display.style.transition = 'opacity 0.5s';
-            }, 300);
+                heart.remove();
+            }, 5000);
         }
+
+        // Logic for clicking "No"
+        noBtn.addEventListener('click', () => {
+            noClickCount++;
+            
+            // 1. Change text of No button
+            const textIndex = Math.min(noClickCount, phrases.length - 1);
+            noBtn.innerText = phrases[textIndex];
+
+            // 2. Make Yes button bigger exponentially
+            // We use fontSize and padding to scale it up
+            const currentSize = parseFloat(window.getComputedStyle(yesBtn).fontSize);
+            const newSize = currentSize * 1.5; 
+            
+            yesBtn.style.fontSize = `${newSize}px`;
+            yesBtn.style.padding = `${10 + (noClickCount * 5)}px ${30 + (noClickCount * 10)}px`;
+            
+            // Remove pulse animation after first grow so it doesn't look weird
+            yesBtn.classList.remove('pulse');
+
+            // Change the bear image to something sadder if available (optional, simpler to keep cute)
+            // But let's keep the focus on the growing button
+        });
+
+        // Logic for clicking "Yes"
+        yesBtn.addEventListener('click', () => {
+            // Hide question, show celebration
+            questionContainer.style.display = 'none';
+            successContainer.style.display = 'flex';
+            successContainer.classList.remove('hidden-page');
+
+            // Try to play audio
+            // Note: Modern browsers require user interaction to play audio. 
+            // Since the user clicked "Yes", this counts as interaction.
+            try {
+                audio.volume = 0.5;
+                audio.play().catch(e => console.log("Audio play failed (file might be missing):", e));
+            } catch (err) {
+                console.log("Audio error");
+            }
+
+            // Start heart rain
+            setInterval(createHeart, 300);
+        });
 
     </script>
 </body>
