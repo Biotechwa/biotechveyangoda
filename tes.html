@@ -306,9 +306,10 @@
                 .replace(/O/g, "0");
 
             // Biotech Check
-            // UPDATED: Relaxed check to accept "BIO" and common OCR variations
-            const biotechCheck = /B[I1L8]O|LABS/i;
-            const simpleCheck = cleanText.includes("BIO");
+            // UPDATED: Extremely relaxed to accept "B", "BI", "BIO" etc.
+            // Matches any "B" (Biotech), "8" (OCR error), or "LABS"
+            const biotechCheck = /[B8]|LABS/i;
+            const simpleCheck = cleanText.includes("B") || cleanText.includes("8");
 
             if (!simpleCheck && !biotechCheck.test(cleanText)) {
                 showManualEntry("Biotech Label Not Found", "This does not appear to be a Biotech Labs bill. Please enter details manually.");
