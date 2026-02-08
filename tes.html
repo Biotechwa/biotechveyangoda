@@ -11,8 +11,17 @@
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Tesseract.js for OCR (Image to Text) -->
-    <script src='https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js'></script>
+    <!-- Markdown Parser (for AI responses if needed, though we parse JSON) -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <!-- Google Generative AI SDK -->
+    <script type="importmap">
+      {
+        "imports": {
+          "@google/generative-ai": "https://esm.run/@google/generative-ai"
+        }
+      }
+    </script>
 
     <!-- Fonts -->
     <style>
@@ -46,7 +55,7 @@
             height: 4px;
             background: #0d9488;
             box-shadow: 0 0 15px #0d9488;
-            animation: scan 2s infinite linear;
+            animation: scan 1.5s infinite linear; /* Faster animation for AI */
             z-index: 10;
         }
 
@@ -121,7 +130,7 @@
                     <img id="previewImage" class="w-full h-full object-cover opacity-60">
                     <div class="scan-animation"></div>
                     <div class="absolute inset-0 flex items-center justify-center">
-                        <i class="fa-solid fa-circle-notch fa-spin text-white text-4xl"></i>
+                        <i class="fa-solid fa-bolt text-white text-4xl animate-pulse"></i>
                     </div>
                 </div>
                 <!-- Simple loader for non-image redirects -->
@@ -129,8 +138,8 @@
                     <div class="w-20 h-20 border-4 border-teal-100 border-t-teal-500 rounded-full animate-spin mx-auto"></div>
                 </div>
 
-                <h3 class="text-lg font-bold text-slate-800" id="scanTitle">Enhancing Image...</h3>
-                <p class="text-sm text-slate-500 mt-2" id="scanStatus">Cleaning up noise...</p>
+                <h3 class="text-lg font-bold text-slate-800" id="scanTitle">AI Analysis...</h3>
+                <p class="text-sm text-slate-500 mt-2" id="scanStatus">Detecting Sample ID & Date...</p>
                 
                 <!-- Hidden Canvas for Image Processing -->
                 <canvas id="processingCanvas" class="hidden"></canvas>
@@ -141,7 +150,7 @@
                 <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4 flex items-start gap-3">
                     <i class="fa-solid fa-triangle-exclamation text-amber-500 mt-0.5"></i>
                     <div>
-                        <p class="text-xs font-bold text-amber-700" id="manualErrorTitle">Scan Incomplete</p>
+                        <p class="text-xs font-bold text-amber-700" id="manualErrorTitle">AI Scan Incomplete</p>
                         <p class="text-[11px] text-amber-600/80 leading-tight mt-0.5" id="manualErrorMsg">We couldn't confirm the details. Please verify below.</p>
                     </div>
                 </div>
@@ -184,7 +193,7 @@
 
         <!-- Footer -->
         <div class="p-4 text-center border-t border-slate-100 bg-slate-50/50">
-            <p class="text-[10px] text-slate-400 font-medium">Secured by Biotech Systems v2.3</p>
+            <p class="text-[10px] text-slate-400 font-medium">Powered by Gemini AI v1.0</p>
         </div>
 
     </div>
@@ -216,8 +225,16 @@
         };
     </script>
 
-    <!-- MAIN LOGIC -->
-    <script>
+    <!-- MAIN LOGIC (Gemini AI Vision) -->
+    <script type="module">
+        import { GoogleGenerativeAI } from "@google/generative-ai";
+
+        // *** API KEY SET ***
+        const API_KEY = "AIzaSyAYhWD0CNpd3rsvTb9BAa80jxkaExuZA88"; 
+        
+        const genAI = new GoogleGenerativeAI(API_KEY);
+
+        // UI References
         const uploadState = document.getElementById('uploadState');
         const scanningState = document.getElementById('scanningState');
         const manualState = document.getElementById('manualState');
@@ -225,9 +242,10 @@
         const scanStatus = document.getElementById('scanStatus');
         const processingCanvas = document.getElementById('processingCanvas');
 
-        let foundPrefix = "";
-        let foundNumber = "";
-        let foundDate = "";
+        // Expose functions to global scope for HTML onclick attributes
+        window.processImage = processImage;
+        window.showManualEntry = showManualEntry;
+        window.handleManualSubmit = handleManualSubmit;
 
         // 1. Image Capture & Preprocessing
         function processImage(input) {
@@ -246,10 +264,11 @@
                     scanningState.classList.remove('hidden');
                     scanningState.classList.add('flex');
                     
+                    // Compress image before sending to AI (faster upload)
                     const img = new Image();
                     img.onload = () => {
-                        const processedDataUrl = preprocessImage(img);
-                        runOCR(processedDataUrl);
+                        const compressedBase64 = compressImage(img);
+                        runGeminiVision(compressedBase64);
                     };
                     img.src = e.target.result;
                 }
@@ -257,97 +276,107 @@
             }
         }
 
-        function preprocessImage(img) {
+        // Compress to 800px max width/height to speed up AI API call
+        function compressImage(img) {
             const ctx = processingCanvas.getContext('2d');
-            const ratio = Math.min(1500 / img.width, 1);
-            processingCanvas.width = img.width * ratio;
-            processingCanvas.height = img.height * ratio;
-            ctx.drawImage(img, 0, 0, processingCanvas.width, processingCanvas.height);
-            const imageData = ctx.getImageData(0, 0, processingCanvas.width, processingCanvas.height);
-            const data = imageData.data;
-            for (let i = 0; i < data.length; i += 4) {
-                const r = data[i];
-                const g = data[i + 1];
-                const b = data[i + 2];
-                const gray = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-                const val = gray > 140 ? 255 : 0;
-                data[i] = val; data[i + 1] = val; data[i + 2] = val;
-            }
-            ctx.putImageData(imageData, 0, 0);
-            return processingCanvas.toDataURL('image/jpeg');
-        }
+            const maxSize = 800; 
+            let width = img.width;
+            let height = img.height;
 
-        async function runOCR(imageDataUrl) {
-            try {
-                scanStatus.innerText = "Reading text...";
-                const worker = await Tesseract.createWorker();
-                await worker.loadLanguage('eng');
-                await worker.initialize('eng');
-                await worker.setParameters({
-                    tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/-:. '
-                });
-                const { data: { text, confidence } } = await worker.recognize(imageDataUrl);
-                await worker.terminate();
-
-                scanStatus.innerText = "Analyzing data...";
-                analyzeText(text);
-
-            } catch (error) {
-                console.error(error);
-                showManualEntry();
-            }
-        }
-
-        function analyzeText(text) {
-            let cleanText = text.toUpperCase()
-                .replace(/[\r\n]+/g, " ")
-                .replace(/\|/g, "I")
-                .replace(/S/g, "5")
-                .replace(/O/g, "0");
-
-            // Biotech Check
-            // UPDATED: Extremely relaxed to accept "B", "BI", "BIO" etc.
-            // Matches any "B" (Biotech), "8" (OCR error), or "LABS"
-            const biotechCheck = /[B8]|LABS/i;
-            const simpleCheck = cleanText.includes("B") || cleanText.includes("8");
-
-            if (!simpleCheck && !biotechCheck.test(cleanText)) {
-                showManualEntry("Biotech Label Not Found", "This does not appear to be a Biotech Labs bill. Please enter details manually.");
-                if(window.logPatientRequest) {
-                    window.logPatientRequest({ status: 'failed_verification_biotech_missing', raw_text: text.substring(0, 100) });
+            if (width > height) {
+                if (width > maxSize) {
+                    height *= maxSize / width;
+                    width = maxSize;
                 }
+            } else {
+                if (height > maxSize) {
+                    width *= maxSize / height;
+                    height = maxSize;
+                }
+            }
+
+            processingCanvas.width = width;
+            processingCanvas.height = height;
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            // Return base64 without prefix
+            const dataUrl = processingCanvas.toDataURL('image/jpeg', 0.8);
+            return dataUrl.split(',')[1];
+        }
+
+        async function runGeminiVision(base64Image) {
+            // Check if user set the key
+            if(API_KEY === "YOUR_GEMINI_API_KEY_HERE" || API_KEY === "") {
+                console.error("Missing Gemini API Key");
+                showManualEntry("System Error", "API Key missing. Please use manual entry.");
                 return;
             }
 
-            const idPattern = /(VG|BN|NI|BR|HO|V\.G|B\.N|N\.I)\s*[:.\-]?\s*(\d{1,5})/i;
-            const idMatch = cleanText.match(idPattern);
-            const datePattern = /(\d{4}-\d{2}-\d{2})|(\d{2}\/\d{2}\/\d{4})/;
-            const dateMatch = cleanText.match(datePattern);
-
-            if (idMatch) {
-                foundPrefix = idMatch[1].replace(/\./g, "").substring(0,2); 
-                foundNumber = idMatch[2];
+            try {
+                scanStatus.innerText = "AI Processing...";
                 
-                if (dateMatch) {
-                    foundDate = formatDateForInput(dateMatch[0]);
+                // Use the fast Flash model
+                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+                const prompt = `
+                    Analyze this medical bill image. 
+                    1. Find the Sample Number. It starts with a prefix (VG, BN, NI, BR, HO, or V.G, B.N etc) followed by a number (e.g., VG33, BN 105).
+                    2. Find the Date (YYYY-MM-DD or DD/MM/YYYY).
+                    3. Return ONLY a raw JSON string (no markdown formatting) with keys: prefix, number, date.
+                    If not found, return null values.
+                `;
+
+                const imagePart = {
+                    inlineData: {
+                        data: base64Image,
+                        mimeType: "image/jpeg",
+                    },
+                };
+
+                const result = await model.generateContent([prompt, imagePart]);
+                const response = await result.response;
+                const text = response.text();
+                
+                console.log("Gemini Output:", text); // Debugging
+                
+                parseAIResponse(text);
+
+            } catch (error) {
+                console.error("Gemini Error:", error);
+                // Fallback to manual on error
+                showManualEntry("Connection Error", "AI service unavailable. Please enter details manually.");
+            }
+        }
+
+        function parseAIResponse(responseText) {
+            try {
+                // Clean markdown code blocks if Gemini sends them
+                const cleanJson = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+                const data = JSON.parse(cleanJson);
+
+                if (data.prefix && data.number && data.date) {
+                    // Success!
+                    
+                    // Clean up prefix (remove dots, e.g. V.G -> VG)
+                    const cleanPrefix = data.prefix.replace(/[^a-zA-Z]/g, "").toUpperCase().substring(0, 2);
+                    const cleanDate = formatDateForInput(data.date);
+
+                    if(window.logPatientRequest) {
+                        window.logPatientRequest({
+                            status: 'success_ai',
+                            detected: `${cleanPrefix}${data.number}`,
+                            date: cleanDate
+                        });
+                    }
+
+                    generateAndShowLink(cleanPrefix, data.number, cleanDate);
+
                 } else {
-                    foundDate = new Date().toISOString().split('T')[0];
+                    showManualEntry("Details Not Found", "The AI couldn't read the exact details. Please fill them in.");
                 }
-
-                // Success Log
-                if(window.logPatientRequest) {
-                    window.logPatientRequest({
-                        status: 'success_ocr',
-                        ocr_raw: text.substring(0, 50),
-                        detected_id: `${foundPrefix}${foundNumber}`
-                    });
-                }
-
-                // Redirect immediately
-                generateAndShowLink(foundPrefix, foundNumber, foundDate);
-
-            } else {
-                showManualEntry("Sample ID Not Found", "We confirmed this is a Biotech bill, but couldn't read the sample number. Please enter it below.");
+            } catch (e) {
+                console.error("JSON Parse Error", e);
+                showManualEntry("Read Error", "Could not understand the bill layout. Please enter manually.");
             }
         }
 
@@ -406,7 +435,7 @@
             const encodedData = btoa(originalData);
             const finalUrl = `https://biotechveyangoda.lk/report-preview.html?data=${encodedData}`;
 
-            // Provide visual feedback if coming from OCR
+            // Provide visual feedback
             const titleEl = document.getElementById('scanTitle');
             if(titleEl) titleEl.innerText = "Report Found!";
             document.getElementById('scanStatus').innerText = "Opening document...";
