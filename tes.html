@@ -117,14 +117,19 @@
 
             <!-- STATE 2: SCANNING (Loading) -->
             <div id="scanningState" class="hidden w-full flex-col items-center text-center">
-                <div class="relative w-full max-w-[200px] aspect-square bg-slate-800 rounded-xl overflow-hidden mb-6 shadow-xl">
+                <div id="scanImageContainer" class="relative w-full max-w-[200px] aspect-square bg-slate-800 rounded-xl overflow-hidden mb-6 shadow-xl">
                     <img id="previewImage" class="w-full h-full object-cover opacity-60">
                     <div class="scan-animation"></div>
                     <div class="absolute inset-0 flex items-center justify-center">
                         <i class="fa-solid fa-circle-notch fa-spin text-white text-4xl"></i>
                     </div>
                 </div>
-                <h3 class="text-lg font-bold text-slate-800">Enhancing Image...</h3>
+                <!-- Simple loader for non-image redirects -->
+                <div id="simpleLoader" class="hidden mb-6">
+                    <div class="w-20 h-20 border-4 border-teal-100 border-t-teal-500 rounded-full animate-spin mx-auto"></div>
+                </div>
+
+                <h3 class="text-lg font-bold text-slate-800" id="scanTitle">Enhancing Image...</h3>
                 <p class="text-sm text-slate-500 mt-2" id="scanStatus">Cleaning up noise...</p>
                 
                 <!-- Hidden Canvas for Image Processing -->
@@ -136,8 +141,8 @@
                 <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4 flex items-start gap-3">
                     <i class="fa-solid fa-triangle-exclamation text-amber-500 mt-0.5"></i>
                     <div>
-                        <p class="text-xs font-bold text-amber-700">Scan Incomplete</p>
-                        <p class="text-[11px] text-amber-600/80 leading-tight mt-0.5">We couldn't confirm the details. Please verify below.</p>
+                        <p class="text-xs font-bold text-amber-700" id="manualErrorTitle">Scan Incomplete</p>
+                        <p class="text-[11px] text-amber-600/80 leading-tight mt-0.5" id="manualErrorMsg">We couldn't confirm the details. Please verify below.</p>
                     </div>
                 </div>
 
@@ -175,28 +180,11 @@
                 </form>
             </div>
 
-            <!-- STATE 4: SUCCESS / DOWNLOAD -->
-            <div id="successState" class="hidden w-full text-center fade-in">
-                <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-green-500">
-                    <i class="fa-solid fa-check text-4xl"></i>
-                </div>
-                <h2 class="text-2xl font-extrabold text-slate-800 mb-1">Report Ready!</h2>
-                <p class="text-sm text-slate-500 mb-8">Sample: <span id="foundID" class="font-bold text-slate-800"></span></p>
-
-                <a id="downloadLink" href="#" target="_blank" class="block w-full py-4 rounded-xl btn-gradient text-white font-bold text-lg shadow-xl shadow-teal-500/30 transform hover:-translate-y-1 transition-all">
-                    <i class="fa-solid fa-file-pdf mr-2"></i> Open Report
-                </a>
-                
-                <button onclick="location.reload()" class="mt-4 text-sm font-bold text-slate-400 hover:text-slate-600">
-                    Scan Another Bill
-                </button>
-            </div>
-
         </div>
 
         <!-- Footer -->
         <div class="p-4 text-center border-t border-slate-100 bg-slate-50/50">
-            <p class="text-[10px] text-slate-400 font-medium">Secured by Biotech Systems v2.1</p>
+            <p class="text-[10px] text-slate-400 font-medium">Secured by Biotech Systems v2.3</p>
         </div>
 
     </div>
@@ -228,12 +216,11 @@
         };
     </script>
 
-    <!-- MAIN LOGIC (Improved OCR + Preprocessing) -->
+    <!-- MAIN LOGIC -->
     <script>
         const uploadState = document.getElementById('uploadState');
         const scanningState = document.getElementById('scanningState');
         const manualState = document.getElementById('manualState');
-        const successState = document.getElementById('successState');
         const previewImg = document.getElementById('previewImage');
         const scanStatus = document.getElementById('scanStatus');
         const processingCanvas = document.getElementById('processingCanvas');
@@ -247,20 +234,20 @@
             if (input.files && input.files[0]) {
                 const file = input.files[0];
                 
-                // Show raw preview
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     previewImg.src = e.target.result;
                     
-                    // Switch UI
+                    // Show Image Loader
+                    document.getElementById('scanImageContainer').classList.remove('hidden');
+                    document.getElementById('simpleLoader').classList.add('hidden');
+                    
                     uploadState.classList.add('hidden');
                     scanningState.classList.remove('hidden');
                     scanningState.classList.add('flex');
                     
-                    // Load image for processing
                     const img = new Image();
                     img.onload = () => {
-                        // Preprocess: Convert to High Contrast Black/White
                         const processedDataUrl = preprocessImage(img);
                         runOCR(processedDataUrl);
                     };
@@ -270,65 +257,39 @@
             }
         }
 
-        // 2. High Contrast Pre-processing
         function preprocessImage(img) {
             const ctx = processingCanvas.getContext('2d');
-            
-            // Resize if too huge (limit to 1500px width for speed)
             const ratio = Math.min(1500 / img.width, 1);
             processingCanvas.width = img.width * ratio;
             processingCanvas.height = img.height * ratio;
-            
             ctx.drawImage(img, 0, 0, processingCanvas.width, processingCanvas.height);
-            
-            // Get pixel data
             const imageData = ctx.getImageData(0, 0, processingCanvas.width, processingCanvas.height);
             const data = imageData.data;
-            
-            // Convert to Grayscale & Threshold (Binarization)
-            // This makes text black and background white
             for (let i = 0; i < data.length; i += 4) {
                 const r = data[i];
                 const g = data[i + 1];
                 const b = data[i + 2];
-                
-                // Luminance
                 const gray = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-                
-                // Thresholding: If light gray, make it pure white. If dark, make pure black.
-                // Threshold of 120 is usually good for bills
                 const val = gray > 140 ? 255 : 0;
-                
-                data[i] = val;     // R
-                data[i + 1] = val; // G
-                data[i + 2] = val; // B
+                data[i] = val; data[i + 1] = val; data[i + 2] = val;
             }
-            
             ctx.putImageData(imageData, 0, 0);
             return processingCanvas.toDataURL('image/jpeg');
         }
 
-        // 3. OCR Logic
         async function runOCR(imageDataUrl) {
             try {
                 scanStatus.innerText = "Reading text...";
-                
                 const worker = await Tesseract.createWorker();
                 await worker.loadLanguage('eng');
                 await worker.initialize('eng');
-                
-                // OPTIMIZATION: Only look for specific characters
                 await worker.setParameters({
                     tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/-:. '
                 });
-                
                 const { data: { text, confidence } } = await worker.recognize(imageDataUrl);
                 await worker.terminate();
 
                 scanStatus.innerText = "Analyzing data...";
-                console.log("Confidence:", confidence);
-                console.log("Text:", text);
-
                 analyzeText(text);
 
             } catch (error) {
@@ -337,26 +298,31 @@
             }
         }
 
-        // 4. Enhanced Text Analysis
         function analyzeText(text) {
-            // Normalize text: remove noise, fix common OCR mixups (0 vs O, 5 vs S)
             let cleanText = text.toUpperCase()
                 .replace(/[\r\n]+/g, " ")
-                .replace(/\|/g, "I") // Pipe often read as I
-                .replace(/S/g, "5")  // S often read as 5 in IDs
-                .replace(/O/g, "0"); // O often read as 0
+                .replace(/\|/g, "I")
+                .replace(/S/g, "5")
+                .replace(/O/g, "0");
 
-            // Improved Regex: Allows optional dots/colons/spaces
-            // Matches: VG33, VG 33, VG:33, VG-33, V.G 33
+            // Biotech Check
+            const biotechCheck = /B[I1L8]O\s*TE[C(]H|LABS/i;
+            const simpleCheck = text.toUpperCase().includes("BIOTECH") || text.toUpperCase().includes("BIO TECH");
+
+            if (!simpleCheck && !biotechCheck.test(cleanText)) {
+                showManualEntry("Biotech Label Not Found", "This does not appear to be a Biotech Labs bill. Please enter details manually.");
+                if(window.logPatientRequest) {
+                    window.logPatientRequest({ status: 'failed_verification_biotech_missing', raw_text: text.substring(0, 100) });
+                }
+                return;
+            }
+
             const idPattern = /(VG|BN|NI|BR|HO|V\.G|B\.N|N\.I)\s*[:.\-]?\s*(\d{1,5})/i;
             const idMatch = cleanText.match(idPattern);
-
-            // Date Pattern
             const datePattern = /(\d{4}-\d{2}-\d{2})|(\d{2}\/\d{2}\/\d{4})/;
             const dateMatch = cleanText.match(datePattern);
 
             if (idMatch) {
-                // Normalize Prefix (remove dots)
                 foundPrefix = idMatch[1].replace(/\./g, "").substring(0,2); 
                 foundNumber = idMatch[2];
                 
@@ -366,8 +332,7 @@
                     foundDate = new Date().toISOString().split('T')[0];
                 }
 
-                generateAndShowLink(foundPrefix, foundNumber, foundDate);
-                
+                // Success Log
                 if(window.logPatientRequest) {
                     window.logPatientRequest({
                         status: 'success_ocr',
@@ -376,23 +341,28 @@
                     });
                 }
 
+                // Redirect immediately
+                generateAndShowLink(foundPrefix, foundNumber, foundDate);
+
             } else {
-                showManualEntry();
+                showManualEntry("Sample ID Not Found", "We confirmed this is a Biotech bill, but couldn't read the sample number. Please enter it below.");
             }
         }
 
-        function showManualEntry() {
+        function showManualEntry(title, msg) {
             scanningState.classList.remove('flex');
             scanningState.classList.add('hidden');
             uploadState.classList.add('hidden');
             manualState.classList.remove('hidden');
+            
+            if(title) document.getElementById('manualErrorTitle').innerText = title;
+            if(msg) document.getElementById('manualErrorMsg').innerText = msg;
+            
             document.getElementById('inputDate').valueAsDate = new Date();
         }
 
         function handleManualSubmit(e) {
             e.preventDefault();
-            const btn = document.getElementById('submitBtn');
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Processing...';
             
             const prefix = document.getElementById('inputType').value;
             const num = document.getElementById('inputNum').value;
@@ -409,9 +379,21 @@
                 });
             }
 
+            // Show simple loading state before redirect
+            manualState.classList.add('hidden');
+            scanningState.classList.remove('hidden');
+            scanningState.classList.add('flex');
+            
+            // Hide image preview since we are in manual mode
+            document.getElementById('scanImageContainer').classList.add('hidden');
+            document.getElementById('simpleLoader').classList.remove('hidden');
+            
+            document.getElementById('scanTitle').innerText = "Opening Report...";
+            document.getElementById('scanStatus').innerText = "Redirecting you now...";
+
             setTimeout(() => {
                 generateAndShowLink(prefix, num, date);
-            }, 800);
+            }, 500);
         }
 
         function generateAndShowLink(prefix, num, dateStr) {
@@ -422,13 +404,13 @@
             const encodedData = btoa(originalData);
             const finalUrl = `https://biotechveyangoda.lk/report-preview.html?data=${encodedData}`;
 
-            document.getElementById('foundID').innerText = patientId;
-            document.getElementById('downloadLink').href = finalUrl;
+            // Provide visual feedback if coming from OCR
+            const titleEl = document.getElementById('scanTitle');
+            if(titleEl) titleEl.innerText = "Report Found!";
+            document.getElementById('scanStatus').innerText = "Opening document...";
 
-            scanningState.classList.add('hidden');
-            manualState.classList.add('hidden');
-            scanningState.classList.remove('flex');
-            successState.classList.remove('hidden');
+            // Redirect
+            window.location.href = finalUrl;
         }
 
         function formatDateForInput(dateString) {
