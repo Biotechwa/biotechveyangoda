@@ -124,8 +124,11 @@
                         <i class="fa-solid fa-circle-notch fa-spin text-white text-4xl"></i>
                     </div>
                 </div>
-                <h3 class="text-lg font-bold text-slate-800">Analyzing Bill...</h3>
-                <p class="text-sm text-slate-500 mt-2" id="scanStatus">Identifying Sample Number...</p>
+                <h3 class="text-lg font-bold text-slate-800">Enhancing Image...</h3>
+                <p class="text-sm text-slate-500 mt-2" id="scanStatus">Cleaning up noise...</p>
+                
+                <!-- Hidden Canvas for Image Processing -->
+                <canvas id="processingCanvas" class="hidden"></canvas>
             </div>
 
             <!-- STATE 3: MANUAL FORM (Fallback) -->
@@ -134,7 +137,7 @@
                     <i class="fa-solid fa-triangle-exclamation text-amber-500 mt-0.5"></i>
                     <div>
                         <p class="text-xs font-bold text-amber-700">Scan Incomplete</p>
-                        <p class="text-[11px] text-amber-600/80 leading-tight mt-0.5">We couldn't read everything clearly. Please confirm details below.</p>
+                        <p class="text-[11px] text-amber-600/80 leading-tight mt-0.5">We couldn't confirm the details. Please verify below.</p>
                     </div>
                 </div>
 
@@ -193,7 +196,7 @@
 
         <!-- Footer -->
         <div class="p-4 text-center border-t border-slate-100 bg-slate-50/50">
-            <p class="text-[10px] text-slate-400 font-medium">Secured by Biotech Systems v2.0</p>
+            <p class="text-[10px] text-slate-400 font-medium">Secured by Biotech Systems v2.1</p>
         </div>
 
     </div>
@@ -203,7 +206,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
         import { getDatabase, ref, push, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
 
-        // CONFIG (From your provided code)
         const voiceConfig = {
             apiKey: "AIzaSyCPYqMnRIapygJqaKe6JZpitF3E5fq8jIs",
             authDomain: "biotechchat-c0a38.firebaseapp.com",
@@ -216,7 +218,6 @@
         const app = initializeApp(voiceConfig);
         const db = getDatabase(app);
 
-        // Expose function to save logs securely
         window.logPatientRequest = (data) => {
             const logsRef = ref(db, 'patient_logs');
             push(logsRef, {
@@ -227,126 +228,169 @@
         };
     </script>
 
-    <!-- MAIN LOGIC (OCR + UI) -->
+    <!-- MAIN LOGIC (Improved OCR + Preprocessing) -->
     <script>
-        // State Elements
         const uploadState = document.getElementById('uploadState');
         const scanningState = document.getElementById('scanningState');
         const manualState = document.getElementById('manualState');
         const successState = document.getElementById('successState');
         const previewImg = document.getElementById('previewImage');
         const scanStatus = document.getElementById('scanStatus');
+        const processingCanvas = document.getElementById('processingCanvas');
 
-        // Logic Variables
         let foundPrefix = "";
         let foundNumber = "";
         let foundDate = "";
 
-        // 1. Image Processing Trigger
+        // 1. Image Capture & Preprocessing
         function processImage(input) {
             if (input.files && input.files[0]) {
                 const file = input.files[0];
                 
-                // Show Preview
+                // Show raw preview
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     previewImg.src = e.target.result;
                     
-                    // Switch UI to Scanning
+                    // Switch UI
                     uploadState.classList.add('hidden');
                     scanningState.classList.remove('hidden');
                     scanningState.classList.add('flex');
                     
-                    // Start OCR
-                    runOCR(file);
+                    // Load image for processing
+                    const img = new Image();
+                    img.onload = () => {
+                        // Preprocess: Convert to High Contrast Black/White
+                        const processedDataUrl = preprocessImage(img);
+                        runOCR(processedDataUrl);
+                    };
+                    img.src = e.target.result;
                 }
                 reader.readAsDataURL(file);
             }
         }
 
-        // 2. OCR Logic using Tesseract.js
-        async function runOCR(file) {
+        // 2. High Contrast Pre-processing
+        function preprocessImage(img) {
+            const ctx = processingCanvas.getContext('2d');
+            
+            // Resize if too huge (limit to 1500px width for speed)
+            const ratio = Math.min(1500 / img.width, 1);
+            processingCanvas.width = img.width * ratio;
+            processingCanvas.height = img.height * ratio;
+            
+            ctx.drawImage(img, 0, 0, processingCanvas.width, processingCanvas.height);
+            
+            // Get pixel data
+            const imageData = ctx.getImageData(0, 0, processingCanvas.width, processingCanvas.height);
+            const data = imageData.data;
+            
+            // Convert to Grayscale & Threshold (Binarization)
+            // This makes text black and background white
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+                
+                // Luminance
+                const gray = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+                
+                // Thresholding: If light gray, make it pure white. If dark, make pure black.
+                // Threshold of 120 is usually good for bills
+                const val = gray > 140 ? 255 : 0;
+                
+                data[i] = val;     // R
+                data[i + 1] = val; // G
+                data[i + 2] = val; // B
+            }
+            
+            ctx.putImageData(imageData, 0, 0);
+            return processingCanvas.toDataURL('image/jpeg');
+        }
+
+        // 3. OCR Logic
+        async function runOCR(imageDataUrl) {
             try {
-                scanStatus.innerText = "Reading text from image...";
+                scanStatus.innerText = "Reading text...";
                 
                 const worker = await Tesseract.createWorker();
                 await worker.loadLanguage('eng');
                 await worker.initialize('eng');
                 
-                const { data: { text } } = await worker.recognize(file);
+                // OPTIMIZATION: Only look for specific characters
+                await worker.setParameters({
+                    tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/-:. '
+                });
+                
+                const { data: { text, confidence } } = await worker.recognize(imageDataUrl);
                 await worker.terminate();
 
                 scanStatus.innerText = "Analyzing data...";
-                console.log("OCR Result:", text); // Debugging
+                console.log("Confidence:", confidence);
+                console.log("Text:", text);
 
-                // Regex Extraction Logic
                 analyzeText(text);
 
             } catch (error) {
                 console.error(error);
-                // On error, just go to manual mode
                 showManualEntry();
             }
         }
 
-        // 3. Text Analysis (Regex)
+        // 4. Enhanced Text Analysis
         function analyzeText(text) {
-            // Clean text
-            const cleanText = text.toUpperCase().replace(/[\r\n]+/g, " ");
+            // Normalize text: remove noise, fix common OCR mixups (0 vs O, 5 vs S)
+            let cleanText = text.toUpperCase()
+                .replace(/[\r\n]+/g, " ")
+                .replace(/\|/g, "I") // Pipe often read as I
+                .replace(/S/g, "5")  // S often read as 5 in IDs
+                .replace(/O/g, "0"); // O often read as 0
 
-            // Pattern for Sample ID: VG33, BN 100, etc.
-            // Looks for (VG, BN, NI, BR) followed by optional space, followed by 1-5 digits
-            const idPattern = /(VG|BN|NI|BR|HO)\s*(\d{1,5})/i;
+            // Improved Regex: Allows optional dots/colons/spaces
+            // Matches: VG33, VG 33, VG:33, VG-33, V.G 33
+            const idPattern = /(VG|BN|NI|BR|HO|V\.G|B\.N|N\.I)\s*[:.\-]?\s*(\d{1,5})/i;
             const idMatch = cleanText.match(idPattern);
 
-            // Pattern for Date: YYYY-MM-DD or DD/MM/YYYY
-            // Simplified regex for common receipts
+            // Date Pattern
             const datePattern = /(\d{4}-\d{2}-\d{2})|(\d{2}\/\d{2}\/\d{4})/;
             const dateMatch = cleanText.match(datePattern);
 
             if (idMatch) {
-                foundPrefix = idMatch[1].toUpperCase();
+                // Normalize Prefix (remove dots)
+                foundPrefix = idMatch[1].replace(/\./g, "").substring(0,2); 
                 foundNumber = idMatch[2];
                 
-                // Default date to today if not found (Bill is usually today)
                 if (dateMatch) {
                     foundDate = formatDateForInput(dateMatch[0]);
                 } else {
                     foundDate = new Date().toISOString().split('T')[0];
                 }
 
-                // Success! Generate Link directly
                 generateAndShowLink(foundPrefix, foundNumber, foundDate);
                 
-                // Log success in background
                 if(window.logPatientRequest) {
                     window.logPatientRequest({
                         status: 'success_ocr',
-                        ocr_text_snippet: cleanText.substring(0, 50),
+                        ocr_raw: text.substring(0, 50),
                         detected_id: `${foundPrefix}${foundNumber}`
                     });
                 }
 
             } else {
-                // Failed to find ID -> Go to Manual
                 showManualEntry();
             }
         }
 
-        // 4. Manual Entry Handling
         function showManualEntry() {
-            scanningState.classList.remove('flex'); // Remove flex
-            scanningState.classList.add('hidden'); // Hide
+            scanningState.classList.remove('flex');
+            scanningState.classList.add('hidden');
             uploadState.classList.add('hidden');
             manualState.classList.remove('hidden');
-
-            // Set today's date as default
             document.getElementById('inputDate').valueAsDate = new Date();
         }
 
         function handleManualSubmit(e) {
             e.preventDefault();
-            
             const btn = document.getElementById('submitBtn');
             btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Processing...';
             
@@ -355,55 +399,39 @@
             const date = document.getElementById('inputDate').value;
             const phone = document.getElementById('inputPhone').value;
 
-            // Log the manual entry to Firebase (Backend)
             if(window.logPatientRequest) {
                 window.logPatientRequest({
                     status: 'manual_entry',
                     prefix: prefix,
                     number: num,
                     date: date,
-                    phone: phone // Saved but not shown in UI
+                    phone: phone
                 });
             }
 
-            // Simulate small delay for "Processing" feel
             setTimeout(() => {
                 generateAndShowLink(prefix, num, date);
             }, 800);
         }
 
-        // 5. Link Generation (Encryption Logic)
         function generateAndShowLink(prefix, num, dateStr) {
             const patientId = `${prefix}${num}`;
-            const dateObj = new Date(); // Use current time for expiry calculation base
-            
-            // Expiry: 14 Days from now
+            const dateObj = new Date();
             const expiryTimestamp = dateObj.getTime() + (14 * 24 * 60 * 60 * 1000); 
-
-            // Create Payload: ID|Date|Expiry
-            // NOTE: Using the dateStr from input ensures we request the specific report date
             const originalData = `${patientId}|${dateStr}|${expiryTimestamp}`;
-            
-            // Base64 Encode
             const encodedData = btoa(originalData);
-            
-            // Final URL
             const finalUrl = `https://biotechveyangoda.lk/report-preview.html?data=${encodedData}`;
 
-            // Update UI
             document.getElementById('foundID').innerText = patientId;
             document.getElementById('downloadLink').href = finalUrl;
 
             scanningState.classList.add('hidden');
             manualState.classList.add('hidden');
             scanningState.classList.remove('flex');
-            
             successState.classList.remove('hidden');
         }
 
-        // Helper: Standardize date format for input value
         function formatDateForInput(dateString) {
-            // Very basic parser, assumes standard receipt formats
             const d = new Date(dateString);
             if(!isNaN(d.getTime())) {
                 return d.toISOString().split('T')[0];
