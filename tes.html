@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Biotech Labs | Patient Portal</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tesseract.js for OCR (Image to Text) -->
+    <script src='https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js'></script>
+
+    <!-- Fonts -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f0f9ff;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(20, 184, 166, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.15) 0px, transparent 50%);
+            background-size: cover;
+            background-attachment: fixed;
+            color: #334155; 
+            min-height: 100vh;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 1);
+            box-shadow: 0 20px 40px -12px rgba(13, 148, 136, 0.15);
+        }
+
+        .scan-animation {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: #0d9488;
+            box-shadow: 0 0 15px #0d9488;
+            animation: scan 2s infinite linear;
+            z-index: 10;
+        }
+
+        @keyframes scan {
+            0% { top: 0; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+
+        .hidden { display: none !important; }
+        
+        /* Smooth fade ins */
+        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .btn-gradient {
+            background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+        }
+        .btn-gradient:active { transform: scale(0.98); }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center p-4">
+
+    <!-- MAIN CONTAINER -->
+    <div class="w-full max-w-md glass-panel rounded-3xl overflow-hidden relative min-h-[500px] flex flex-col">
+        
+        <!-- Header -->
+        <div class="p-6 pb-4 text-center border-b border-slate-100">
+            <div class="w-16 h-16 bg-teal-50 rounded-2xl mx-auto flex items-center justify-center text-teal-600 mb-3 shadow-sm border border-teal-100">
+                <i class="fa-solid fa-microscope text-3xl"></i>
+            </div>
+            <h1 class="text-xl font-extrabold text-slate-800 tracking-tight">Biotech Labs</h1>
+            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Patient Report Portal</p>
+        </div>
+
+        <!-- CONTENT AREA -->
+        <div class="p-6 flex-1 flex flex-col items-center justify-center relative">
+
+            <!-- STATE 1: IDLE / UPLOAD -->
+            <div id="uploadState" class="w-full flex flex-col gap-4 fade-in">
+                <div class="text-center mb-4">
+                    <p class="text-sm text-slate-600 font-medium">Take a photo of your bill to retrieve your report automatically.</p>
+                </div>
+
+                <!-- Camera Input -->
+                <label class="relative w-full aspect-[4/3] rounded-2xl border-2 border-dashed border-teal-200 bg-teal-50/50 flex flex-col items-center justify-center cursor-pointer hover:bg-teal-50 transition-colors group">
+                    <div class="w-16 h-16 rounded-full bg-white shadow-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-camera text-2xl text-teal-500"></i>
+                    </div>
+                    <span class="text-sm font-bold text-teal-700">Tap to Scan Bill</span>
+                    <span class="text-[10px] text-teal-600/70 mt-1">or upload photo</span>
+                    
+                    <!-- File Input -->
+                    <input type="file" id="fileInput" accept="image/*" capture="environment" class="hidden" onchange="processImage(this)">
+                </label>
+
+                <div class="relative flex items-center py-2">
+                    <div class="flex-grow border-t border-slate-200"></div>
+                    <span class="flex-shrink-0 mx-4 text-slate-400 text-xs font-bold uppercase">Or</span>
+                    <div class="flex-grow border-t border-slate-200"></div>
+                </div>
+
+                <button onclick="showManualEntry()" class="w-full py-3.5 rounded-xl border border-slate-200 bg-white text-slate-600 font-bold text-sm shadow-sm hover:bg-slate-50 transition-all">
+                    Enter Details Manually
+                </button>
+            </div>
+
+            <!-- STATE 2: SCANNING (Loading) -->
+            <div id="scanningState" class="hidden w-full flex-col items-center text-center">
+                <div class="relative w-full max-w-[200px] aspect-square bg-slate-800 rounded-xl overflow-hidden mb-6 shadow-xl">
+                    <img id="previewImage" class="w-full h-full object-cover opacity-60">
+                    <div class="scan-animation"></div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <i class="fa-solid fa-circle-notch fa-spin text-white text-4xl"></i>
+                    </div>
+                </div>
+                <h3 class="text-lg font-bold text-slate-800">Analyzing Bill...</h3>
+                <p class="text-sm text-slate-500 mt-2" id="scanStatus">Identifying Sample Number...</p>
+            </div>
+
+            <!-- STATE 3: MANUAL FORM (Fallback) -->
+            <div id="manualState" class="hidden w-full fade-in">
+                <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4 flex items-start gap-3">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-500 mt-0.5"></i>
+                    <div>
+                        <p class="text-xs font-bold text-amber-700">Scan Incomplete</p>
+                        <p class="text-[11px] text-amber-600/80 leading-tight mt-0.5">We couldn't read everything clearly. Please confirm details below.</p>
+                    </div>
+                </div>
+
+                <form id="detailsForm" onsubmit="handleManualSubmit(event)" class="space-y-3">
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="col-span-1">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Type</label>
+                            <select id="inputType" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 outline-none focus:border-teal-500">
+                                <option value="VG">VG</option>
+                                <option value="BN">BN</option>
+                                <option value="NI">NI</option>
+                                <option value="BR">BR</option>
+                                <option value="HO">HO</option>
+                            </select>
+                        </div>
+                        <div class="col-span-2">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Sample Number</label>
+                            <input type="number" id="inputNum" placeholder="e.g. 33" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 outline-none focus:border-teal-500 placeholder:font-normal">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Date on Bill</label>
+                        <input type="date" id="inputDate" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 outline-none focus:border-teal-500">
+                    </div>
+
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Your Mobile Number</label>
+                        <input type="tel" id="inputPhone" placeholder="07x xxxxxxx" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 outline-none focus:border-teal-500 placeholder:font-normal">
+                    </div>
+
+                    <button type="submit" id="submitBtn" class="w-full py-4 mt-2 rounded-xl btn-gradient text-white font-bold text-sm shadow-lg shadow-teal-500/30 flex items-center justify-center gap-2">
+                        Get Report <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </form>
+            </div>
+
+            <!-- STATE 4: SUCCESS / DOWNLOAD -->
+            <div id="successState" class="hidden w-full text-center fade-in">
+                <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-green-500">
+                    <i class="fa-solid fa-check text-4xl"></i>
+                </div>
+                <h2 class="text-2xl font-extrabold text-slate-800 mb-1">Report Ready!</h2>
+                <p class="text-sm text-slate-500 mb-8">Sample: <span id="foundID" class="font-bold text-slate-800"></span></p>
+
+                <a id="downloadLink" href="#" target="_blank" class="block w-full py-4 rounded-xl btn-gradient text-white font-bold text-lg shadow-xl shadow-teal-500/30 transform hover:-translate-y-1 transition-all">
+                    <i class="fa-solid fa-file-pdf mr-2"></i> Open Report
+                </a>
+                
+                <button onclick="location.reload()" class="mt-4 text-sm font-bold text-slate-400 hover:text-slate-600">
+                    Scan Another Bill
+                </button>
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="p-4 text-center border-t border-slate-100 bg-slate-50/50">
+            <p class="text-[10px] text-slate-400 font-medium">Secured by Biotech Systems v2.0</p>
+        </div>
+
+    </div>
+
+    <!-- FIREBASE MODULES -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+        import { getDatabase, ref, push, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
+
+        // CONFIG (From your provided code)
+        const voiceConfig = {
+            apiKey: "AIzaSyCPYqMnRIapygJqaKe6JZpitF3E5fq8jIs",
+            authDomain: "biotechchat-c0a38.firebaseapp.com",
+            projectId: "biotechchat-c0a38",
+            storageBucket: "biotechchat-c0a38.firebasestorage.app",
+            messagingSenderId: "1081724102554",
+            appId: "1:1081724102554:web:16b0c1ee763148b4a63c23"
+        };
+
+        const app = initializeApp(voiceConfig);
+        const db = getDatabase(app);
+
+        // Expose function to save logs securely
+        window.logPatientRequest = (data) => {
+            const logsRef = ref(db, 'patient_logs');
+            push(logsRef, {
+                ...data,
+                timestamp: serverTimestamp(),
+                userAgent: navigator.userAgent
+            });
+        };
+    </script>
+
+    <!-- MAIN LOGIC (OCR + UI) -->
+    <script>
+        // State Elements
+        const uploadState = document.getElementById('uploadState');
+        const scanningState = document.getElementById('scanningState');
+        const manualState = document.getElementById('manualState');
+        const successState = document.getElementById('successState');
+        const previewImg = document.getElementById('previewImage');
+        const scanStatus = document.getElementById('scanStatus');
+
+        // Logic Variables
+        let foundPrefix = "";
+        let foundNumber = "";
+        let foundDate = "";
+
+        // 1. Image Processing Trigger
+        function processImage(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                
+                // Show Preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImg.src = e.target.result;
+                    
+                    // Switch UI to Scanning
+                    uploadState.classList.add('hidden');
+                    scanningState.classList.remove('hidden');
+                    scanningState.classList.add('flex');
+                    
+                    // Start OCR
+                    runOCR(file);
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // 2. OCR Logic using Tesseract.js
+        async function runOCR(file) {
+            try {
+                scanStatus.innerText = "Reading text from image...";
+                
+                const worker = await Tesseract.createWorker();
+                await worker.loadLanguage('eng');
+                await worker.initialize('eng');
+                
+                const { data: { text } } = await worker.recognize(file);
+                await worker.terminate();
+
+                scanStatus.innerText = "Analyzing data...";
+                console.log("OCR Result:", text); // Debugging
+
+                // Regex Extraction Logic
+                analyzeText(text);
+
+            } catch (error) {
+                console.error(error);
+                // On error, just go to manual mode
+                showManualEntry();
+            }
+        }
+
+        // 3. Text Analysis (Regex)
+        function analyzeText(text) {
+            // Clean text
+            const cleanText = text.toUpperCase().replace(/[\r\n]+/g, " ");
+
+            // Pattern for Sample ID: VG33, BN 100, etc.
+            // Looks for (VG, BN, NI, BR) followed by optional space, followed by 1-5 digits
+            const idPattern = /(VG|BN|NI|BR|HO)\s*(\d{1,5})/i;
+            const idMatch = cleanText.match(idPattern);
+
+            // Pattern for Date: YYYY-MM-DD or DD/MM/YYYY
+            // Simplified regex for common receipts
+            const datePattern = /(\d{4}-\d{2}-\d{2})|(\d{2}\/\d{2}\/\d{4})/;
+            const dateMatch = cleanText.match(datePattern);
+
+            if (idMatch) {
+                foundPrefix = idMatch[1].toUpperCase();
+                foundNumber = idMatch[2];
+                
+                // Default date to today if not found (Bill is usually today)
+                if (dateMatch) {
+                    foundDate = formatDateForInput(dateMatch[0]);
+                } else {
+                    foundDate = new Date().toISOString().split('T')[0];
+                }
+
+                // Success! Generate Link directly
+                generateAndShowLink(foundPrefix, foundNumber, foundDate);
+                
+                // Log success in background
+                if(window.logPatientRequest) {
+                    window.logPatientRequest({
+                        status: 'success_ocr',
+                        ocr_text_snippet: cleanText.substring(0, 50),
+                        detected_id: `${foundPrefix}${foundNumber}`
+                    });
+                }
+
+            } else {
+                // Failed to find ID -> Go to Manual
+                showManualEntry();
+            }
+        }
+
+        // 4. Manual Entry Handling
+        function showManualEntry() {
+            scanningState.classList.remove('flex'); // Remove flex
+            scanningState.classList.add('hidden'); // Hide
+            uploadState.classList.add('hidden');
+            manualState.classList.remove('hidden');
+
+            // Set today's date as default
+            document.getElementById('inputDate').valueAsDate = new Date();
+        }
+
+        function handleManualSubmit(e) {
+            e.preventDefault();
+            
+            const btn = document.getElementById('submitBtn');
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Processing...';
+            
+            const prefix = document.getElementById('inputType').value;
+            const num = document.getElementById('inputNum').value;
+            const date = document.getElementById('inputDate').value;
+            const phone = document.getElementById('inputPhone').value;
+
+            // Log the manual entry to Firebase (Backend)
+            if(window.logPatientRequest) {
+                window.logPatientRequest({
+                    status: 'manual_entry',
+                    prefix: prefix,
+                    number: num,
+                    date: date,
+                    phone: phone // Saved but not shown in UI
+                });
+            }
+
+            // Simulate small delay for "Processing" feel
+            setTimeout(() => {
+                generateAndShowLink(prefix, num, date);
+            }, 800);
+        }
+
+        // 5. Link Generation (Encryption Logic)
+        function generateAndShowLink(prefix, num, dateStr) {
+            const patientId = `${prefix}${num}`;
+            const dateObj = new Date(); // Use current time for expiry calculation base
+            
+            // Expiry: 14 Days from now
+            const expiryTimestamp = dateObj.getTime() + (14 * 24 * 60 * 60 * 1000); 
+
+            // Create Payload: ID|Date|Expiry
+            // NOTE: Using the dateStr from input ensures we request the specific report date
+            const originalData = `${patientId}|${dateStr}|${expiryTimestamp}`;
+            
+            // Base64 Encode
+            const encodedData = btoa(originalData);
+            
+            // Final URL
+            const finalUrl = `https://biotechveyangoda.lk/report-preview.html?data=${encodedData}`;
+
+            // Update UI
+            document.getElementById('foundID').innerText = patientId;
+            document.getElementById('downloadLink').href = finalUrl;
+
+            scanningState.classList.add('hidden');
+            manualState.classList.add('hidden');
+            scanningState.classList.remove('flex');
+            
+            successState.classList.remove('hidden');
+        }
+
+        // Helper: Standardize date format for input value
+        function formatDateForInput(dateString) {
+            // Very basic parser, assumes standard receipt formats
+            const d = new Date(dateString);
+            if(!isNaN(d.getTime())) {
+                return d.toISOString().split('T')[0];
+            }
+            return new Date().toISOString().split('T')[0];
+        }
+
+    </script>
+</body>
+</html>
