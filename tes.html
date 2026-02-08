@@ -306,8 +306,9 @@
                 .replace(/O/g, "0");
 
             // Biotech Check
-            const biotechCheck = /B[I1L8]O\s*TE[C(]H|LABS/i;
-            const simpleCheck = text.toUpperCase().includes("BIOTECH") || text.toUpperCase().includes("BIO TECH");
+            // UPDATED: Relaxed check to accept "BIO" and common OCR variations
+            const biotechCheck = /B[I1L8]O|LABS/i;
+            const simpleCheck = cleanText.includes("BIO");
 
             if (!simpleCheck && !biotechCheck.test(cleanText)) {
                 showManualEntry("Biotech Label Not Found", "This does not appear to be a Biotech Labs bill. Please enter details manually.");
