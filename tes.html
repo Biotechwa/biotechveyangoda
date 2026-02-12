@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Biotech Labs | Patient Portal</title>
+    <title>Biotech | AI Assistant</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -20,242 +20,275 @@
         
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #f0f9ff;
-            background-image: 
-                radial-gradient(at 0% 0%, rgba(20, 184, 166, 0.15) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.15) 0px, transparent 50%);
-            background-size: cover;
-            background-attachment: fixed;
-            color: #334155; 
-            min-height: 100vh;
+            background-color: #e2e8f0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            overflow: hidden;
         }
 
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 1);
-            box-shadow: 0 20px 40px -12px rgba(13, 148, 136, 0.15);
-        }
-
-        .scan-animation {
-            position: absolute;
-            top: 0;
-            left: 0;
+        .chat-container {
             width: 100%;
-            height: 4px;
-            background: #0d9488;
-            box-shadow: 0 0 15px #0d9488;
-            animation: scan 2s infinite linear;
-            z-index: 10;
+            max-width: 450px;
+            height: 100vh;
+            max-height: 850px;
+            background: #ffffff;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
         }
 
-        @keyframes scan {
-            0% { top: 0; opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% { top: 100%; opacity: 0; }
+        @media (min-width: 640px) {
+            .chat-container {
+                height: 90vh;
+                border-radius: 24px;
+                overflow: hidden;
+            }
         }
 
-        .hidden { display: none !important; }
-        
-        /* Smooth fade ins */
-        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .btn-gradient {
-            background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+        .chat-body {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
+            background-blend-mode: soft-light;
+            background-color: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
-        .btn-gradient:active { transform: scale(0.98); }
+
+        /* Message Bubbles */
+        .msg {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 16px;
+            font-size: 14px;
+            line-height: 1.5;
+            position: relative;
+            word-wrap: break-word;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .msg-bot {
+            background-color: #ffffff;
+            color: #334155;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .msg-user {
+            background-color: #d9fdd3;
+            color: #111b21;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .msg-img {
+            max-width: 200px;
+            border-radius: 8px;
+            margin-bottom: 4px;
+        }
+
+        /* Typing Indicator */
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background: #94a3b8;
+            border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out both;
+        }
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes typing {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+
+        /* Hidden Canvas */
+        #processingCanvas { display: none; }
     </style>
 </head>
-<body class="flex flex-col items-center justify-center p-4">
+<body>
 
-    <!-- MAIN CONTAINER -->
-    <div class="w-full max-w-md glass-panel rounded-3xl overflow-hidden relative min-h-[500px] flex flex-col">
+    <div class="chat-container">
         
-        <!-- Header -->
-        <div class="p-6 pb-4 text-center border-b border-slate-100">
-            <div class="w-16 h-16 bg-teal-50 rounded-2xl mx-auto flex items-center justify-center text-teal-600 mb-3 shadow-sm border border-teal-100">
-                <i class="fa-solid fa-microscope text-3xl"></i>
+        <!-- Chat Header -->
+        <div class="bg-[#0f766e] text-white px-4 py-3 flex items-center gap-4 shadow-md z-10">
+            <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center border border-white/30">
+                <i class="fa-solid fa-robot text-xl"></i>
             </div>
-            <h1 class="text-xl font-extrabold text-slate-800 tracking-tight">Biotech Labs</h1>
-            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Patient Report Portal</p>
+            <div>
+                <h1 class="font-bold text-lg leading-tight">Biotech Assistant</h1>
+                <div class="flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+                    <p class="text-xs text-teal-100">Online | Always Free</p>
+                </div>
+            </div>
         </div>
 
-        <!-- CONTENT AREA -->
-        <div class="p-6 flex-1 flex flex-col items-center justify-center relative">
-
-            <!-- STATE 1: IDLE / UPLOAD -->
-            <div id="uploadState" class="w-full flex flex-col gap-4 fade-in">
-                <div class="text-center mb-4">
-                    <p class="text-sm text-slate-600 font-medium">Take a photo of your bill to retrieve your report automatically.</p>
-                </div>
-
-                <!-- Camera Input -->
-                <label class="relative w-full aspect-[4/3] rounded-2xl border-2 border-dashed border-teal-200 bg-teal-50/50 flex flex-col items-center justify-center cursor-pointer hover:bg-teal-50 transition-colors group">
-                    <div class="w-16 h-16 rounded-full bg-white shadow-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-camera text-2xl text-teal-500"></i>
-                    </div>
-                    <span class="text-sm font-bold text-teal-700">Tap to Scan Bill</span>
-                    <span class="text-[10px] text-teal-600/70 mt-1">or upload photo</span>
-                    
-                    <!-- File Input -->
-                    <input type="file" id="fileInput" accept="image/*" capture="environment" class="hidden" onchange="processImage(this)">
-                </label>
-
-                <div class="relative flex items-center py-2">
-                    <div class="flex-grow border-t border-slate-200"></div>
-                    <span class="flex-shrink-0 mx-4 text-slate-400 text-xs font-bold uppercase">Or</span>
-                    <div class="flex-grow border-t border-slate-200"></div>
-                </div>
-
-                <button onclick="showManualEntry()" class="w-full py-3.5 rounded-xl border border-slate-200 bg-white text-slate-600 font-bold text-sm shadow-sm hover:bg-slate-50 transition-all">
-                    Enter Details Manually
-                </button>
+        <!-- Chat Body (Messages go here) -->
+        <div class="chat-body custom-scroll" id="chatBody">
+            <!-- Welcome Message -->
+            <div class="msg msg-bot">
+                Hello! 👋 I am the Biotech Lab AI Assistant.<br><br>
+                Please <strong>upload a clear photo of your receipt</strong>, and I will find your medical report instantly!
             </div>
-
-            <!-- STATE 2: SCANNING (Loading) -->
-            <div id="scanningState" class="hidden w-full flex-col items-center text-center">
-                <div id="scanImageContainer" class="relative w-full max-w-[200px] aspect-square bg-slate-800 rounded-xl overflow-hidden mb-6 shadow-xl">
-                    <img id="previewImage" class="w-full h-full object-cover opacity-60">
-                    <div class="scan-animation"></div>
-                    <div class="absolute inset-0 flex items-center justify-center">
-                        <i class="fa-solid fa-circle-notch fa-spin text-white text-4xl"></i>
-                    </div>
-                </div>
-                <!-- Simple loader for non-image redirects -->
-                <div id="simpleLoader" class="hidden mb-6">
-                    <div class="w-20 h-20 border-4 border-teal-100 border-t-teal-500 rounded-full animate-spin mx-auto"></div>
-                </div>
-
-                <h3 class="text-lg font-bold text-slate-800" id="scanTitle">Enhancing Image...</h3>
-                <p class="text-sm text-slate-500 mt-2" id="scanStatus">Cleaning up noise...</p>
-                
-                <!-- Hidden Canvas for Image Processing -->
-                <canvas id="processingCanvas" class="hidden"></canvas>
-            </div>
-
-            <!-- STATE 3: MANUAL FORM (Fallback) -->
-            <div id="manualState" class="hidden w-full fade-in">
-                <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4 flex items-start gap-3">
-                    <i class="fa-solid fa-triangle-exclamation text-amber-500 mt-0.5"></i>
-                    <div>
-                        <p class="text-xs font-bold text-amber-700" id="manualErrorTitle">Scan Incomplete</p>
-                        <p class="text-[11px] text-amber-600/80 leading-tight mt-0.5" id="manualErrorMsg">We couldn't confirm the details. Please verify below.</p>
-                    </div>
-                </div>
-
-                <form id="detailsForm" onsubmit="handleManualSubmit(event)" class="space-y-3">
-                    <div class="grid grid-cols-3 gap-3">
-                        <div class="col-span-1">
-                            <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Type</label>
-                            <select id="inputType" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 outline-none focus:border-teal-500">
-                                <option value="VG">VG</option>
-                                <option value="BN">BN</option>
-                                <option value="NI">NI</option>
-                                <option value="BR">BR</option>
-                                <option value="HO">HO</option>
-                            </select>
-                        </div>
-                        <div class="col-span-2">
-                            <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Sample Number</label>
-                            <input type="number" id="inputNum" placeholder="e.g. 33" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 outline-none focus:border-teal-500 placeholder:font-normal">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Date on Bill</label>
-                        <input type="date" id="inputDate" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 outline-none focus:border-teal-500">
-                    </div>
-
-                    <div>
-                        <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Your Mobile Number</label>
-                        <input type="tel" id="inputPhone" placeholder="07x xxxxxxx" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 outline-none focus:border-teal-500 placeholder:font-normal">
-                    </div>
-
-                    <button type="submit" id="submitBtn" class="w-full py-4 mt-2 rounded-xl btn-gradient text-white font-bold text-sm shadow-lg shadow-teal-500/30 flex items-center justify-center gap-2">
-                        Get Report <i class="fa-solid fa-arrow-right"></i>
-                    </button>
-                </form>
-            </div>
-
         </div>
 
-        <!-- Footer -->
-        <div class="p-4 text-center border-t border-slate-100 bg-slate-50/50">
-            <p class="text-[10px] text-slate-400 font-medium">Secured by Biotech Systems v2.6</p>
+        <!-- Chat Input Area -->
+        <div class="bg-[#f0f2f5] px-4 py-3 flex items-end gap-2 border-t border-slate-200 z-10">
+            
+            <label class="w-10 h-10 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-200 transition cursor-pointer flex-shrink-0 mb-1">
+                <i class="fa-solid fa-paperclip text-xl"></i>
+                <input type="file" id="imageInput" accept="image/*" capture="environment" class="hidden" onchange="handleImageUpload(this)">
+            </label>
+
+            <div class="flex-grow bg-white rounded-2xl border border-slate-300 overflow-hidden shadow-sm flex items-center px-3 py-2">
+                <input type="text" id="textInput" placeholder="Type ID (e.g. VG78) if scan fails..." class="w-full bg-transparent outline-none text-sm text-slate-700" onkeypress="handleKeyPress(event)">
+            </div>
+
+            <button onclick="sendText()" class="w-10 h-10 rounded-full bg-[#0f766e] hover:bg-[#0d9488] text-white flex items-center justify-center transition shadow-md flex-shrink-0 mb-1">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
         </div>
 
     </div>
 
-    <!-- FIREBASE MODULES -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-        import { getDatabase, ref, push, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
+    <!-- Hidden Canvas for Image Processing -->
+    <canvas id="processingCanvas"></canvas>
 
-        const voiceConfig = {
-            apiKey: "AIzaSyCPYqMnRIapygJqaKe6JZpitF3E5fq8jIs",
-            authDomain: "biotechchat-c0a38.firebaseapp.com",
-            projectId: "biotechchat-c0a38",
-            storageBucket: "biotechchat-c0a38.firebasestorage.app",
-            messagingSenderId: "1081724102554",
-            appId: "1:1081724102554:web:16b0c1ee763148b4a63c23"
-        };
-
-        const app = initializeApp(voiceConfig);
-        const db = getDatabase(app);
-
-        window.logPatientRequest = (data) => {
-            const logsRef = ref(db, 'patient_logs');
-            push(logsRef, {
-                ...data,
-                timestamp: serverTimestamp(),
-                userAgent: navigator.userAgent
-            });
-        };
-    </script>
-
-    <!-- MAIN LOGIC (Free OCR with Smart URL Detection) -->
     <script>
-        const uploadState = document.getElementById('uploadState');
-        const scanningState = document.getElementById('scanningState');
-        const manualState = document.getElementById('manualState');
-        const previewImg = document.getElementById('previewImage');
-        const scanStatus = document.getElementById('scanStatus');
+        const chatBody = document.getElementById('chatBody');
+        const textInput = document.getElementById('textInput');
         const processingCanvas = document.getElementById('processingCanvas');
 
-        let foundPrefix = "";
-        let foundNumber = "";
-        let foundDate = "";
+        // --- UI FUNCTIONS ---
 
-        // 1. Image Capture & Preprocessing
-        function processImage(input) {
+        function appendMessage(text, sender, type = 'text') {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `msg ${sender === 'bot' ? 'msg-bot' : 'msg-user'}`;
+            
+            if (type === 'html') {
+                msgDiv.innerHTML = text;
+            } else if (type === 'image') {
+                msgDiv.innerHTML = `<img src="${text}" class="msg-img"><br><span class="text-xs opacity-70">Photo uploaded</span>`;
+            } else {
+                msgDiv.innerText = text;
+            }
+            
+            chatBody.appendChild(msgDiv);
+            scrollToBottom();
+        }
+
+        function showTyping() {
+            const typingId = 'typing-' + Date.now();
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `msg msg-bot flex items-center gap-1 py-3 px-4`;
+            msgDiv.id = typingId;
+            msgDiv.innerHTML = `
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            `;
+            chatBody.appendChild(msgDiv);
+            scrollToBottom();
+            return typingId;
+        }
+
+        function removeTyping(id) {
+            const el = document.getElementById(id);
+            if(el) el.remove();
+        }
+
+        function scrollToBottom() {
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }
+
+        // --- INTERACTION LOGIC ---
+
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') sendText();
+        }
+
+        function sendText() {
+            const text = textInput.value.trim();
+            if (!text) return;
+
+            // 1. Show user message
+            appendMessage(text, 'user');
+            textInput.value = '';
+
+            // 2. Show bot typing
+            const typingId = showTyping();
+
+            // 3. Process text (Simple fallback logic)
+            setTimeout(() => {
+                removeTyping(typingId);
+                
+                // Very basic regex to see if they typed something like VG78
+                const manualMatch = text.toUpperCase().match(/(VG|BN|NI|BR|HO)\s*(\d{1,5})/i);
+                
+                if (manualMatch) {
+                    const prefix = manualMatch[1].substring(0,2);
+                    const num = manualMatch[2];
+                    const dateStr = new Date().toISOString().split('T')[0]; // Assume today if typed manually
+                    
+                    const link = generateSecureLink(prefix, num, dateStr);
+                    const botReply = `
+                        I found an ID! Here is your report link for <strong>${prefix}${num}</strong>:<br><br>
+                        <a href="${link}" target="_blank" class="block bg-teal-50 text-teal-700 font-bold py-2 px-3 rounded-lg text-center border border-teal-200 hover:bg-teal-100 transition mt-2">
+                            <i class="fa-solid fa-file-pdf mr-1"></i> Open Report
+                        </a>
+                    `;
+                    appendMessage(botReply, 'bot', 'html');
+                } else {
+                    appendMessage("I couldn't detect a Sample ID. Please upload a clear photo of your receipt, or type your ID (e.g., VG78).", 'bot');
+                }
+            }, 1000);
+        }
+
+        function handleImageUpload(input) {
             if (input.files && input.files[0]) {
                 const file = input.files[0];
-                
                 const reader = new FileReader();
+                
                 reader.onload = function(e) {
-                    previewImg.src = e.target.result;
+                    const imageData = e.target.result;
+                    // Show image in chat
+                    appendMessage(imageData, 'user', 'image');
                     
-                    // Show Image Loader
-                    document.getElementById('scanImageContainer').classList.remove('hidden');
-                    document.getElementById('simpleLoader').classList.add('hidden');
-                    
-                    uploadState.classList.add('hidden');
-                    scanningState.classList.remove('hidden');
-                    scanningState.classList.add('flex');
+                    // Start processing
+                    const typingId = showTyping();
                     
                     const img = new Image();
                     img.onload = () => {
-                        const processedDataUrl = preprocessImage(img);
-                        runOCR(processedDataUrl);
+                        const processedBase64 = preprocessImage(img);
+                        runOCR(processedBase64, typingId);
                     };
-                    img.src = e.target.result;
+                    img.src = imageData;
                 }
                 reader.readAsDataURL(file);
+                
+                // Clear input so same file can be uploaded again if needed
+                input.value = '';
             }
         }
+
+        // --- OCR & PREPROCESSING LOGIC (Free Tesseract) ---
 
         function preprocessImage(img) {
             const ctx = processingCanvas.getContext('2d');
@@ -268,9 +301,7 @@
             const data = imageData.data;
             
             for (let i = 0; i < data.length; i += 4) {
-                const r = data[i];
-                const g = data[i + 1];
-                const b = data[i + 2];
+                const r = data[i]; const g = data[i + 1]; const b = data[i + 2];
                 const gray = 0.299 * r + 0.587 * g + 0.114 * b;
                 const val = gray > 130 ? 255 : 0; 
                 data[i] = val; data[i + 1] = val; data[i + 2] = val;
@@ -279,158 +310,91 @@
             return processingCanvas.toDataURL('image/jpeg');
         }
 
-        async function runOCR(imageDataUrl) {
+        async function runOCR(imageDataUrl, typingId) {
             try {
-                scanStatus.innerText = "Reading text...";
                 const worker = await Tesseract.createWorker();
                 await worker.loadLanguage('eng');
                 await worker.initialize('eng');
-                
                 await worker.setParameters({
-                    tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/-:.%&abcdefghijklmnopqrstuvwxyz', // Added lower case & symbols for URL reading
+                    tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/-:.%&abcdefghijklmnopqrstuvwxyz',
                     tessedit_pageseg_mode: '6', 
                 });
                 
-                const { data: { text, confidence } } = await worker.recognize(imageDataUrl);
+                const { data: { text } } = await worker.recognize(imageDataUrl);
                 await worker.terminate();
 
-                scanStatus.innerText = "Analyzing data...";
-                analyzeText(text);
+                analyzeText(text, typingId);
 
             } catch (error) {
                 console.error(error);
-                showManualEntry();
+                removeTyping(typingId);
+                appendMessage("Sorry, an error occurred while scanning the image. Please try again or type your ID.", 'bot');
             }
         }
 
-        function analyzeText(text) {
-            // Clean text
-            const cleanText = text.toUpperCase()
-                .replace(/[\r\n]+/g, " ");
+        function analyzeText(text, typingId) {
+            removeTyping(typingId);
+            
+            const cleanText = text.toUpperCase().replace(/[\r\n]+/g, " ");
 
-            // --- STRATEGY 1: CHECK FOR FOOTER URL (100% Accuracy) ---
-            // Pattern: printinvoice/VG78%262026-02-08
-            // We look for ID (VG78) followed by %26 (which is &) followed by Date
+            let foundPrefix = "";
+            let foundNumber = "";
+            let foundDate = "";
+
+            // 1. Check for URL directly
             const urlPattern = /([A-Z]{2,}\d+)%26(\d{4}-\d{2}-\d{2})/;
             const urlMatch = cleanText.match(urlPattern);
 
             if (urlMatch) {
-                console.log("Found via URL Strategy!");
                 foundPrefix = urlMatch[1].substring(0, 2);
                 foundNumber = urlMatch[1].substring(2);
-                foundDate = urlMatch[2]; // Date is already YYYY-MM-DD
-                
-                finishSuccess(text, "url_match");
-                return;
-            }
-
-            // --- STRATEGY 2: STANDARD BODY SCAN ---
-            
-            // Clean common OCR mistakes for body text
-            let bodyText = cleanText
-                .replace(/\|/g, "I")
-                .replace(/S/g, "5")
-                .replace(/O/g, "0")
-                .replace(/V6/g, "VG")
-                .replace(/8N/g, "BN")
-                .replace(/H0/g, "HO")
-                .replace(/N1/g, "NI");
-
-            // ID Regex: Matches VG78, VG 78, V.G. 78
-            const idPattern = /(VG|BN|NI|BR|HO|V\.G|B\.N|N\.I)\s*[:.\-]?\s*(\d+)/i;
-            const idMatch = bodyText.match(idPattern);
-            
-            // Date Regex
-            const datePattern = /(\d{4}-\d{2}-\d{2})|(\d{2}\/\d{2}\/\d{4})/;
-            const dateMatch = bodyText.match(datePattern);
-
-            if (idMatch) {
-                foundPrefix = idMatch[1].replace(/\./g, "").substring(0,2); 
-                foundNumber = idMatch[2];
-                
-                if (dateMatch) {
-                    foundDate = formatDateForInput(dateMatch[0]);
-                } else {
-                    foundDate = new Date().toISOString().split('T')[0];
-                }
-
-                finishSuccess(text, "body_match");
-
+                foundDate = urlMatch[2];
             } else {
-                showManualEntry("Sample ID Not Found", "We couldn't read the sample number accurately. Please enter it below.");
+                // 2. Standard Body Scan
+                let bodyText = cleanText
+                    .replace(/\|/g, "I").replace(/S/g, "5").replace(/O/g, "0")
+                    .replace(/V6/g, "VG").replace(/8N/g, "BN").replace(/H0/g, "HO").replace(/N1/g, "NI");
+
+                const idPattern = /(VG|BN|NI|BR|HO|V\.G|B\.N|N\.I)\s*[:.\-]?\s*(\d+)/i;
+                const idMatch = bodyText.match(idPattern);
+                const datePattern = /(\d{4}-\d{2}-\d{2})|(\d{2}\/\d{2}\/\d{4})/;
+                const dateMatch = bodyText.match(datePattern);
+
+                if (idMatch) {
+                    foundPrefix = idMatch[1].replace(/\./g, "").substring(0,2); 
+                    foundNumber = idMatch[2];
+                    if (dateMatch) {
+                        foundDate = formatDateForInput(dateMatch[0]);
+                    } else {
+                        foundDate = new Date().toISOString().split('T')[0];
+                    }
+                }
+            }
+
+            // --- RESPOND ---
+            if (foundPrefix && foundNumber) {
+                const link = generateSecureLink(foundPrefix, foundNumber, foundDate);
+                const botReply = `
+                    ✅ <strong>Scan Successful!</strong><br>
+                    ID: ${foundPrefix}${foundNumber}<br>
+                    Date: ${foundDate}<br><br>
+                    Click the button below to view your report:
+                    <a href="${link}" target="_blank" class="block bg-teal-50 text-teal-700 font-bold py-3 px-4 rounded-xl text-center border border-teal-200 hover:bg-teal-100 hover:scale-[1.02] transition-all mt-3 shadow-sm">
+                        <i class="fa-solid fa-file-pdf mr-2 text-rose-500"></i> Download Report
+                    </a>
+                `;
+                appendMessage(botReply, 'bot', 'html');
+            } else {
+                appendMessage("I couldn't read the Sample ID from that photo clearly. 😕 <br><br>Please try taking a closer photo, or just <strong>type your Sample ID</strong> (like VG78) into the chat.", 'bot', 'html');
             }
         }
 
-        function finishSuccess(rawText, method) {
-             // Success Log
-             if(window.logPatientRequest) {
-                window.logPatientRequest({
-                    status: 'success_ocr',
-                    method: method,
-                    ocr_raw: rawText.substring(0, 100),
-                    detected_id: `${foundPrefix}${foundNumber}`
-                });
-            }
-            // Redirect immediately
-            generateAndShowLink(foundPrefix, foundNumber, foundDate);
-        }
-
-        function showManualEntry(title, msg) {
-            scanningState.classList.remove('flex');
-            scanningState.classList.add('hidden');
-            uploadState.classList.add('hidden');
-            manualState.classList.remove('hidden');
-            
-            if(title) document.getElementById('manualErrorTitle').innerText = title;
-            if(msg) document.getElementById('manualErrorMsg').innerText = msg;
-            
-            document.getElementById('inputDate').valueAsDate = new Date();
-        }
-
-        function handleManualSubmit(e) {
-            e.preventDefault();
-            
-            const prefix = document.getElementById('inputType').value;
-            const num = document.getElementById('inputNum').value;
-            const date = document.getElementById('inputDate').value;
-            const phone = document.getElementById('inputPhone').value;
-
-            if(window.logPatientRequest) {
-                window.logPatientRequest({
-                    status: 'manual_entry',
-                    prefix: prefix,
-                    number: num,
-                    date: date,
-                    phone: phone
-                });
-            }
-
-            manualState.classList.add('hidden');
-            scanningState.classList.remove('hidden');
-            scanningState.classList.add('flex');
-            document.getElementById('scanImageContainer').classList.add('hidden');
-            document.getElementById('simpleLoader').classList.remove('hidden');
-            document.getElementById('scanTitle').innerText = "Opening Report...";
-            document.getElementById('scanStatus').innerText = "Redirecting you now...";
-
-            setTimeout(() => {
-                generateAndShowLink(prefix, num, date);
-            }, 500);
-        }
-
-        function generateAndShowLink(prefix, num, dateStr) {
+        function generateSecureLink(prefix, num, dateStr) {
             const patientId = `${prefix}${num}`;
             const dateObj = new Date();
             const expiryTimestamp = dateObj.getTime() + (14 * 24 * 60 * 60 * 1000); 
             const originalData = `${patientId}|${dateStr}|${expiryTimestamp}`;
-            const encodedData = btoa(originalData);
-            const finalUrl = `https://biotechveyangoda.lk/report-preview.html?data=${encodedData}`;
-
-            const titleEl = document.getElementById('scanTitle');
-            if(titleEl) titleEl.innerText = "Report Found!";
-            document.getElementById('scanStatus').innerText = "Opening document...";
-
-            window.location.href = finalUrl;
+            return `https://biotechveyangoda.lk/report-preview.html?data=${btoa(originalData)}`;
         }
 
         function formatDateForInput(dateString) {
