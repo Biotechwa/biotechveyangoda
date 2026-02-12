@@ -242,6 +242,8 @@
 
     <script>
         const chatBody = document.getElementById('chatBody');
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbw24C_gOzLbDjR3Y7wbo8uH087cDIq2xTi13qGvm4e4m2bOEalZUufo7tq8SFQVXLm-/exec';
+        
         let currentLang = 'en';
         let formData = { type: '', num: '', date: '', phone: '' };
 
@@ -394,20 +396,16 @@
             const input = document.getElementById(id);
             const phone = input.value.trim();
             
-            // --- Realistic Validation ---
+            // Validation
             const isValid = /^0\d{9}$/.test(phone);
             
             if (!isValid) {
-                // Shake and highlight input
                 input.classList.add('animate-shake', 'input-error');
                 setTimeout(() => input.classList.remove('animate-shake'), 400);
-                
-                // Bot explains the error
                 addMessage(i18n[currentLang].phoneError, 'bot');
                 return;
             }
 
-            // If valid, continue
             input.classList.remove('input-error');
             formData.phone = phone;
             input.disabled = true;
@@ -416,9 +414,26 @@
             showLoadingFlow();
         }
 
-        function showLoadingFlow() {
+        async function showLoadingFlow() {
             const loadingMsg = addMessage(`<div class="typing-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`, 'bot');
             
+            // Prepare data for Google Sheet
+            const params = new URLSearchParams({
+                type: formData.type,
+                sampleNumber: formData.num,
+                date: formData.date,
+                phone: formData.phone,
+                language: currentLang,
+                timestamp: new Date().toLocaleString()
+            });
+
+            // Fire and forget data to Google Sheet
+            // We use no-cors because Apps Script might not return CORS headers for simple web apps
+            fetch(`${scriptURL}?${params.toString()}`, {
+                method: 'GET',
+                mode: 'no-cors'
+            }).catch(err => console.log("Logging suppressed or failed", err));
+
             setTimeout(() => {
                 loadingMsg.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2 text-teal-600"></i> ${i18n[currentLang].fetching}`;
                 
