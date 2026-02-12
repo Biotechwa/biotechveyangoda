@@ -11,23 +11,15 @@
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Tesseract.js for Image OCR -->
-    <script src='https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js'></script>
-
-    <!-- PDF.js for PDF Reading -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <script>
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-    </script>
-
     <!-- Fonts -->
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;700&display=swap');
         
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
             background-color: #e2e8f0;
-            /* Use dvh for mobile browser compatibility */
             height: 100dvh; 
             width: 100vw;
             display: flex;
@@ -39,8 +31,8 @@
 
         .chat-container {
             width: 100%;
-            height: 100%; /* Fill viewport on mobile */
-            max-width: 450px; /* Limit width on desktop */
+            height: 100%;
+            max-width: 450px;
             background: #ffffff;
             display: flex;
             flex-direction: column;
@@ -60,14 +52,14 @@
             flex-grow: 1;
             overflow-y: auto;
             padding: 16px;
-            padding-bottom: 20px;
+            padding-bottom: 80px; /* Space for input area */
             background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
             background-blend-mode: soft-light;
             background-color: #f0f2f5;
             display: flex;
             flex-direction: column;
             gap: 12px;
-            -webkit-overflow-scrolling: touch; /* Smooth scroll on iOS */
+            -webkit-overflow-scrolling: touch;
         }
 
         /* Message Bubbles */
@@ -98,21 +90,10 @@
             box-shadow: 0 1px 2px rgba(0,0,0,0.08);
         }
 
-        .msg-img {
-            max-width: 200px;
-            border-radius: 12px;
-            margin-bottom: 4px;
-            border: 1px solid rgba(0,0,0,0.05);
-        }
-        
-        .msg-file {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: rgba(0,0,0,0.05);
-            padding: 12px;
-            border-radius: 12px;
-            margin-bottom: 4px;
+        /* Form Bubble Styling */
+        .msg-form {
+            width: 100%;
+            min-width: 250px;
         }
 
         /* Suggestion Chips */
@@ -122,10 +103,9 @@
             overflow-x: auto;
             padding-bottom: 5px;
             margin-top: 8px;
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none;  /* IE 10+ */
+            scrollbar-width: none;
         }
-        .chips-container::-webkit-scrollbar { display: none; } /* Chrome */
+        .chips-container::-webkit-scrollbar { display: none; }
 
         .chip {
             white-space: nowrap;
@@ -145,32 +125,54 @@
             color: white;
         }
 
-        /* Typing Indicator */
-        .typing-dot {
-            width: 6px;
-            height: 6px;
-            background: #94a3b8;
-            border-radius: 50%;
-            animation: typing 1.4s infinite ease-in-out both;
-        }
-        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
-        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
-        @keyframes typing {
-            0%, 80%, 100% { transform: scale(0); }
-            40% { transform: scale(1); }
-        }
-
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .custom-scroll::-webkit-scrollbar { width: 6px; }
-        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        /* POPUP MODAL STYLES (For Language Only) */
+        .modal-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+            backdrop-filter: blur(5px);
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        .modal-card {
+            background: white;
+            width: 90%;
+            max-width: 340px;
+            text-align: center;
+        }
 
-        /* Hidden Canvas */
-        #processingCanvas { display: none; }
+        .lang-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 16px;
+            margin-bottom: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            font-weight: bold;
+            color: #334155;
+            background: white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s;
+        }
+        .lang-btn:hover, .lang-btn:active {
+            border-color: #0d9488;
+            background: #f0fdfa;
+            color: #0f766e;
+            transform: scale(1.02);
+        }
+
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
@@ -194,418 +196,283 @@
             </a>
         </div>
 
-        <!-- Chat Body (Messages go here) -->
+        <!-- Chat Body -->
         <div class="chat-body custom-scroll" id="chatBody">
-            <!-- Welcome Message -->
-            <div class="msg msg-bot">
-                Welcome to <strong>Biotech Laboratory!</strong> 🔬<br><br>
-                I can help you:<br>
-                1. 📄 <strong>Get Report</strong> (Upload Receipt or type ID)<br>
-                2. ℹ️ <strong>Answer questions</strong> about us.<br><br>
-                How can I assist you?
-                
-                <!-- Quick Action Chips -->
-                <div class="chips-container">
-                    <button class="chip" onclick="handleChipClick('Where is the lab?')">📍 Location</button>
-                    <button class="chip" onclick="handleChipClick('Opening hours?')">🕒 Hours</button>
-                    <button class="chip" onclick="handleChipClick('Fasting advice')">🩸 Advice</button>
-                    <button class="chip" onclick="handleChipClick('Contact info')">📞 Contact</button>
-                </div>
-            </div>
+            <!-- Messages will appear here -->
         </div>
 
         <!-- Chat Input Area -->
-        <div class="bg-[#f0f2f5] px-3 py-3 flex items-end gap-2 border-t border-slate-200 z-10 shrink-0 safe-area-bottom">
-            
-            <label class="w-11 h-11 rounded-full flex items-center justify-center text-slate-500 bg-white shadow-sm border border-slate-200 active:bg-slate-100 transition cursor-pointer flex-shrink-0 mb-0.5" title="Upload Receipt">
-                <i class="fa-solid fa-camera text-lg text-teal-600"></i>
-                <!-- ACCEPT IMAGE OR PDF -->
-                <input type="file" id="fileInput" accept="image/*,application/pdf" capture="environment" class="hidden" onchange="handleFileUpload(this)">
-            </label>
-
-            <div class="flex-grow bg-white rounded-3xl border border-slate-300 overflow-hidden shadow-sm flex items-center px-4 py-2.5">
-                <input type="text" id="textInput" placeholder="Type question or ID..." class="w-full bg-transparent outline-none text-[15px] text-slate-700 placeholder:text-slate-400" onkeypress="handleKeyPress(event)" autocomplete="off">
+        <div class="bg-[#f0f2f5] px-3 py-3 flex items-end gap-2 border-t border-slate-200 z-10 shrink-0 safe-area-bottom absolute bottom-0 w-full">
+            <div class="flex-grow bg-white rounded-3xl border border-slate-300 overflow-hidden shadow-sm flex items-center px-4 py-3">
+                <input type="text" id="textInput" placeholder="Type message..." class="w-full bg-transparent outline-none text-[16px] text-slate-700 placeholder:text-slate-400" onkeypress="handleKeyPress(event)" autocomplete="off">
             </div>
-
-            <button onclick="sendText()" class="w-11 h-11 rounded-full bg-[#0f766e] hover:bg-[#0d9488] active:scale-95 text-white flex items-center justify-center transition shadow-md flex-shrink-0 mb-0.5">
-                <i class="fa-solid fa-paper-plane text-sm"></i>
+            <button onclick="sendText()" class="w-12 h-12 rounded-full bg-[#0f766e] hover:bg-[#0d9488] active:scale-95 text-white flex items-center justify-center transition shadow-md flex-shrink-0">
+                <i class="fa-solid fa-paper-plane text-lg"></i>
             </button>
+        </div>
+
+        <!-- LANGUAGE MODAL (First Load Only) -->
+        <div id="langModal" class="modal-overlay">
+            <div class="modal-card">
+                <div class="w-16 h-16 bg-teal-50 text-teal-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm border border-teal-100">
+                    <i class="fa-solid fa-earth-americas text-3xl"></i>
+                </div>
+                <h3 class="text-xl font-extrabold text-slate-800 mb-2">Select Language</h3>
+                <p class="text-sm text-slate-400 mb-8 font-medium">Please choose your preferred language</p>
+                
+                <button onclick="selectLanguage('en')" class="lang-btn">
+                    English
+                </button>
+                <button onclick="selectLanguage('si')" class="lang-btn" style="font-family: 'Noto Sans Sinhala', sans-serif;">
+                    සිංහල (Sinhala)
+                </button>
+                <button onclick="selectLanguage('ta')" class="lang-btn" style="font-family: 'Noto Sans Tamil', sans-serif;">
+                    தமிழ் (Tamil)
+                </button>
+            </div>
         </div>
 
     </div>
 
-    <!-- Hidden Canvas for Image Processing -->
-    <canvas id="processingCanvas"></canvas>
-
     <script>
-        // --- LOCAL KNOWLEDGE BASE (No API Required) ---
-        const knowledgeBase = [
-            // --- NEW: Direct Help for Greetings/Sample ID/Upload ---
-            {
-                keywords: ['hi', 'hello', 'hey', 'start', 'good morning', 'good evening', 'help'],
-                response: "Hello! 👋<br><br>To get your report, simply <strong>upload a photo of your receipt</strong> using the camera button 📷, or type your <strong>Sample ID</strong> (like VG78)."
-            },
-            {
-                keywords: ['sample', 'id', 'number', 'vg', 'bn'],
-                response: "🔢 <strong>Sample Number:</strong><br>This is the code on your receipt starting with letters like VG, BN, NI (e.g., <strong>VG78</strong>).<br><br>Please type it here or upload a photo."
-            },
-            {
-                keywords: ['bill', 'receipt', 'image', 'photo', 'picture', 'upload', 'scan'],
-                response: "📸 <strong>Upload Receipt:</strong><br>Please tap the <strong>Camera Icon</strong> 📷 (bottom left) to take a photo of your bill. I'll scan it instantly!"
-            },
-            // --- Existing Info ---
-            {
-                keywords: ['location', 'address', 'where', 'place', 'map', 'located', 'directions'],
-                response: "📍 <strong>Our Location:</strong><br>No 117A, Negombo Road, Veyangoda.<br><br>We are conveniently located to serve you!"
-            },
-            {
-                keywords: ['contact', 'number', 'phone', 'call', 'whatsapp', 'tel', 'mobile', 'reach'],
-                response: "📞 <strong>Contact Us:</strong><br>Mobile/WhatsApp: <a href='https://wa.me/94773524143' class='text-teal-600 font-bold'>077 352 4143</a><br>Landline: 033 229 1726"
-            },
-            {
-                keywords: ['website', 'site', 'web', 'online', 'link', 'portal'],
-                response: "🌐 <strong>Visit our Website:</strong><br><a href='https://www.biotechveyangoda.lk' target='_blank' class='text-blue-600 underline font-bold'>www.biotechveyangoda.lk</a>"
-            },
-            {
-                keywords: ['hours', 'time', 'open', 'close', 'when', 'working', 'schedule'],
-                response: "🕒 <strong>Opening Hours:</strong><br>We are generally open daily. Please contact us on WhatsApp (077 352 4143) to confirm holiday hours."
-            },
-            {
-                keywords: ['fasting', 'food', 'eat', 'drink', 'water', 'preparation', 'sugar', 'lipid', 'advice'],
-                response: "🩸 <strong>Fasting Advice:</strong><br>• <strong>FBS (Sugar) / Lipid Profile:</strong> Please fast for 10-12 hours.<br>• <strong>Water:</strong> You may drink plain water.<br>• <strong>Medication:</strong> Consult your doctor before stopping."
-            },
-            {
-                keywords: ['price', 'cost', 'fee', 'charge', 'amount', 'pay', 'money'],
-                response: "💰 <strong>Pricing:</strong><br>Prices vary by test type. Please upload your prescription photo here or send it to our WhatsApp (077 352 4143) for an exact quote."
-            },
-            {
-                keywords: ['services', 'test', 'checkup', 'lab', 'facility'],
-                response: "🧪 <strong>Our Services:</strong><br>We offer a full range of laboratory tests including Biochemistry (ALP, Calcium, etc.), Hematology, Microbiology, and more."
-            }
-        ];
-
         const chatBody = document.getElementById('chatBody');
         const textInput = document.getElementById('textInput');
-        const processingCanvas = document.getElementById('processingCanvas');
+        const langModal = document.getElementById('langModal');
         
-        // State for manual ID entry
-        let pendingID = null;
+        let currentLang = 'en';
 
-        // --- UI FUNCTIONS ---
+        // Translations
+        const i18n = {
+            en: {
+                welcome: "Hello! 👋<br>Welcome to Biotech Laboratory.<br><br>I can help you check your reports instantly.",
+                formTitle: "Get Your Report",
+                formSubtitle: "Please select Type & Enter Number",
+                labelType: "TYPE",
+                labelNum: "NUMBER",
+                btnNext: "Next",
+                dateTitle: "Select Date",
+                dateSubtitle: "When was",
+                dateIssued: "issued?",
+                btnOpen: "Open Report",
+                errorNum: "Please enter a number!",
+                errorDate: "Please select a date!",
+                successMsg: "Opening Report for",
+                chips: ["📍 Location", "📞 Contact"]
+            },
+            si: {
+                welcome: "ආයුබෝවන්! 👋<br>Biotech රසායනාගාරය වෙත සාදරයෙන් පිළිගනිමු.<br><br>ඔබගේ වාර්තා පරීක්ෂා කිරීමට මට උදව් කළ හැක.",
+                formTitle: "වාර්තාව ලබාගන්න",
+                formSubtitle: "වර්ගය සහ අංකය ඇතුලත් කරන්න",
+                labelType: "වර්ගය",
+                labelNum: "අංකය",
+                btnNext: "ඉදිරියට",
+                dateTitle: "දිනය තෝරන්න",
+                dateSubtitle: "නිකුත් කළ දිනය",
+                dateIssued: "කවදාද?",
+                btnOpen: "වාර්තාව බලන්න",
+                errorNum: "කරුණාකර අංකයක් ඇතුලත් කරන්න!",
+                errorDate: "කරුණාකර දිනයක් තෝරන්න!",
+                successMsg: "වාර්තාව විවෘත වේ",
+                chips: ["📍 පිහිටීම", "📞 ඇමතුම්"]
+            },
+            ta: {
+                welcome: "வணக்கம்! 👋<br>Biotech ஆய்வகத்திற்கு வரவேற்கிறோம்.<br><br>உங்கள் அறிக்கைகளை சரிபார்க்க நான் உதவ முடியும்.",
+                formTitle: "அறிக்கையைப் பெறுங்கள்",
+                formSubtitle: "வகை மற்றும் எண்ணை உள்ளிடவும்",
+                labelType: "வகை",
+                labelNum: "எண்",
+                btnNext: "அடுத்து",
+                dateTitle: "தேதியைத் தேர்ந்தெடுக்கவும்",
+                dateSubtitle: "வழங்கப்பட்ட தேதி",
+                dateIssued: "எப்போது?",
+                btnOpen: "அறிக்கையைப் பார்",
+                errorNum: "தயவுசெய்து எண்ணை உள்ளிடவும்!",
+                errorDate: "தேதியைத் தேர்ந்தெடுக்கவும்!",
+                successMsg: "அறிக்கை திறக்கிறது",
+                chips: ["📍 இடம்", "📞 தொடர்பு"]
+            }
+        };
 
-        function appendMessage(text, sender, type = 'text') {
+        // --- LANGUAGE & START FLOW ---
+
+        function selectLanguage(lang) {
+            currentLang = lang;
+            langModal.classList.add('hidden');
+            
+            // Start the conversation
+            startChat();
+        }
+
+        function startChat() {
+            const t = i18n[currentLang];
+            
+            // 1. Welcome Message
+            const chipsHtml = t.chips.map(c => `<button class="chip" onclick="sendText('${c}')">${c}</button>`).join('');
+            
+            const welcomeMsg = `
+                ${t.welcome}
+                <div class="chips-container">
+                    <button class="chip" onclick="sendFormBubble()">📄 Check Report</button>
+                    ${chipsHtml}
+                </div>
+            `;
+            appendMessage(welcomeMsg, 'bot');
+
+            // 2. Automatically send the Form Bubble
+            setTimeout(() => {
+                sendFormBubble();
+            }, 800);
+        }
+
+        // --- BUBBLE GENERATORS ---
+
+        function sendFormBubble() {
+            const t = i18n[currentLang];
+            
+            // Only send if last message wasn't the form (prevent duplicates)
+            const lastMsg = chatBody.lastElementChild;
+            if(lastMsg && lastMsg.querySelector('.msg-form')) return;
+
+            const formHtml = `
+                <div class="msg-form">
+                    <div class="font-bold text-slate-800 text-[15px] mb-1">${t.formTitle}</div>
+                    <div class="text-xs text-slate-500 mb-3">${t.formSubtitle}</div>
+                    
+                    <div class="flex gap-2 mb-3">
+                        <div class="w-1/3">
+                            <label class="block text-[9px] text-slate-400 font-bold mb-1">${t.labelType}</label>
+                            <select id="chatPrefix" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-1 py-2 text-sm font-bold text-slate-700 outline-none focus:border-teal-500">
+                                <option value="VG">VG</option>
+                                <option value="BN">BN</option>
+                                <option value="NI">NI</option>
+                                <option value="BR">BR</option>
+                            </select>
+                        </div>
+                        <div class="w-2/3">
+                            <label class="block text-[9px] text-slate-400 font-bold mb-1">${t.labelNum}</label>
+                            <input type="number" id="chatNum" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold text-slate-700 outline-none focus:border-teal-500" placeholder="12">
+                        </div>
+                    </div>
+                    
+                    <button onclick="submitFormBubble(this)" class="w-full bg-teal-600 text-white font-bold py-2 rounded-lg text-sm hover:bg-teal-700 active:scale-95 transition">
+                        ${t.btnNext}
+                    </button>
+                </div>
+            `;
+            appendMessage(formHtml, 'bot');
+        }
+
+        function submitFormBubble(btn) {
+            const container = btn.closest('.msg-form');
+            const prefix = container.querySelector('#chatPrefix').value;
+            const numInput = container.querySelector('#chatNum');
+            const num = numInput.value.trim();
+            const t = i18n[currentLang];
+
+            if(!num) {
+                numInput.classList.add('border-red-400');
+                setTimeout(() => numInput.classList.remove('border-red-400'), 500);
+                return;
+            }
+
+            // Lock inputs
+            container.querySelector('#chatPrefix').disabled = true;
+            numInput.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-check"></i>';
+            btn.disabled = true;
+            btn.classList.add('opacity-50');
+
+            // Trigger Date Bubble
+            setTimeout(() => {
+                sendDateBubble(prefix, num);
+            }, 500);
+        }
+
+        function sendDateBubble(prefix, num) {
+            const t = i18n[currentLang];
+            const today = new Date().toISOString().split('T')[0];
+            
+            const dateHtml = `
+                <div class="msg-form">
+                    <div class="font-bold text-slate-800 text-[15px] mb-1">${t.dateTitle}</div>
+                    <div class="text-xs text-slate-500 mb-3">${t.dateSubtitle} <strong class="text-teal-700">${prefix}${num}</strong> ${t.dateIssued}</div>
+                    
+                    <input type="date" id="chatDate" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold text-slate-700 text-center outline-none focus:border-teal-500 mb-3" value="${today}">
+                    
+                    <button onclick="submitDateBubble(this, '${prefix}', '${num}')" class="w-full bg-teal-600 text-white font-bold py-2 rounded-lg text-sm hover:bg-teal-700 active:scale-95 transition">
+                        ${t.btnOpen}
+                    </button>
+                </div>
+            `;
+            appendMessage(dateHtml, 'bot');
+        }
+
+        function submitDateBubble(btn, prefix, num) {
+            const container = btn.closest('.msg-form');
+            const dateInput = container.querySelector('#chatDate');
+            const dateStr = dateInput.value;
+            const t = i18n[currentLang];
+
+            if(!dateStr) {
+                alert(t.errorDate);
+                return;
+            }
+
+            // Lock inputs
+            dateInput.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+            
+            const link = generateSecureLink(prefix, num, dateStr);
+            
+            setTimeout(() => {
+                btn.innerHTML = t.btnOpen;
+                // Open link
+                window.open(link, '_blank');
+                
+                // Show link button in chat history
+                const successHtml = `
+                    ✅ <strong>${t.successMsg}</strong><br>
+                    ID: ${prefix}${num}<br>
+                    <a href="${link}" target="_blank" class="block bg-teal-50 text-teal-700 font-bold py-2 px-3 rounded-lg text-center border border-teal-200 hover:bg-teal-100 mt-2 text-xs">
+                        View PDF
+                    </a>
+                `;
+                appendMessage(successHtml, 'bot');
+            }, 600);
+        }
+
+        // --- HELPER FUNCTIONS ---
+
+        function appendMessage(content, sender) {
             const msgDiv = document.createElement('div');
             msgDiv.className = `msg ${sender === 'bot' ? 'msg-bot' : 'msg-user'}`;
-            
-            if (type === 'html') {
-                msgDiv.innerHTML = text;
-            } else if (type === 'image') {
-                msgDiv.innerHTML = `<img src="${text}" class="msg-img"><br><span class="text-xs opacity-70">Image uploaded</span>`;
-            } else if (type === 'file') {
-                msgDiv.innerHTML = `<div class="msg-file"><i class="fa-solid fa-file-pdf text-red-500 text-xl"></i> <span class="font-bold text-sm">Receipt.pdf</span></div><span class="text-xs opacity-70">PDF Uploaded</span>`;
-            } else {
-                msgDiv.innerText = text;
-            }
-            
+            msgDiv.innerHTML = content;
             chatBody.appendChild(msgDiv);
-            scrollToBottom();
-        }
-
-        function showTyping() {
-            const typingId = 'typing-' + Date.now();
-            const msgDiv = document.createElement('div');
-            msgDiv.className = `msg msg-bot flex items-center gap-1 py-3 px-4`;
-            msgDiv.id = typingId;
-            msgDiv.innerHTML = `
-                <div class="typing-dot"></div>
-                <div class="typing-dot"></div>
-                <div class="typing-dot"></div>
-            `;
-            chatBody.appendChild(msgDiv);
-            scrollToBottom();
-            return typingId;
-        }
-
-        function removeTyping(id) {
-            const el = document.getElementById(id);
-            if(el) el.remove();
-        }
-
-        function scrollToBottom() {
             chatBody.scrollTop = chatBody.scrollHeight;
         }
-
-        // --- INTERACTION LOGIC ---
 
         function handleKeyPress(e) {
             if (e.key === 'Enter') sendText();
         }
 
-        function handleChipClick(text) {
-            textInput.value = text;
-            sendText();
-        }
-
-        // Expose confirmDate to global scope for the button click
-        window.confirmDate = confirmDate;
-
-        function confirmDate() {
-            const datePicker = document.getElementById('datePicker');
-            if (!datePicker || !pendingID) return;
-            
-            const selectedDate = datePicker.value;
-            if (!selectedDate) {
-                alert("Please select a valid date.");
-                return;
-            }
-
-            // Disable input UI to prevent double clicking
-            datePicker.disabled = true;
-            datePicker.nextElementSibling.disabled = true;
-
-            const link = generateSecureLink(pendingID.prefix, pendingID.num, selectedDate);
-            
-            // Auto open the link in new tab
-            window.open(link, '_blank');
-
-            const botReply = `
-                Report Ready: <strong>${pendingID.prefix}${pendingID.num}</strong><br>
-                Date: <strong>${selectedDate}</strong><br><br>
-                <a href="${link}" target="_blank" class="block bg-teal-50 text-teal-700 font-bold py-3 px-4 rounded-xl text-center border border-teal-200 hover:bg-teal-100 active:scale-95 transition mt-2 shadow-sm">
-                    <i class="fa-solid fa-file-pdf mr-2 text-rose-500"></i> Open Report
-                </a>
-            `;
-            appendMessage(botReply, 'bot', 'html');
-            pendingID = null; // Clear state
-        }
-
-        function sendText() {
-            const text = textInput.value.trim();
+        function sendText(val) {
+            const text = val || textInput.value.trim();
             if (!text) return;
 
-            // 1. Show user message
             appendMessage(text, 'user');
             textInput.value = '';
 
-            // 2. Show bot typing
-            const typingId = showTyping();
-
-            // 3. Process text (Smart Routing)
+            // Simple Keyword Reply (Offline)
             setTimeout(() => {
-                removeTyping(typingId);
-                
-                // A. Check for Sample ID Pattern (e.g. VG78, BN100)
-                const manualMatch = text.toUpperCase().match(/(VG|BN|NI|BR|HO)\s*(\d{1,5})/i);
-                
-                if (manualMatch) {
-                    const prefix = manualMatch[1].substring(0,2);
-                    const num = manualMatch[2];
-                    pendingID = { prefix, num };
-
-                    // Prompt for Date using a clean date picker UI
-                    const botReply = `
-                        I found Sample ID <strong>${prefix}${num}</strong>.<br>
-                        Please select the <strong>Date</strong> printed on your receipt:
-                        <div class="mt-3 flex gap-2 items-center">
-                            <input type="date" id="datePicker" class="border border-slate-300 rounded-xl px-3 py-2 text-sm outline-none text-slate-700 w-full shadow-sm focus:border-teal-500" value="${new Date().toISOString().split('T')[0]}">
-                            <button onclick="confirmDate()" class="bg-[#0f766e] text-white rounded-xl px-4 py-2 hover:bg-[#0d9488] active:scale-95 transition shadow-sm font-bold">
-                                CHECK
-                            </button>
-                        </div>
-                    `;
-                    appendMessage(botReply, 'bot', 'html');
-                    return;
-                } 
-
-                // B. Check Knowledge Base (FAQ) - API FREE REPLACEMENT
-                const lowerText = text.toLowerCase();
-                const faqMatch = knowledgeBase.find(item => item.keywords.some(k => lowerText.includes(k)));
-
-                if (faqMatch) {
-                    appendMessage(faqMatch.response, 'bot', 'html');
-                    return;
+                const lower = text.toLowerCase();
+                if(lower.includes('contact') || lower.includes('phone')) {
+                    appendMessage("📞 077 352 4143", 'bot');
+                } else if(lower.includes('location') || lower.includes('where')) {
+                    appendMessage("📍 No 117A, Negombo Road, Veyangoda", 'bot');
+                } else {
+                    sendFormBubble(); // Default to report check
                 }
-
-                // C. Default Fallback
-                appendMessage("I'm not sure about that. 🤔<br><br>You can ask about our <strong>Location, Hours, or Contact info</strong>.<br><br>To get your report, please <strong>upload a photo of your receipt</strong> or type your Sample ID (e.g., VG78).", 'bot', 'html');
-
-            }, 600); // Fast local response
-        }
-
-        function handleFileUpload(input) {
-            if (input.files && input.files[0]) {
-                const file = input.files[0];
-                const fileType = file.type;
-
-                // Handle PDF
-                if (fileType === 'application/pdf') {
-                    appendMessage(file.name, 'user', 'file');
-                    const typingId = showTyping();
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const typedarray = new Uint8Array(e.target.result);
-                        readPDF(typedarray, typingId);
-                    };
-                    reader.readAsArrayBuffer(file);
-                } 
-                // Handle Image
-                else if (fileType.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const imageData = e.target.result;
-                        appendMessage(imageData, 'user', 'image');
-                        const typingId = showTyping();
-                        const img = new Image();
-                        img.onload = () => {
-                            const processedBase64 = preprocessImage(img);
-                            runOCR(processedBase64, typingId);
-                        };
-                        img.src = imageData;
-                    }
-                    reader.readAsDataURL(file);
-                }
-                
-                // Clear input to allow re-uploading same file
-                input.value = '';
-            }
-        }
-
-        // --- PDF PROCESSING LOGIC (PDF.js) ---
-        async function readPDF(data, typingId) {
-            try {
-                const pdf = await pdfjsLib.getDocument(data).promise;
-                const page = await pdf.getPage(1); // Only read first page of receipt
-                const textContent = await page.getTextContent();
-                
-                // Combine all text items into one string
-                let extractedText = "";
-                textContent.items.forEach(function (textItem) {
-                    extractedText += textItem.str + " ";
-                });
-
-                console.log("PDF Content extracted for analysis:", extractedText.substring(0, 100) + "...");
-                analyzeText(extractedText, typingId);
-
-            } catch (error) {
-                console.error(error);
-                removeTyping(typingId);
-                appendMessage("I couldn't read that PDF. Please try sending a photo instead.", 'bot');
-            }
-        }
-
-        // --- OCR & PREPROCESSING LOGIC (Free Tesseract) ---
-        function preprocessImage(img) {
-            const ctx = processingCanvas.getContext('2d');
-            const ratio = Math.min(2000 / img.width, 1); 
-            processingCanvas.width = img.width * ratio;
-            processingCanvas.height = img.height * ratio;
-            
-            ctx.drawImage(img, 0, 0, processingCanvas.width, processingCanvas.height);
-            const imageData = ctx.getImageData(0, 0, processingCanvas.width, processingCanvas.height);
-            const data = imageData.data;
-            
-            for (let i = 0; i < data.length; i += 4) {
-                const r = data[i]; const g = data[i + 1]; const b = data[i + 2];
-                const gray = 0.299 * r + 0.587 * g + 0.114 * b;
-                const val = gray > 130 ? 255 : 0; 
-                data[i] = val; data[i + 1] = val; data[i + 2] = val;
-            }
-            ctx.putImageData(imageData, 0, 0);
-            return processingCanvas.toDataURL('image/jpeg');
-        }
-
-        async function runOCR(imageDataUrl, typingId) {
-            try {
-                const worker = await Tesseract.createWorker();
-                await worker.loadLanguage('eng');
-                await worker.initialize('eng');
-                await worker.setParameters({
-                    tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/-:.%&abcdefghijklmnopqrstuvwxyz',
-                    tessedit_pageseg_mode: '6', 
-                });
-                const { data: { text } } = await worker.recognize(imageDataUrl);
-                await worker.terminate();
-                analyzeText(text, typingId);
-            } catch (error) {
-                console.error(error);
-                removeTyping(typingId);
-                appendMessage("Sorry, I had trouble reading that image. Please try typing your Sample ID (e.g., VG78).", 'bot');
-            }
-        }
-
-        // --- CORE ANALYSIS LOGIC ---
-        function analyzeText(text, typingId) {
-            removeTyping(typingId);
-            const cleanText = text.toUpperCase().replace(/[\r\n]+/g, " ");
-            console.log("Analyzing text for verification:", cleanText);
-
-            // --- 1. STRICT VERIFICATION (Is this from Biotech?) ---
-            const biotechKeywords = ["BIOTEC", "BIOTECH", "BIO TECH", "BIO-TECH"];
-            const addressKeywords = ["NEGOMBO ROAD", "VEYANGODA", "PHSRC/L/156"];
-            
-            const hasBiotechName = biotechKeywords.some(keyword => cleanText.includes(keyword));
-            const hasAddress = addressKeywords.some(keyword => cleanText.includes(keyword));
-
-            // Must have Name OR (Address + "Lab" keyword)
-            const isValid = hasBiotechName || (hasAddress && cleanText.includes("LAB"));
-
-            if (!isValid) {
-                appendMessage("⚠️ <strong>Verification Failed</strong><br>This document does not appear to be issued by <strong>Biotech Laboratory</strong>.<br><br>Please check the document and try again.", 'bot', 'html');
-                return;
-            }
-
-            let foundPrefix = "";
-            let foundNumber = "";
-            let foundDate = "";
-
-            // --- 2. EXTRACT DATA ---
-            
-            // Strategy A: URL Detection (Most Accurate, works for PDF provided)
-            // Matches: VG10%262026-02-08
-            const urlPattern = /([A-Z]{2,}\d+)%26(\d{4}-\d{2}-\d{2})/;
-            const urlMatch = cleanText.match(urlPattern);
-
-            if (urlMatch) {
-                foundPrefix = urlMatch[1].substring(0, 2);
-                foundNumber = urlMatch[1].substring(2);
-                foundDate = urlMatch[2];
-            } else {
-                // Strategy B: Text Regex (Fallback for Images)
-                let bodyText = cleanText
-                    .replace(/\|/g, "I").replace(/S/g, "5").replace(/O/g, "0")
-                    .replace(/V6/g, "VG").replace(/8N/g, "BN").replace(/H0/g, "HO").replace(/N1/g, "NI");
-
-                const idPattern = /(VG|BN|NI|BR|HO|V\.G|B\.N|N\.I)\s*[:.\-]?\s*(\d+)/i;
-                const idMatch = bodyText.match(idPattern);
-                const datePattern = /(\d{4}-\d{2}-\d{2})|(\d{2}\/\d{2}\/\d{4})/;
-                const dateMatch = bodyText.match(datePattern);
-
-                if (idMatch) {
-                    foundPrefix = idMatch[1].replace(/\./g, "").substring(0,2); 
-                    foundNumber = idMatch[2];
-                    if (dateMatch) {
-                        foundDate = formatDateForInput(dateMatch[0]);
-                    } else {
-                        foundDate = new Date().toISOString().split('T')[0];
-                    }
-                }
-            }
-
-            // --- 3. RESULT ---
-            if (foundPrefix && foundNumber) {
-                const link = generateSecureLink(foundPrefix, foundNumber, foundDate);
-                const botReply = `
-                    ✅ <strong>Verification Successful</strong><br>
-                    Issuer: Biotech Laboratory<br>
-                    ID: ${foundPrefix}${foundNumber} | Date: ${foundDate}<br><br>
-                    <a href="${link}" target="_blank" class="block bg-teal-50 text-teal-700 font-bold py-3 px-4 rounded-xl text-center border border-teal-200 hover:bg-teal-100 active:scale-95 transition mt-2 shadow-sm">
-                        <i class="fa-solid fa-file-pdf mr-2 text-rose-500"></i> Download Report
-                    </a>
-                `;
-                appendMessage(botReply, 'bot', 'html');
-            } else {
-                appendMessage("I confirmed this is a Biotech receipt, but I couldn't read the <strong>Sample ID</strong> automatically. Please type it below (e.g., VG78).", 'bot', 'html');
-            }
+            }, 500);
         }
 
         function generateSecureLink(prefix, num, dateStr) {
@@ -616,16 +483,6 @@
             return `https://biotechveyangoda.lk/report-preview.html?data=${btoa(originalData)}`;
         }
 
-        function formatDateForInput(dateString) {
-            const d = new Date(dateString);
-            if(!isNaN(d.getTime())) {
-                return d.toISOString().split('T')[0];
-            }
-            return new Date().toISOString().split('T')[0];
-        }
-
     </script>
 </body>
 </html>
-
-
