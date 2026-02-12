@@ -11,8 +11,14 @@
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Tesseract.js for Free Client-Side OCR -->
+    <!-- Tesseract.js for Image OCR -->
     <script src='https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js'></script>
+
+    <!-- PDF.js for PDF Reading -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
 
     <!-- Fonts -->
     <style>
@@ -93,6 +99,44 @@
             border-radius: 8px;
             margin-bottom: 4px;
         }
+        
+        .msg-file {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0,0,0,0.05);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 4px;
+        }
+
+        /* Suggestion Chips */
+        .chips-container {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+            margin-top: 5px;
+            scrollbar-width: none; /* Firefox */
+        }
+        .chips-container::-webkit-scrollbar { display: none; } /* Chrome */
+
+        .chip {
+            white-space: nowrap;
+            background: rgba(15, 118, 110, 0.1);
+            color: #0f766e;
+            border: 1px solid rgba(15, 118, 110, 0.2);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .chip:hover {
+            background: #0f766e;
+            color: white;
+        }
 
         /* Typing Indicator */
         .typing-dot {
@@ -128,37 +172,53 @@
         
         <!-- Chat Header -->
         <div class="bg-[#0f766e] text-white px-4 py-3 flex items-center gap-4 shadow-md z-10">
-            <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center border border-white/30">
-                <i class="fa-solid fa-robot text-xl"></i>
+            <div class="w-10 h-10 rounded-full border-2 border-white/30 overflow-hidden bg-white">
+                <img src="img/carousel-1.jpg" alt="Biotech Logo" class="w-full h-full object-cover" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3774/3774299.png'">
             </div>
-            <div>
-                <h1 class="font-bold text-lg leading-tight">Biotech Assistant</h1>
+            <div class="flex-grow">
+                <h1 class="font-bold text-lg leading-tight">Biotech Laboratory</h1>
                 <div class="flex items-center gap-1.5">
                     <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-                    <p class="text-xs text-teal-100">Online | Always Free</p>
+                    <p class="text-xs text-teal-100">Online | 077 352 4143</p>
                 </div>
             </div>
+            <a href="https://wa.me/94773524143" target="_blank" class="w-8 h-8 flex items-center justify-center bg-green-500 rounded-full text-white hover:bg-green-600 transition">
+                <i class="fa-brands fa-whatsapp"></i>
+            </a>
         </div>
 
         <!-- Chat Body (Messages go here) -->
         <div class="chat-body custom-scroll" id="chatBody">
             <!-- Welcome Message -->
             <div class="msg msg-bot">
-                Hello! 👋 I am the Biotech Lab AI Assistant.<br><br>
-                Please <strong>upload a clear photo of your receipt</strong>, and I will find your medical report instantly!
+                Welcome to <strong>Biotech Laboratory!</strong> 🔬<br><br>
+                I can help you:<br>
+                1. 📄 <strong>Download your Report</strong> (Upload receipt or type Sample ID)<br>
+                2. ℹ️ <strong>Answer questions</strong> about our lab.<br><br>
+                How can I assist you today?
+                
+                <!-- Quick Action Chips -->
+                <div class="chips-container">
+                    <button class="chip" onclick="handleChipClick('Where are you located?')">📍 Location</button>
+                    <button class="chip" onclick="handleChipClick('What are your opening hours?')">🕒 Hours</button>
+                    <button class="chip" onclick="handleChipClick('How do I fast for blood test?')">🩸 Fasting Advice</button>
+                    <button class="chip" onclick="handleChipClick('Contact Number')">📞 Contact</button>
+                    <button class="chip" onclick="handleChipClick('Website')">🌐 Website</button>
+                </div>
             </div>
         </div>
 
         <!-- Chat Input Area -->
         <div class="bg-[#f0f2f5] px-4 py-3 flex items-end gap-2 border-t border-slate-200 z-10">
             
-            <label class="w-10 h-10 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-200 transition cursor-pointer flex-shrink-0 mb-1">
+            <label class="w-10 h-10 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-200 transition cursor-pointer flex-shrink-0 mb-1" title="Upload Receipt">
                 <i class="fa-solid fa-paperclip text-xl"></i>
-                <input type="file" id="imageInput" accept="image/*" capture="environment" class="hidden" onchange="handleImageUpload(this)">
+                <!-- ACCEPT IMAGE OR PDF -->
+                <input type="file" id="fileInput" accept="image/*,application/pdf" capture="environment" class="hidden" onchange="handleFileUpload(this)">
             </label>
 
             <div class="flex-grow bg-white rounded-2xl border border-slate-300 overflow-hidden shadow-sm flex items-center px-3 py-2">
-                <input type="text" id="textInput" placeholder="Type ID (e.g. VG78) if scan fails..." class="w-full bg-transparent outline-none text-sm text-slate-700" onkeypress="handleKeyPress(event)">
+                <input type="text" id="textInput" placeholder="Type a question or Sample ID (VG78)..." class="w-full bg-transparent outline-none text-sm text-slate-700" onkeypress="handleKeyPress(event)">
             </div>
 
             <button onclick="sendText()" class="w-10 h-10 rounded-full bg-[#0f766e] hover:bg-[#0d9488] text-white flex items-center justify-center transition shadow-md flex-shrink-0 mb-1">
@@ -175,6 +235,41 @@
         const chatBody = document.getElementById('chatBody');
         const textInput = document.getElementById('textInput');
         const processingCanvas = document.getElementById('processingCanvas');
+        
+        // State for manual ID entry
+        let pendingID = null;
+
+        // --- KNOWLEDGE BASE (FAQs) ---
+        const knowledgeBase = [
+            {
+                keywords: ['location', 'address', 'where', 'place', 'map', 'located'],
+                response: "📍 <strong>Our Location:</strong><br>No 117A, Negombo Road, Veyangoda.<br><br>We are conveniently located to serve you!"
+            },
+            {
+                keywords: ['contact', 'number', 'phone', 'call', 'whatsapp', 'tel', 'mobile'],
+                response: "📞 <strong>Contact Us:</strong><br>Mobile/WhatsApp: <a href='https://wa.me/94773524143' class='text-teal-600 font-bold'>077 352 4143</a><br>Landline: 033 229 1726"
+            },
+            {
+                keywords: ['website', 'site', 'web', 'online', 'link'],
+                response: "🌐 <strong>Visit our Website:</strong><br><a href='https://www.biotechveyangoda.lk' target='_blank' class='text-blue-600 underline font-bold'>www.biotechveyangoda.lk</a>"
+            },
+            {
+                keywords: ['hours', 'time', 'open', 'close', 'when', 'working'],
+                response: "🕒 <strong>Opening Hours:</strong><br>We are generally open daily. Please contact us on WhatsApp (077 352 4143) to confirm holiday hours."
+            },
+            {
+                keywords: ['fasting', 'food', 'eat', 'drink', 'water', 'preparation', 'sugar', 'lipid'],
+                response: "🩸 <strong>Fasting Advice:</strong><br>• <strong>FBS (Sugar) / Lipid Profile:</strong> Please fast for 10-12 hours.<br>• <strong>Water:</strong> You may drink plain water.<br>• <strong>Medication:</strong> Consult your doctor before stopping."
+            },
+            {
+                keywords: ['price', 'cost', 'fee', 'charge', 'amount', 'pay'],
+                response: "💰 <strong>Pricing:</strong><br>Prices vary by test type. Please upload your prescription photo here or send it to our WhatsApp (077 352 4143) for an exact quote."
+            },
+            {
+                keywords: ['services', 'test', 'checkup', 'lab'],
+                response: "🧪 <strong>Our Services:</strong><br>We offer a full range of laboratory tests including Biochemistry (ALP, Calcium, etc.), Hematology, Microbiology, and more."
+            }
+        ];
 
         // --- UI FUNCTIONS ---
 
@@ -185,7 +280,9 @@
             if (type === 'html') {
                 msgDiv.innerHTML = text;
             } else if (type === 'image') {
-                msgDiv.innerHTML = `<img src="${text}" class="msg-img"><br><span class="text-xs opacity-70">Photo uploaded</span>`;
+                msgDiv.innerHTML = `<img src="${text}" class="msg-img"><br><span class="text-xs opacity-70">Image uploaded</span>`;
+            } else if (type === 'file') {
+                msgDiv.innerHTML = `<div class="msg-file"><i class="fa-solid fa-file-pdf text-red-500 text-xl"></i> <span class="font-bold text-sm">Receipt.pdf</span></div><span class="text-xs opacity-70">PDF Uploaded</span>`;
             } else {
                 msgDiv.innerText = text;
             }
@@ -224,6 +321,40 @@
             if (e.key === 'Enter') sendText();
         }
 
+        function handleChipClick(text) {
+            textInput.value = text;
+            sendText();
+        }
+
+        // Expose confirmDate to global scope for the button click
+        window.confirmDate = confirmDate;
+
+        function confirmDate() {
+            const datePicker = document.getElementById('datePicker');
+            if (!datePicker || !pendingID) return;
+            
+            const selectedDate = datePicker.value;
+            if (!selectedDate) {
+                alert("Please select a valid date.");
+                return;
+            }
+
+            // Disable input UI
+            datePicker.disabled = true;
+            datePicker.nextElementSibling.disabled = true;
+
+            const link = generateSecureLink(pendingID.prefix, pendingID.num, selectedDate);
+            
+            const botReply = `
+                Generating report for <strong>${pendingID.prefix}${pendingID.num}</strong> on <strong>${selectedDate}</strong>...<br><br>
+                <a href="${link}" target="_blank" class="block bg-teal-50 text-teal-700 font-bold py-3 px-4 rounded-xl text-center border border-teal-200 hover:bg-teal-100 transition mt-2 shadow-sm">
+                    <i class="fa-solid fa-file-pdf mr-1"></i> Open Report
+                </a>
+            `;
+            appendMessage(botReply, 'bot', 'html');
+            pendingID = null; // Clear state
+        }
+
         function sendText() {
             const text = textInput.value.trim();
             if (!text) return;
@@ -235,61 +366,111 @@
             // 2. Show bot typing
             const typingId = showTyping();
 
-            // 3. Process text (Simple fallback logic)
+            // 3. Process text (Smart Routing)
             setTimeout(() => {
                 removeTyping(typingId);
                 
-                // Very basic regex to see if they typed something like VG78
+                // A. Check for Sample ID Pattern (e.g. VG78, BN100)
                 const manualMatch = text.toUpperCase().match(/(VG|BN|NI|BR|HO)\s*(\d{1,5})/i);
                 
                 if (manualMatch) {
                     const prefix = manualMatch[1].substring(0,2);
                     const num = manualMatch[2];
-                    const dateStr = new Date().toISOString().split('T')[0]; // Assume today if typed manually
                     
-                    const link = generateSecureLink(prefix, num, dateStr);
+                    // Store state
+                    pendingID = { prefix, num };
+
+                    // Prompt for Date using a clean date picker UI
                     const botReply = `
-                        I found an ID! Here is your report link for <strong>${prefix}${num}</strong>:<br><br>
-                        <a href="${link}" target="_blank" class="block bg-teal-50 text-teal-700 font-bold py-2 px-3 rounded-lg text-center border border-teal-200 hover:bg-teal-100 transition mt-2">
-                            <i class="fa-solid fa-file-pdf mr-1"></i> Open Report
-                        </a>
+                        I found Sample ID <strong>${prefix}${num}</strong>.<br>
+                        Please select the date printed on your receipt:
+                        <div class="mt-3 flex gap-2 items-center">
+                            <input type="date" id="datePicker" class="border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none text-slate-700 w-full shadow-sm focus:border-teal-500" value="${new Date().toISOString().split('T')[0]}">
+                            <button onclick="confirmDate()" class="bg-[#0f766e] text-white rounded-lg px-4 py-2 hover:bg-[#0d9488] transition shadow-sm">
+                                <i class="fa-solid fa-check"></i>
+                            </button>
+                        </div>
                     `;
                     appendMessage(botReply, 'bot', 'html');
-                } else {
-                    appendMessage("I couldn't detect a Sample ID. Please upload a clear photo of your receipt, or type your ID (e.g., VG78).", 'bot');
+                    return;
+                } 
+
+                // B. Check Knowledge Base (FAQ)
+                const lowerText = text.toLowerCase();
+                const faqMatch = knowledgeBase.find(item => item.keywords.some(k => lowerText.includes(k)));
+
+                if (faqMatch) {
+                    appendMessage(faqMatch.response, 'bot', 'html');
+                    return;
                 }
-            }, 1000);
+
+                // C. Default Fallback
+                appendMessage("I'm not sure about that. 🤔<br><br>To get your report, please <strong>upload a PDF/Photo of your receipt</strong> or type your Sample ID (e.g., VG78).", 'bot', 'html');
+
+            }, 800);
         }
 
-        function handleImageUpload(input) {
+        function handleFileUpload(input) {
             if (input.files && input.files[0]) {
                 const file = input.files[0];
-                const reader = new FileReader();
-                
-                reader.onload = function(e) {
-                    const imageData = e.target.result;
-                    // Show image in chat
-                    appendMessage(imageData, 'user', 'image');
-                    
-                    // Start processing
+                const fileType = file.type;
+
+                // Handle PDF
+                if (fileType === 'application/pdf') {
+                    appendMessage(file.name, 'user', 'file');
                     const typingId = showTyping();
-                    
-                    const img = new Image();
-                    img.onload = () => {
-                        const processedBase64 = preprocessImage(img);
-                        runOCR(processedBase64, typingId);
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const typedarray = new Uint8Array(e.target.result);
+                        readPDF(typedarray, typingId);
                     };
-                    img.src = imageData;
+                    reader.readAsArrayBuffer(file);
+                } 
+                // Handle Image
+                else if (fileType.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const imageData = e.target.result;
+                        appendMessage(imageData, 'user', 'image');
+                        const typingId = showTyping();
+                        const img = new Image();
+                        img.onload = () => {
+                            const processedBase64 = preprocessImage(img);
+                            runOCR(processedBase64, typingId);
+                        };
+                        img.src = imageData;
+                    }
+                    reader.readAsDataURL(file);
                 }
-                reader.readAsDataURL(file);
                 
-                // Clear input so same file can be uploaded again if needed
                 input.value = '';
             }
         }
 
-        // --- OCR & PREPROCESSING LOGIC (Free Tesseract) ---
+        // --- PDF PROCESSING LOGIC (PDF.js) ---
+        async function readPDF(data, typingId) {
+            try {
+                const pdf = await pdfjsLib.getDocument(data).promise;
+                const page = await pdf.getPage(1); // Only read first page of receipt
+                const textContent = await page.getTextContent();
+                
+                // Combine all text items into one string
+                let extractedText = "";
+                textContent.items.forEach(function (textItem) {
+                    extractedText += textItem.str + " ";
+                });
 
+                console.log("PDF Text:", extractedText);
+                analyzeText(extractedText, typingId);
+
+            } catch (error) {
+                console.error(error);
+                removeTyping(typingId);
+                appendMessage("I couldn't read that PDF. Please try sending a photo instead.", 'bot');
+            }
+        }
+
+        // --- OCR & PREPROCESSING LOGIC (Free Tesseract) ---
         function preprocessImage(img) {
             const ctx = processingCanvas.getContext('2d');
             const ratio = Math.min(2000 / img.width, 1); 
@@ -319,29 +500,37 @@
                     tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/-:.%&abcdefghijklmnopqrstuvwxyz',
                     tessedit_pageseg_mode: '6', 
                 });
-                
                 const { data: { text } } = await worker.recognize(imageDataUrl);
                 await worker.terminate();
-
                 analyzeText(text, typingId);
-
             } catch (error) {
                 console.error(error);
                 removeTyping(typingId);
-                appendMessage("Sorry, an error occurred while scanning the image. Please try again or type your ID.", 'bot');
+                appendMessage("Sorry, I had trouble reading that image. Please try typing your Sample ID (e.g., VG78).", 'bot');
             }
         }
 
+        // --- CORE ANALYSIS LOGIC ---
         function analyzeText(text, typingId) {
             removeTyping(typingId);
-            
             const cleanText = text.toUpperCase().replace(/[\r\n]+/g, " ");
+
+            // --- 1. VERIFY ISSUER (Security Check) ---
+            const biotechCheck = /B[I1L8]O\s*TE[C(]H|LABS/i;
+            const hasBiotech = cleanText.includes("BIOTEC") || cleanText.includes("BIO TECH") || biotechCheck.test(cleanText);
+
+            if (!hasBiotech) {
+                appendMessage("⚠️ <strong>Verification Failed</strong><br>This document does not appear to be issued by <strong>Biotech Laboratory</strong>.<br><br>Please check the document and try again.", 'bot', 'html');
+                return;
+            }
 
             let foundPrefix = "";
             let foundNumber = "";
             let foundDate = "";
 
-            // 1. Check for URL directly
+            // --- 2. EXTRACT DATA ---
+            
+            // Strategy A: URL Detection (Most Accurate)
             const urlPattern = /([A-Z]{2,}\d+)%26(\d{4}-\d{2}-\d{2})/;
             const urlMatch = cleanText.match(urlPattern);
 
@@ -350,7 +539,7 @@
                 foundNumber = urlMatch[1].substring(2);
                 foundDate = urlMatch[2];
             } else {
-                // 2. Standard Body Scan
+                // Strategy B: Text Regex
                 let bodyText = cleanText
                     .replace(/\|/g, "I").replace(/S/g, "5").replace(/O/g, "0")
                     .replace(/V6/g, "VG").replace(/8N/g, "BN").replace(/H0/g, "HO").replace(/N1/g, "NI");
@@ -371,21 +560,20 @@
                 }
             }
 
-            // --- RESPOND ---
+            // --- 3. RESULT ---
             if (foundPrefix && foundNumber) {
                 const link = generateSecureLink(foundPrefix, foundNumber, foundDate);
                 const botReply = `
-                    ✅ <strong>Scan Successful!</strong><br>
-                    ID: ${foundPrefix}${foundNumber}<br>
-                    Date: ${foundDate}<br><br>
-                    Click the button below to view your report:
-                    <a href="${link}" target="_blank" class="block bg-teal-50 text-teal-700 font-bold py-3 px-4 rounded-xl text-center border border-teal-200 hover:bg-teal-100 hover:scale-[1.02] transition-all mt-3 shadow-sm">
+                    ✅ <strong>Verification Successful</strong><br>
+                    Issuer: Biotech Laboratory<br>
+                    ID: ${foundPrefix}${foundNumber} | Date: ${foundDate}<br><br>
+                    <a href="${link}" target="_blank" class="block bg-teal-50 text-teal-700 font-bold py-3 px-4 rounded-xl text-center border border-teal-200 hover:bg-teal-100 transition mt-2 shadow-sm">
                         <i class="fa-solid fa-file-pdf mr-2 text-rose-500"></i> Download Report
                     </a>
                 `;
                 appendMessage(botReply, 'bot', 'html');
             } else {
-                appendMessage("I couldn't read the Sample ID from that photo clearly. 😕 <br><br>Please try taking a closer photo, or just <strong>type your Sample ID</strong> (like VG78) into the chat.", 'bot', 'html');
+                appendMessage("I confirmed this is a Biotech receipt, but I couldn't read the <strong>Sample ID</strong> automatically. Please type it below (e.g., VG78).", 'bot', 'html');
             }
         }
 
