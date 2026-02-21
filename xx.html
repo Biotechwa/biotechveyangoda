@@ -281,8 +281,6 @@
                 welcome: "Hello! 👋 I'm your Biotech Assistant. I'll help you access your laboratory reports instantly.",
                 welcomeBackGen: "Welcome back! 👋 Ready to check another report?",
                 welcomeBack: "Welcome back, <b>{name}</b>! 👋 Ready to check another report?",
-                btnContinue: "Continue Chat",
-                btnNewChat: "Start New Chat",
                 askMethod: "Please upload a photo of your BIOTEC Laboratory bill to begin.",
                 btnUpload: "Upload Bill Photo",
                 askPhone: "Please enter your registered <b>Phone Number</b> to verify your identity:",
@@ -302,8 +300,6 @@
                 welcome: "ආයුබෝවන්! 👋 මම Biotech සහායකයා. ඔබගේ වාර්තා ලබා ගැනීමට මම උදව් කරන්නම්.",
                 welcomeBackGen: "නැවතත් සාදරයෙන් පිළිගනිමු! 👋 අපි ඊළඟ වාර්තාව පරීක්ෂා කරමුද?",
                 welcomeBack: "නැවතත් සාදරයෙන් පිළිගනිමු <b>{name}</b>! 👋 අපි ඊළඟ වාර්තාව පරීක්ෂා කරමුද?",
-                btnContinue: "කතාබහ කරගෙන යන්න",
-                btnNewChat: "අලුත් කතාබහක් පටන්ගන්න",
                 askMethod: "ආරම්භ කිරීමට කරුණාකර ඔබගේ BIOTEC බිල්පතේ ඡායාරූපයක් ලබා දෙන්න.",
                 btnUpload: "බිල්පතේ ඡායාරූපයක් දෙන්න",
                 askPhone: "අනන්‍යතාව තහවුරු කිරීම සඳහා ඔබ ලියාපදිංචි කළ <b>දුරකථන අංකය</b> ඇතුළත් කරන්න:",
@@ -323,8 +319,6 @@
                 welcome: "வணக்கம்! 👋 நான் உங்கள் Biotech உதவியாளர். உங்கள் அறிக்கைகளைப் பெற நான் உதவுகிறேன்.",
                 welcomeBackGen: "மீண்டும் வருக! 👋 அடுத்த அறிக்கையை சரிபார்க்க தயாரா?",
                 welcomeBack: "மீண்டும் வருக <b>{name}</b>! 👋 அடுத்த அறிக்கையை சரிபார்க்க தயாரா?",
-                btnContinue: "அரட்டையை தொடரவும்",
-                btnNewChat: "புதிய அரட்டையைத் தொடங்கவும்",
                 askMethod: "தொடங்க உங்கள் BIOTEC பில்லின் புகைப்படத்தைப் பதிவேற்றவும்.",
                 btnUpload: "பில் புகைப்படம் பதிவேற்றுக",
                 askPhone: "உங்கள் அடையாளத்தை சரிபார்க்க பதிவு செய்யப்பட்ட <b>தொலைபேசி எண்ணை</b> உள்ளிடவும்:",
@@ -399,53 +393,18 @@
                     ? i18n[currentLang].welcomeBack.replace('{name}', savedPatientName) 
                     : i18n[currentLang].welcomeBackGen;
 
-                const promptHtml = `
-                    <div class="mb-2 font-medium text-teal-900">${welcomeBackStr}</div>
-                    <div class="flex flex-col gap-2 mt-3">
-                        <button onclick="resumeChat(false)" class="w-full bg-teal-600 text-white py-3 rounded-xl font-bold transition hover:bg-teal-700 shadow-md">
-                            ${i18n[currentLang].btnContinue} <i class="fa-solid fa-arrow-right ml-1"></i>
-                        </button>
-                        <button onclick="resumeChat(true)" class="w-full bg-white border-2 border-teal-200 text-teal-700 py-3 rounded-xl font-bold transition hover:bg-teal-50 shadow-sm">
-                            ${i18n[currentLang].btnNewChat} <i class="fa-solid fa-broom ml-1"></i>
-                        </button>
-                    </div>
-                `;
-                
-                const promptDiv = document.createElement('div');
-                promptDiv.className = `msg msg-bot temp-prompt`;
-                promptDiv.innerHTML = promptHtml;
-                chatBody.appendChild(promptDiv);
-                scrollToBottom();
-
-            } else {
-                let greetingMsg = i18n[currentLang].welcome;
-                addMessage(greetingMsg, 'bot');
-                setTimeout(() => step0_Method(), 800);
-            }
-        }
-
-        function resumeChat(clearHistory) {
-            const temp = document.querySelector('.temp-prompt');
-            if (temp) temp.remove();
-
-            if (clearHistory) {
-                chatHistory = [];
-                localStorage.removeItem('biotech_chat_history');
-                chatBody.innerHTML = '';
-                
-                let greetingMsg = savedPatientName 
-                    ? i18n[currentLang].welcomeBack.replace('{name}', savedPatientName) 
-                    : i18n[currentLang].welcome;
-                    
-                addMessage(greetingMsg, 'bot');
-                setTimeout(() => step0_Method(), 600);
-            } else {
                 const divider = document.createElement('div');
                 divider.className = "text-center text-teal-600/50 text-xs font-bold my-4 uppercase tracking-widest";
                 divider.innerText = "--- Continued Session ---";
                 chatBody.appendChild(divider);
                 
-                setTimeout(() => step0_Method(), 400);
+                addMessage(welcomeBackStr, 'bot');
+                setTimeout(() => step0_Method(), 800);
+
+            } else {
+                let greetingMsg = i18n[currentLang].welcome;
+                addMessage(greetingMsg, 'bot');
+                setTimeout(() => step0_Method(), 800);
             }
         }
 
