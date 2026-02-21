@@ -463,11 +463,7 @@
                 statusEl.innerHTML = `<i class="fa-solid fa-magnifying-glass fa-beat mr-2"></i> ${i18n[currentLang].scan1}`;
                 const worker = await Tesseract.createWorker('eng');
                 
-                // Restrict allowed characters to improve accuracy drastically
-                await worker.setParameters({
-                    tessedit_char_whitelist: '0123456789ABCDUQDgwqVE-6aMBLYLbQv6i5N5y7bC5SajqSjHPzt8UJUqbZ8a/.-: ',
-                });
-
+                // Read text completely naturally (Removed restrictive whitelist to read labels better)
                 const ret = await worker.recognize(processedBase64);
                 const textStr = ret.data.text.toLowerCase();
                 await worker.terminate();
@@ -480,8 +476,8 @@
                 statusEl.innerHTML = `<i class="fa-solid fa-shield-halved fa-beat mr-2"></i> ${i18n[currentLang].scan3}`;
                 await delay(1200);
                 
-                // Advanced Validation: Look for broader lab terminology
-                const isValidBill = /biotech|veyangoda|laboratory|lab|clinic|report|sample|patient|ref/i.test(textStr);
+                // Advanced Validation: Added 'biotec' (without H) and 'receipt' to pass image check
+                const isValidBill = /biotec|biotech|veyangoda|laboratory|lab|clinic|report|sample|patient|receipt|ref/i.test(textStr);
 
                 if (!isValidBill && textStr.length < 10) { 
                     // Reject only if very little text is found and no keywords are present
@@ -494,53 +490,60 @@
                 statusEl.innerHTML = `<i class="fa-solid fa-check-double text-green-500 mr-2 text-lg"></i> <span class="text-green-600">Scan Complete!</span>`;
                 await delay(1000);
 
-                // --- ADVANCED REGEX PARSING ---
+                // --- ADVANCED STRICT REGEX PARSING (TARGETING BIOTEC LAYOUT) ---
                 
                 let extractedType = 'VG'; // Default fallback
                 let extractedNum = '';
 
-                // 1. Direct Combined Match (e.g. looks exactly for "VG1234", "BN-5678", "NI 1234")
-                const combinedMatch = textStr.match(/\b(vg|bn|ni|br)[\s\:\.\-]*(\d{1,6})\b/i);
+                // 1. Explicit Layout Match: Specifically look for "Sample NO" near "VG/BN/NI/BR"
+                // This ensures it grabs the digits attached to the type, even if it's just 2 digits like "38"
+                const explicitSampleMatch = textStr.match(/sample\s*no[\s\S]{0,20}?(vg|bn|ni|br)[\s\:\.\-]*(\d{1,6})/i);
                 
-                if (combinedMatch) {
-                    extractedType = combinedMatch[1].toUpperCase();
-                    extractedNum = combinedMatch[2];
-                } else {
-                    // 2. Fragmented Match (If OCR split them apart)
-                    const typeMatch = textStr.match(/\b(v[\s\.]*g|b[\s\.]*n|n[\s\.]*i|b[\s\.]*r)\b/i);
-                    if (typeMatch) {
-                        extractedType = typeMatch[1].replace(/[\s\.]/g, '').toUpperCase();
-                    }
+                // 2. Direct Combined Match (Fallback if "Sample NO" text was blurry)
+                const combinedMatch = textStr.match(/(vg|bn|ni|br)[\s\:\.\-]*(\d{1,6})/i);
 
-                    // Look for numbers near keywords like "No", "Ref", "Id"
-                    const contextNumMatch = textStr.match(/(?:no|ref|sample|id|inv)[^\d]{0,8}(\d{1,6})\b/i);
-                    if (contextNumMatch && contextNumMatch[1]) {
-                        extractedNum = contextNumMatch[1];
-                    } else {
-                        // Fallback: Just grab the first prominent 3 to 6 digit sequence found
-                        const generalNumMatch = textStr.match(/(?<!\d)(\d{3,6})(?!\d)/);
-                        extractedNum = generalNumMatch ? generalNumMatch[1] : '';
-                    }
+                if (explicitSampleMatch) {
+                    extractedType = explicitSampleMatch[1].replace(/[\s\.]/g, '').toUpperCase();
+                    extractedNum = explicitSampleMatch[2];
+                } else if (combinedMatch) {
+                    extractedType = combinedMatch[1].replace(/[\s\.]/g, '').toUpperCase();
+                    extractedNum = combinedMatch[2];
                 }
 
                 formData.type = extractedType;
                 formData.num = extractedNum;
 
-                // 3. Date Match (Detect DD/MM/YYYY, YYYY-MM-DD, DD.MM.YY)
-                const dateMatch1 = textStr.match(/\b(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})\b/);
-                const dateMatch2 = textStr.match(/\b(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})\b/);
+                // 3. Date Match (Look explicitly near the word "Date:")
+                let dateStringToParse = '';
+                const explicitDateMatch = textStr.match(/date[\s\:\.]*([\d\/\-\.]{8,10})/i);
                 
-                if (dateMatch1) {
-                    let d = dateMatch1[1].padStart(2, '0');
-                    let m = dateMatch1[2].padStart(2, '0');
-                    let y = dateMatch1[3];
-                    if (y.length === 2) y = "20" + y; // Assume 20xx
-                    formData.date = `${y}-${m}-${d}`;
-                } else if (dateMatch2) {
-                    let y = dateMatch2[1];
-                    let m = dateMatch2[2].padStart(2, '0');
-                    let d = dateMatch2[3].padStart(2, '0');
-                    formData.date = `${y}-${m}-${d}`;
+                if (explicitDateMatch) {
+                    dateStringToParse = explicitDateMatch[1];
+                } else {
+                    const fallbackDateMatch = textStr.match(/\b(\d{1,4}[\/\-\.]\d{1,2}[\/\-\.]\d{1,4})\b/);
+                    if (fallbackDateMatch) dateStringToParse = fallbackDateMatch[1];
+                }
+
+                if (dateStringToParse) {
+                    // Try parsing YYYY-MM-DD format first (Matches "2026-02-21")
+                    const dMatch2 = dateStringToParse.match(/\b(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})\b/);
+                    // Try parsing DD/MM/YYYY format second
+                    const dMatch1 = dateStringToParse.match(/\b(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})\b/);
+                    
+                    if (dMatch2) {
+                        let y = dMatch2[1];
+                        let m = dMatch2[2].padStart(2, '0');
+                        let d = dMatch2[3].padStart(2, '0');
+                        formData.date = `${y}-${m}-${d}`;
+                    } else if (dMatch1) {
+                        let d = dMatch1[1].padStart(2, '0');
+                        let m = dMatch1[2].padStart(2, '0');
+                        let y = dMatch1[3];
+                        if (y.length === 2) y = "20" + y; // Assume 20xx
+                        formData.date = `${y}-${m}-${d}`;
+                    } else {
+                        formData.date = new Date().toISOString().split('T')[0]; // Default to today
+                    }
                 } else {
                     formData.date = new Date().toISOString().split('T')[0]; // Default to today
                 }
