@@ -465,6 +465,12 @@
         }
 
         // --- Memory & History Engine ---
+        
+        // Strip out large base64 images to prevent LocalStorage QuotaExceededError (5MB crash)
+        function sanitizeForHistory(html) {
+            return html.replace(/<img[^>]+>/g, '<div class="p-3 bg-teal-50 border border-teal-200 rounded-lg text-teal-700 text-center text-xs font-bold shadow-inner"><i class="fa-solid fa-file-image text-xl block mb-2 opacity-50"></i> Uploaded Document</div>');
+        }
+
         function addMessage(content, sender) {
             const div = document.createElement('div');
             div.className = `msg msg-${sender}`;
@@ -477,8 +483,8 @@
             chatBody.appendChild(div);
             scrollToBottom();
 
-            // Push to memory array
-            chatHistory.push({ id: msgId, content: content, sender: sender });
+            // Push to memory array (Sanitized to prevent crashes!)
+            chatHistory.push({ id: msgId, content: sanitizeForHistory(content), sender: sender });
             saveHistory();
 
             return div;
@@ -489,16 +495,18 @@
             const msgId = divElement.dataset.msgId;
             const msgIndex = chatHistory.findIndex(m => m.id === msgId);
             if (msgIndex !== -1) {
-                // Update history with finalized HTML state (e.g., after loading dots resolve)
-                chatHistory[msgIndex].content = divElement.innerHTML;
+                chatHistory[msgIndex].content = sanitizeForHistory(divElement.innerHTML);
                 saveHistory();
             }
         }
 
         function saveHistory() {
-            // Keep only the last 30 messages to prevent infinite storage bloat
             if (chatHistory.length > 30) chatHistory = chatHistory.slice(-30);
-            localStorage.setItem('biotech_chat_history', JSON.stringify(chatHistory));
+            try {
+                localStorage.setItem('biotech_chat_history', JSON.stringify(chatHistory));
+            } catch (e) {
+                console.error("Storage memory is full, history ignored.");
+            }
         }
 
         // --- Process Flows ---
@@ -539,11 +547,23 @@
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
-                    canvas.width = img.width * 1.5;
-                    canvas.height = img.height * 1.5;
+                    
+                    // CRITICAL FIX: Scale logic to prevent Mobile Memory Crashes (Don't let it exceed 1500px)
+                    let scale = 1;
+                    const maxDim = 1500;
+                    if (img.width > maxDim || img.height > maxDim) {
+                        scale = Math.min(maxDim / img.width, maxDim / img.height);
+                    } else {
+                        scale = 1.5; // Slight upscale if it's a tiny image
+                    }
+
+                    canvas.width = img.width * scale;
+                    canvas.height = img.height * scale;
+                    
                     ctx.filter = 'grayscale(100%) contrast(250%) brightness(120%)';
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    resolve(canvas.toDataURL('image/jpeg', 1.0));
+                    
+                    resolve(canvas.toDataURL('image/jpeg', 0.8));
                 };
                 img.src = base64Str;
             });
