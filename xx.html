@@ -216,21 +216,21 @@
     <div class="chat-container glass-effect">
         
         <!-- Premium Header -->
-        <div class="bg-gradient-to-r from-teal-600 to-blue-600 p-6 text-center relative overflow-hidden">
+        <div class="bg-gradient-to-r from-teal-600 to-blue-600 p-6 pt-8 pb-6 text-center relative overflow-hidden shrink-0">
             <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 15px 15px;"></div>
             
-            <div class="relative inline-block mb-3">
+            <div class="relative inline-block mb-3 mt-2">
                 <div class="absolute inset-0 bg-white rounded-full opacity-20 animate-pulse-slow"></div>
                 <div class="relative bg-white text-teal-600 w-14 h-14 rounded-full flex items-center justify-center shadow-lg mx-auto animate-float">
                     <i class="fa-solid fa-microscope text-2xl"></i>
                 </div>
             </div>
             
-            <h1 class="text-white font-extrabold text-xl tracking-wide relative z-10">BIOTECH LABORATORY</h1>
-            <p class="text-teal-100 text-[10px] font-medium tracking-widest relative z-10 uppercase">AI Clinical Assistant</p>
+            <h1 class="text-white font-extrabold text-xl tracking-wide relative z-10 drop-shadow-md">BIOTECH LABORATORY</h1>
+            <p class="text-teal-100 text-[10px] font-medium tracking-widest relative z-10 uppercase mt-1">Online Report Portal</p>
             
-            <button onclick="resetLanguage()" class="absolute top-4 right-4 text-white/50 hover:text-white transition group" title="Change Language & History">
-                <i class="fa-solid fa-globe group-hover:rotate-12 transition-transform"></i>
+            <button onclick="resetLanguage()" class="absolute top-4 right-4 text-white/60 hover:text-white transition group z-20 p-2" title="Change Language & History">
+                <i class="fa-solid fa-globe text-lg group-hover:rotate-12 transition-transform"></i>
             </button>
         </div>
 
@@ -240,7 +240,7 @@
         </div>
 
         <!-- Progress Footer -->
-        <div class="p-5 bg-white/50 border-t border-teal-100/50 text-center">
+        <div class="p-4 bg-white/50 border-t border-teal-100/50 text-center shrink-0">
             <div class="flex items-center justify-center gap-2 text-teal-600/60 font-bold text-[10px] tracking-widest uppercase">
                 <i class="fa-solid fa-shield-halved"></i>
                 End-to-End Encrypted Portal
@@ -697,7 +697,8 @@
 
                 // 4. Patient Name Extraction
                 let patientName = '';
-                const nameMatch = textStr.match(/patient[\s\:\.]+([a-z\.\s]{3,40}?)(?=\s+age|\n|\s+\d)/i);
+                // Improved Regex: specifically targets "Patient:" and ignores the "Patient Receipt" header
+                const nameMatch = textStr.match(/patient\s*[:\-]?\s+(?!receipt\b)([a-z\.\s]{3,40}?)(?=\s+age|\s+vg|\s+bn|\s+ni|\s+br|\s+sample|\n|\s+\d)/i);
                 
                 if (nameMatch && nameMatch[1]) {
                     patientName = nameMatch[1].replace(/[\n\r]/g, ' ').trim().replace(/\b\w/g, c => c.toUpperCase());
