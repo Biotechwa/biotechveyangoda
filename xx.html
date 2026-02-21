@@ -404,8 +404,8 @@
                     canvas.width = img.width * 1.5;
                     canvas.height = img.height * 1.5;
                     
-                    // Apply CSS filters to canvas (Grayscale & high contrast)
-                    ctx.filter = 'grayscale(100%) contrast(160%) brightness(110%)';
+                    // Aggressive CSS filters to remove shadows and enhance text contrast
+                    ctx.filter = 'grayscale(100%) contrast(250%) brightness(120%)';
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                     
                     resolve(canvas.toDataURL('image/jpeg', 1.0));
@@ -463,6 +463,11 @@
                 statusEl.innerHTML = `<i class="fa-solid fa-magnifying-glass fa-beat mr-2"></i> ${i18n[currentLang].scan1}`;
                 const worker = await Tesseract.createWorker('eng');
                 
+                // Restrict allowed characters to improve accuracy drastically
+                await worker.setParameters({
+                    tessedit_char_whitelist: '0123456789ABCDUQDgwqVE-6aMBLYLbQv6i5N5y7bC5SajqSjHPzt8UJUqbZ8a/.-: ',
+                });
+
                 const ret = await worker.recognize(processedBase64);
                 const textStr = ret.data.text.toLowerCase();
                 await worker.terminate();
@@ -491,29 +496,51 @@
 
                 // --- ADVANCED REGEX PARSING ---
                 
-                // 1. Type Match (More flexible, allowing spaces/dots like V.G or V G)
-                const typeMatch = textStr.match(/\b(v[\s\.]*g|b[\s\.]*n|n[\s\.]*i|b[\s\.]*r)\b/i);
-                formData.type = typeMatch ? typeMatch[1].replace(/[\s\.]/g, '').toUpperCase() : 'VG'; // Default to VG if fuzzy
+                let extractedType = 'VG'; // Default fallback
+                let extractedNum = '';
 
-                // 2. Number Match (Looking for 4 digits, preferably near keywords)
-                // First try to find 4 digits near words like "No", "Ref", "Sample"
-                const contextNumMatch = textStr.match(/(?:no|ref|sample|id)[^\d]{0,5}(\d{4})/i);
-                if (contextNumMatch && contextNumMatch[1]) {
-                    formData.num = contextNumMatch[1];
+                // 1. Direct Combined Match (e.g. looks exactly for "VG1234", "BN-5678", "NI 1234")
+                const combinedMatch = textStr.match(/\b(vg|bn|ni|br)[\s\:\.\-]*(\d{1,6})\b/i);
+                
+                if (combinedMatch) {
+                    extractedType = combinedMatch[1].toUpperCase();
+                    extractedNum = combinedMatch[2];
                 } else {
-                    // Fallback: Find any 4 digit sequence
-                    const generalNumMatch = textStr.match(/\b\d{4}\b/);
-                    formData.num = generalNumMatch ? generalNumMatch[0] : '';
+                    // 2. Fragmented Match (If OCR split them apart)
+                    const typeMatch = textStr.match(/\b(v[\s\.]*g|b[\s\.]*n|n[\s\.]*i|b[\s\.]*r)\b/i);
+                    if (typeMatch) {
+                        extractedType = typeMatch[1].replace(/[\s\.]/g, '').toUpperCase();
+                    }
+
+                    // Look for numbers near keywords like "No", "Ref", "Id"
+                    const contextNumMatch = textStr.match(/(?:no|ref|sample|id|inv)[^\d]{0,8}(\d{1,6})\b/i);
+                    if (contextNumMatch && contextNumMatch[1]) {
+                        extractedNum = contextNumMatch[1];
+                    } else {
+                        // Fallback: Just grab the first prominent 3 to 6 digit sequence found
+                        const generalNumMatch = textStr.match(/(?<!\d)(\d{3,6})(?!\d)/);
+                        extractedNum = generalNumMatch ? generalNumMatch[1] : '';
+                    }
                 }
 
-                // 3. Date Match (Detect DD/MM/YYYY or YYYY-MM-DD or DD.MM.YY)
-                const dateMatch = textStr.match(/\b(\d{1,4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,4})\b/);
-                if (dateMatch) {
-                    // Simple heuristic to format to YYYY-MM-DD for the HTML input
-                    let p1 = dateMatch[1], p2 = dateMatch[2], p3 = dateMatch[3];
-                    if (p1.length === 4) formData.date = `${p1}-${p2.padStart(2,'0')}-${p3.padStart(2,'0')}`;
-                    else if (p3.length === 4) formData.date = `${p3}-${p2.padStart(2,'0')}-${p1.padStart(2,'0')}`;
-                    else formData.date = `20${p3.padStart(2,'0')}-${p2.padStart(2,'0')}-${p1.padStart(2,'0')}`; // Assume YY at end
+                formData.type = extractedType;
+                formData.num = extractedNum;
+
+                // 3. Date Match (Detect DD/MM/YYYY, YYYY-MM-DD, DD.MM.YY)
+                const dateMatch1 = textStr.match(/\b(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})\b/);
+                const dateMatch2 = textStr.match(/\b(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})\b/);
+                
+                if (dateMatch1) {
+                    let d = dateMatch1[1].padStart(2, '0');
+                    let m = dateMatch1[2].padStart(2, '0');
+                    let y = dateMatch1[3];
+                    if (y.length === 2) y = "20" + y; // Assume 20xx
+                    formData.date = `${y}-${m}-${d}`;
+                } else if (dateMatch2) {
+                    let y = dateMatch2[1];
+                    let m = dateMatch2[2].padStart(2, '0');
+                    let d = dateMatch2[3].padStart(2, '0');
+                    formData.date = `${y}-${m}-${d}`;
                 } else {
                     formData.date = new Date().toISOString().split('T')[0]; // Default to today
                 }
@@ -535,7 +562,7 @@
                         </div>
                         
                         <div>
-                            <label class="text-[11px] text-teal-600 font-bold uppercase tracking-wider">Sample Number (4 Digits)</label>
+                            <label class="text-[11px] text-teal-600 font-bold uppercase tracking-wider">Sample Number</label>
                             <input type="number" id="edit_num_${editFormId}" value="${formData.num}" class="custom-input !py-2 !bg-white mt-1" placeholder="0000">
                         </div>
                         
