@@ -228,7 +228,7 @@
             <h1 class="text-white font-extrabold text-xl tracking-wide relative z-10">BIOTECH LABORATORY</h1>
             <p class="text-teal-100 text-[10px] font-medium tracking-widest relative z-10 uppercase">AI Clinical Assistant</p>
             
-            <button onclick="resetLanguage()" class="absolute top-4 right-4 text-white/50 hover:text-white transition group" title="Change Language">
+            <button onclick="resetLanguage()" class="absolute top-4 right-4 text-white/50 hover:text-white transition group" title="Change Language & History">
                 <i class="fa-solid fa-globe group-hover:rotate-12 transition-transform"></i>
             </button>
         </div>
@@ -269,11 +269,16 @@
         const scriptURL = 'https://script.google.com/macros/s/AKfycbw24C_gOzLbDjR3Y7wbo8uH087cDIq2xTi13qGvm4e4m2bOEalZUufo7tq8SFQVXLm-/exec';
         
         let currentLang = 'en';
-        let formData = { type: '', num: '', date: '', phone: '' };
+        let formData = { type: '', num: '', date: '', phone: '', patientName: '' };
+
+        // Persistent Memory State
+        let chatHistory = JSON.parse(localStorage.getItem('biotech_chat_history')) || [];
+        let savedPatientName = localStorage.getItem('biotech_patient_name') || '';
 
         const i18n = {
             en: {
                 welcome: "Hello! 👋 I'm your Biotech Assistant. I'll help you access your laboratory reports instantly.",
+                welcomeBack: "Welcome back, <b>{name}</b>! 👋 Ready to check another report?",
                 askMethod: "How would you like to provide your details?",
                 btnManual: "Enter Manually",
                 btnUpload: "Upload Bill Photo",
@@ -282,12 +287,11 @@
                 askDate: "When was this sample collected?",
                 askPhone: "Finally, enter your registered <b>Phone Number</b>:",
                 phoneError: "⚠️ That doesn't look like a valid number. Please ensure it has <b>exactly 10 digits</b> and <b>starts with 0</b> (e.g., 0712345678).",
-                scanEnhance: "Enhancing AI Image clarity...",
-                scan1: "First Pass: AI Text Recognition...",
-                scan2: "Double Checking: Extracting Sample Data...",
-                scan3: "Triple Checking: Verifying Biotech credentials...",
-                reviewMsg: "Extraction Complete! Please review and edit if necessary:",
-                rejectMsg: "⚠️ Verification Failed. We couldn't detect a valid laboratory bill. Please upload a clear photo or enter manually.",
+                greeting: "Hello, <b>{name}</b>! 👋 I've found your details.",
+                reviewMsg: "Extraction Complete! Are these details correct?",
+                btnYes: "Yes, Proceed",
+                btnRetake: "No, Retake Photo",
+                rejectMsg: "⚠️ Verification Failed. This does not appear to be a valid BIOTEC Laboratory bill. Please upload a clear photo or enter details manually.",
                 btnConfirm: "Confirm Details",
                 fetching: "Verifying credentials and fetching report...",
                 ready: "Secure link generated! Redirecting...",
@@ -295,6 +299,7 @@
             },
             si: {
                 welcome: "ආයුබෝවන්! 👋 මම Biotech සහායකයා. ඔබගේ වාර්තා ලබා ගැනීමට මම උදව් කරන්නම්.",
+                welcomeBack: "නැවතත් සාදරයෙන් පිළිගනිමු <b>{name}</b>! 👋 අපි ඊළඟ වාර්තාව පරීක්ෂා කරමුද?",
                 askMethod: "ඔබගේ විස්තර ලබා දෙන්නේ කෙසේද?",
                 btnManual: "අතින් ඇතුළත් කරන්න",
                 btnUpload: "බිල්පතේ ඡායාරූපයක් දෙන්න",
@@ -303,12 +308,11 @@
                 askDate: "සාම්පලය ලබාගත් <b>දිනය</b> තෝරන්න:",
                 askPhone: "අවසාන වශයෙන්, ඔබ ලියාපදිංචි කළ <b>දුරකථන අංකය</b> ඇතුළත් කරන්න:",
                 phoneError: "⚠️ ඇතුළත් කළ අංකය වැරදියි. කරුණාකර එය <b>බින්දුවෙන් (0) ආරම්භ වන</b> ඉලක්කම් 10 ක අංකයක් බව තහවුරු කරගන්න.",
-                scanEnhance: "රූපය පැහැදිලි කරමින්...",
-                scan1: "පළමු පරීක්ෂාව: අකුරු හඳුනා ගනිමින්...",
-                scan2: "දෙවන පරීක්ෂාව: දත්ත විශ්ලේෂණය කරමින්...",
-                scan3: "තුන්වන පරීක්ෂාව: ආයතනය තහවුරු කරමින්...",
-                reviewMsg: "සාර්ථකයි! කරුණාකර පහත විස්තර පරීක්ෂා කර අවශ්‍ය නම් වෙනස් කරන්න:",
-                rejectMsg: "⚠️ මෙය වලංගු බිල්පතක් නොවන බව පෙනේ. කරුණාකර පැහැදිලි ඡායාරූපයක් ලබා දෙන්න.",
+                greeting: "ආයුබෝවන් <b>{name}</b>! 👋 මම ඔබේ විස්තර හඳුනා ගත්තා.",
+                reviewMsg: "සාර්ථකයි! මෙම විස්තර නිවැරදිද?",
+                btnYes: "ඔව්, ඉදිරියට යන්න",
+                btnRetake: "නැහැ, නැවත ඡායාරූපයක් ගන්න",
+                rejectMsg: "⚠️ මෙය වලංගු BIOTEC බිල්පතක් නොවන බව පෙනේ. කරුණාකර පැහැදිලි ඡායාරූපයක් ලබා දෙන්න හෝ අතින් ඇතුළත් කරන්න.",
                 btnConfirm: "තහවුරු කරන්න",
                 fetching: "දත්ත පරීක්ෂා කරමින් පවතී...",
                 ready: "වාර්තාව සූදානම්! විවෘත වෙමින් පවතී...",
@@ -316,6 +320,7 @@
             },
             ta: {
                 welcome: "வணக்கம்! 👋 நான் உங்கள் Biotech உதவியாளர். உங்கள் அறிக்கைகளைப் பெற நான் உதவுகிறேன்.",
+                welcomeBack: "மீண்டும் வருக <b>{name}</b>! 👋 அடுத்த அறிக்கையை சரிபார்க்க தயாரா?",
                 askMethod: "உங்கள் விவரங்களை எவ்வாறு வழங்க விரும்புகிறீர்கள்?",
                 btnManual: "கைமுறையாக உள்ளிடுக",
                 btnUpload: "பில் புகைப்படம் பதிவேற்றுக",
@@ -324,12 +329,11 @@
                 askDate: "மாதிரி எடுக்கப்பட்ட <b>தேதி</b>யைத் தேர்ந்தெடுக்கவும்:",
                 askPhone: "இறுதியாக, உங்கள் <b>தொலைபேசி எண்</b>ணை உள்ளிடவும்:",
                 phoneError: "⚠️ உள்ளிட்ட எண் தவறானது. அது <b>0 இல் ஆரம்பித்து</b> சரியாக 10 இலக்கங்களைக் கொண்டிருப்பதை உறுதிப்படுத்தவும்.",
-                scanEnhance: "படத்தின் தெளிவை மேம்படுத்துகிறது...",
-                scan1: "முதல் முறை: உரை அங்கீகாரம்...",
-                scan2: "இரண்டாம் முறை: தரவு பகுப்பாய்வு...",
-                scan3: "மூன்றாம் முறை: நிறுவனம் உறுதிப்படுத்துகிறது...",
-                reviewMsg: "வெற்றி! தயவுசெய்து சரிபார்த்து, தேவைப்பட்டால் திருத்தவும்:",
-                rejectMsg: "⚠️ இது செல்லுபடியான பில் இல்லை எனத் தோன்றுகிறது. தெளிவான புகைப்படத்தை பதிவேற்றவும்.",
+                greeting: "வணக்கம் <b>{name}</b>! 👋 உங்கள் விவரங்களை கண்டறிந்துள்ளேன்.",
+                reviewMsg: "வெற்றி! இந்த விவரங்கள் சரியானவையா?",
+                btnYes: "ஆம், தொடர்க",
+                btnRetake: "இல்லை, மீண்டும் படம் எடுக்கவும்",
+                rejectMsg: "⚠️ இது செல்லுபடியான BIOTEC பில் இல்லை எனத் தோன்றுகிறது. தெளிவான புகைப்படத்தை பதிவேற்றவும் அல்லது கைமுறையாக உள்ளிடவும்.",
                 btnConfirm: "உறுதிப்படுத்தவும்",
                 fetching: "தரவுகளைத் தேடுகிறது...",
                 ready: "அறிக்கை தயார்! திறக்கப்படுகிறது...",
@@ -355,15 +359,91 @@
 
         function resetLanguage() {
             localStorage.removeItem('biotech_assistant_lang');
+            localStorage.removeItem('biotech_chat_history'); // Clear history on language switch
             location.reload();
         }
 
         function initApp(lang) {
             currentLang = lang;
             document.getElementById('langModal').classList.add('hidden');
-            addMessage(i18n[currentLang].welcome, 'bot');
+
+            // Render Past History if it exists
+            if (chatHistory.length > 0) {
+                chatHistory.forEach(msg => {
+                    const div = document.createElement('div');
+                    div.className = `msg msg-${msg.sender}`;
+                    div.dataset.msgId = msg.id; 
+                    div.innerHTML = msg.content;
+                    chatBody.appendChild(div);
+                });
+
+                // Disable all historical interactive elements so they can't be clicked
+                const oldElements = chatBody.querySelectorAll('.option-btn, input, button, select, label');
+                oldElements.forEach(el => {
+                    el.removeAttribute('onclick');
+                    el.removeAttribute('for');
+                    el.classList.add('opacity-60', 'pointer-events-none');
+                    if (el.tagName === 'INPUT' || el.tagName === 'SELECT') {
+                        el.disabled = true;
+                    }
+                });
+
+                chatBody.scrollTop = chatBody.scrollHeight;
+
+                // Add Session Divider
+                const divider = document.createElement('div');
+                divider.className = "text-center text-teal-600/50 text-xs font-bold my-4 uppercase tracking-widest";
+                divider.innerText = "--- New Session ---";
+                chatBody.appendChild(divider);
+            }
+
+            // Greet User
+            let greetingMsg = i18n[currentLang].welcome;
+            if (savedPatientName) {
+                greetingMsg = i18n[currentLang].welcomeBack.replace('{name}', savedPatientName);
+            }
+
+            addMessage(greetingMsg, 'bot');
             setTimeout(() => step0_Method(), 800);
         }
+
+        // --- Memory & History Engine ---
+        function addMessage(content, sender) {
+            const div = document.createElement('div');
+            div.className = `msg msg-${sender}`;
+            div.innerHTML = content;
+            
+            // Unique ID to keep track for live UI updates
+            const msgId = 'msg_' + Date.now() + Math.floor(Math.random() * 1000);
+            div.dataset.msgId = msgId;
+
+            chatBody.appendChild(div);
+            chatBody.scrollTop = chatBody.scrollHeight;
+
+            // Push to memory array
+            chatHistory.push({ id: msgId, content: content, sender: sender });
+            saveHistory();
+
+            return div;
+        }
+
+        function updateMessageHistory(divElement) {
+            const msgId = divElement.dataset.msgId;
+            const msgIndex = chatHistory.findIndex(m => m.id === msgId);
+            if (msgIndex !== -1) {
+                // Update history with finalized HTML state (e.g., after loading dots resolve)
+                chatHistory[msgIndex].content = divElement.innerHTML;
+                saveHistory();
+            }
+        }
+
+        function saveHistory() {
+            // Keep only the last 30 messages to prevent infinite storage bloat
+            if (chatHistory.length > 30) chatHistory = chatHistory.slice(-30);
+            localStorage.setItem('biotech_chat_history', JSON.stringify(chatHistory));
+        }
+
+        // --- Process Flows ---
 
         function step0_Method() {
             const html = `
@@ -392,22 +472,16 @@
             }
         }
 
-        // Advanced AI Image Preprocessor for OCR accuracy
         function preprocessImage(base64Str) {
             return new Promise((resolve) => {
                 const img = new Image();
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
-                    
-                    // Scale up by 1.5x for better Tesseract reading
                     canvas.width = img.width * 1.5;
                     canvas.height = img.height * 1.5;
-                    
-                    // Aggressive CSS filters to remove shadows and enhance text contrast
                     ctx.filter = 'grayscale(100%) contrast(250%) brightness(120%)';
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    
                     resolve(canvas.toDataURL('image/jpeg', 1.0));
                 };
                 img.src = base64Str;
@@ -433,6 +507,7 @@
                 startScanningAnimation(base64Img);
             };
             reader.readAsDataURL(file);
+            event.target.value = ''; // Allow re-upload of same file
         }
 
         async function startScanningAnimation(originalBase64Img) {
@@ -450,56 +525,43 @@
                     </div>
                 </div>
             `;
-            addMessage(html, 'bot');
+            
+            const scanMsgDiv = addMessage(html, 'bot');
             const statusEl = document.getElementById(textStatusId);
 
             try {
-                // Phase 0: Image Enhancement
-                statusEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles fa-beat mr-2"></i> ${i18n[currentLang].scanEnhance}`;
                 const processedBase64 = await preprocessImage(originalBase64Img);
-                await delay(800);
-
-                // Phase 1: Initialize Tesseract & Scan
-                statusEl.innerHTML = `<i class="fa-solid fa-magnifying-glass fa-beat mr-2"></i> ${i18n[currentLang].scan1}`;
-                const worker = await Tesseract.createWorker('eng');
                 
-                // Read text completely naturally (Removed restrictive whitelist to read labels better)
+                const worker = await Tesseract.createWorker('eng');
                 const ret = await worker.recognize(processedBase64);
                 const textStr = ret.data.text.toLowerCase();
                 await worker.terminate();
 
-                // Phase 2: AI Data Extraction
-                statusEl.innerHTML = `<i class="fa-solid fa-microchip fa-beat mr-2"></i> ${i18n[currentLang].scan2}`;
-                await delay(1000);
-
-                // Phase 3: Triple Check (Validation)
-                statusEl.innerHTML = `<i class="fa-solid fa-shield-halved fa-beat mr-2"></i> ${i18n[currentLang].scan3}`;
-                await delay(1200);
+                await delay(2000); 
                 
-                // Advanced Validation: Added 'biotec' (without H) and 'receipt' to pass image check
-                const isValidBill = /biotec|biotech|veyangoda|laboratory|lab|clinic|report|sample|patient|receipt|ref/i.test(textStr);
+                const isBiotec = /biotec|biotech/i.test(textStr);
+                const isVeyangodaLab = /veyangoda/i.test(textStr) && /lab|laboratory/i.test(textStr);
+                const isPatientReceipt = /patient\s*receipt/i.test(textStr);
+                
+                const isValidBill = isBiotec || isVeyangodaLab || isPatientReceipt;
 
-                if (!isValidBill && textStr.length < 10) { 
-                    // Reject only if very little text is found and no keywords are present
+                if (!isValidBill) { 
                     statusEl.innerHTML = `<i class="fa-solid fa-circle-xmark text-red-500 mr-2 text-lg"></i> <span class="text-red-600">Verification Failed</span>`;
+                    updateMessageHistory(scanMsgDiv);
+                    
                     addMessage(i18n[currentLang].rejectMsg, 'bot');
                     setTimeout(() => step0_Method(), 3500); 
                     return;
                 }
 
                 statusEl.innerHTML = `<i class="fa-solid fa-check-double text-green-500 mr-2 text-lg"></i> <span class="text-green-600">Scan Complete!</span>`;
-                await delay(1000);
+                updateMessageHistory(scanMsgDiv); // Save completed scan state
+                await delay(800);
 
-                // --- ADVANCED STRICT REGEX PARSING (TARGETING BIOTEC LAYOUT) ---
-                
-                let extractedType = 'VG'; // Default fallback
+                let extractedType = 'VG'; 
                 let extractedNum = '';
 
-                // 1. Explicit Layout Match: Specifically look for "Sample NO" near "VG/BN/NI/BR"
-                // This ensures it grabs the digits attached to the type, even if it's just 2 digits like "38"
                 const explicitSampleMatch = textStr.match(/sample\s*no[\s\S]{0,20}?(vg|bn|ni|br)[\s\:\.\-]*(\d{1,6})/i);
-                
-                // 2. Direct Combined Match (Fallback if "Sample NO" text was blurry)
                 const combinedMatch = textStr.match(/(vg|bn|ni|br)[\s\:\.\-]*(\d{1,6})/i);
 
                 if (explicitSampleMatch) {
@@ -513,7 +575,6 @@
                 formData.type = extractedType;
                 formData.num = extractedNum;
 
-                // 3. Date Match (Look explicitly near the word "Date:")
                 let dateStringToParse = '';
                 const explicitDateMatch = textStr.match(/date[\s\:\.]*([\d\/\-\.]{8,10})/i);
                 
@@ -525,9 +586,7 @@
                 }
 
                 if (dateStringToParse) {
-                    // Try parsing YYYY-MM-DD format first (Matches "2026-02-21")
                     const dMatch2 = dateStringToParse.match(/\b(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})\b/);
-                    // Try parsing DD/MM/YYYY format second
                     const dMatch1 = dateStringToParse.match(/\b(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})\b/);
                     
                     if (dMatch2) {
@@ -539,20 +598,45 @@
                         let d = dMatch1[1].padStart(2, '0');
                         let m = dMatch1[2].padStart(2, '0');
                         let y = dMatch1[3];
-                        if (y.length === 2) y = "20" + y; // Assume 20xx
+                        if (y.length === 2) y = "20" + y; 
                         formData.date = `${y}-${m}-${d}`;
                     } else {
-                        formData.date = new Date().toISOString().split('T')[0]; // Default to today
+                        formData.date = new Date().toISOString().split('T')[0]; 
                     }
                 } else {
-                    formData.date = new Date().toISOString().split('T')[0]; // Default to today
+                    formData.date = new Date().toISOString().split('T')[0];
                 }
 
-                // Render Edit UI
+                // 4. Patient Name Extraction
+                let patientName = '';
+                const nameMatch = textStr.match(/patient[\s\:\.]+([a-z\.\s]{3,40}?)(?=\s+age|\n|\s+\d)/i);
+                
+                if (nameMatch && nameMatch[1]) {
+                    patientName = nameMatch[1].replace(/[\n\r]/g, ' ').trim().replace(/\b\w/g, c => c.toUpperCase());
+                    formData.patientName = patientName;
+                    
+                    // SAVE PATIENT NAME TO LOCAL STORAGE SECURELY
+                    savedPatientName = patientName;
+                    localStorage.setItem('biotech_patient_name', savedPatientName);
+                }
+
                 const editFormId = 'edit_' + Date.now();
+                let greetingHtml = '';
+                
+                if (patientName) {
+                    const localizedGreeting = i18n[currentLang].greeting.replace('{name}', patientName);
+                    greetingHtml = `
+                        <div class="mb-3 text-teal-800 font-medium border-b border-teal-100 pb-3">
+                            <i class="fa-solid fa-user-check mr-2 text-teal-600"></i> ${localizedGreeting}
+                        </div>
+                    `;
+                }
+
                 addMessage(`
-                    <p class="mb-3 font-medium text-teal-900">${i18n[currentLang].reviewMsg}</p>
                     <div id="${editFormId}" class="bg-teal-50/80 p-4 rounded-xl border border-teal-200 text-[15px] flex flex-col gap-3 shadow-sm">
+                        
+                        ${greetingHtml}
+                        <p class="font-medium text-teal-900 mb-1">${i18n[currentLang].reviewMsg}</p>
                         
                         <div>
                             <label class="text-[11px] text-teal-600 font-bold uppercase tracking-wider">Sample Type</label>
@@ -574,18 +658,33 @@
                             <input type="date" id="edit_date_${editFormId}" value="${formData.date}" class="custom-input !py-2 !bg-white mt-1">
                         </div>
                         
-                        <button onclick="confirmEdits('${editFormId}')" class="mt-2 bg-teal-600 text-white py-3 rounded-xl font-bold transition hover:bg-teal-700 shadow-md">
-                            ${i18n[currentLang].btnConfirm} <i class="fa-solid fa-check ml-1"></i>
-                        </button>
+                        <div class="flex flex-col gap-2 mt-2">
+                            <button onclick="confirmEdits('${editFormId}')" class="w-full bg-teal-600 text-white py-3 rounded-xl font-bold transition hover:bg-teal-700 shadow-md">
+                                ${i18n[currentLang].btnYes} <i class="fa-solid fa-check ml-1"></i>
+                            </button>
+                            <button onclick="retakePhoto('${editFormId}')" class="w-full bg-white border-2 border-teal-200 text-teal-700 py-3 rounded-xl font-bold transition hover:bg-teal-50 shadow-sm">
+                                ${i18n[currentLang].btnRetake} <i class="fa-solid fa-camera ml-1"></i>
+                            </button>
+                        </div>
                     </div>
                 `, 'bot');
 
             } catch (error) {
                 console.error("OCR Error:", error);
                 statusEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-amber-500 mr-2"></i> Scan Error`;
+                updateMessageHistory(scanMsgDiv);
+                
                 addMessage("An error occurred during scanning. Let's try manual entry instead.", 'bot');
                 setTimeout(() => step0_Method(), 2000);
             }
+        }
+
+        function retakePhoto(formId) {
+            const container = document.getElementById(formId);
+            container.classList.add('opacity-50', 'pointer-events-none');
+            updateMessageHistory(container.closest('.msg')); // Lock the form in history
+            
+            document.getElementById('billUpload').click();
         }
 
         function confirmEdits(formId) {
@@ -604,14 +703,15 @@
             formData.num = numInput.value;
             formData.date = dateInput.value;
 
-            // Lock the form
             typeInput.disabled = true;
             numInput.disabled = true;
             dateInput.disabled = true;
             container.classList.add('opacity-70');
-            container.querySelector('button').remove(); 
+            container.querySelector('.flex.flex-col.gap-2.mt-2').remove(); 
+            
+            // Crucial: Update the DOM history state after the buttons are removed
+            updateMessageHistory(container.closest('.msg'));
 
-            // Proceed to phone step
             setTimeout(() => step4_Phone(), 400);
         }
 
@@ -658,6 +758,11 @@
             if(!input.value) return;
             formData.num = input.value;
             input.disabled = true;
+            
+            // Sync final input state to memory
+            const wrapperDiv = input.closest('.msg');
+            if(wrapperDiv) updateMessageHistory(wrapperDiv);
+
             addMessage(input.value, 'user');
             setTimeout(() => step3_Date(), 600);
         }
@@ -681,6 +786,10 @@
             const input = document.getElementById(id);
             formData.date = input.value;
             input.disabled = true;
+            
+            const wrapperDiv = input.closest('.msg');
+            if(wrapperDiv) updateMessageHistory(wrapperDiv);
+
             addMessage(input.value, 'user');
             setTimeout(() => step4_Phone(), 600);
         }
@@ -706,7 +815,6 @@
             const input = document.getElementById(id);
             const phone = input.value.trim();
             
-            // Validation
             const isValid = /^0\d{9}$/.test(phone);
             
             if (!isValid) {
@@ -719,15 +827,18 @@
             input.classList.remove('input-error');
             formData.phone = phone;
             input.disabled = true;
+            
+            const wrapperDiv = input.closest('.msg');
+            if(wrapperDiv) updateMessageHistory(wrapperDiv);
+
             addMessage(phone, 'user');
             
             showLoadingFlow();
         }
 
         async function showLoadingFlow() {
-            const loadingMsg = addMessage(`<div class="typing-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`, 'bot');
+            const loadingMsgDiv = addMessage(`<div class="typing-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`, 'bot');
             
-            // Prepare data for Google Sheet
             const params = new URLSearchParams({
                 type: formData.type,
                 sampleNumber: formData.num,
@@ -737,17 +848,18 @@
                 timestamp: new Date().toLocaleString()
             });
 
-            // Fire and forget data to Google Sheet
             fetch(`${scriptURL}?${params.toString()}`, {
                 method: 'GET',
                 mode: 'no-cors'
             }).catch(err => console.log("Logging suppressed or failed", err));
 
             setTimeout(() => {
-                loadingMsg.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2 text-teal-600"></i> ${i18n[currentLang].fetching}`;
+                loadingMsgDiv.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2 text-teal-600"></i> ${i18n[currentLang].fetching}`;
+                updateMessageHistory(loadingMsgDiv);
                 
                 setTimeout(() => {
-                    loadingMsg.innerHTML = `<i class="fa-solid fa-circle-check text-green-500 mr-2"></i> ${i18n[currentLang].ready}`;
+                    loadingMsgDiv.innerHTML = `<i class="fa-solid fa-circle-check text-green-500 mr-2"></i> ${i18n[currentLang].ready}`;
+                    updateMessageHistory(loadingMsgDiv);
                     
                     const patientId = formData.type + formData.num;
                     const expiry = new Date().getTime() + (14 * 24 * 60 * 60 * 1000);
@@ -760,15 +872,6 @@
 
                 }, 2000);
             }, 1200);
-        }
-
-        function addMessage(content, sender) {
-            const div = document.createElement('div');
-            div.className = `msg msg-${sender}`;
-            div.innerHTML = content;
-            chatBody.appendChild(div);
-            chatBody.scrollTop = chatBody.scrollHeight;
-            return div;
         }
     </script>
 </body>
