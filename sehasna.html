@@ -3,178 +3,282 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Will You Be My Valentine?</title>
-    <!-- Tailwind CSS for styling -->
+    <title>For Damsandi</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts - Dancing Script (Romantic) and Poppins (Clean) -->
-    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
             font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            scroll-behavior: smooth;
+            background-color: #fff5f7;
+        }
+        .cursive {
+            font-family: 'Dancing Script', cursive;
+        }
+        .heart-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
             overflow: hidden;
         }
-        
-        .romantic-bg {
-            background: linear-gradient(to bottom right, #ffdde1, #ee9ca7);
-            min-height: 100vh;
-        }
-
-        h1 {
-            font-family: 'Dancing Script', cursive;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-            font-weight: 700;
-        }
-
-        .btn-transition {
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        }
-
-        /* Floating Hearts Animation */
-        .heart {
+        .floating-heart {
             position: absolute;
-            color: #ff4b4b;
-            animation: float 4s ease-in infinite;
-            opacity: 0;
-            z-index: 0;
+            color: #ffb6c1;
+            opacity: 0.6;
+            animation: float 15s infinite linear;
         }
-
         @keyframes float {
-            0% { transform: translateY(100vh) scale(0); opacity: 1; }
-            100% { transform: translateY(-10vh) scale(1.5); opacity: 0; }
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
         }
-
-        @keyframes pulse-soft {
-            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 75, 75, 0.7); }
-            50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(255, 75, 75, 0); }
+        .fade-in {
+            animation: fadeIn 1.5s ease-out;
         }
-        
-        .pulse {
-            animation: pulse-soft 2s infinite;
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-
-        .hidden-page {
-            display: none;
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
-
-        /* Video styling to ensure it looks like a clean animation */
-        video {
-            border-radius: 1rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            mix-blend-mode: multiply; /* Helps blend white backgrounds if the video has one */
+        .timeline-line::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            width: 2px;
+            height: 100%;
+            background: #fbcfe8;
+            transform: translateX(-50%);
+        }
+        @media (max-width: 640px) {
+            .timeline-line::before {
+                left: 20px;
+            }
+        }
+        .img-card {
+            overflow: hidden;
+            position: relative;
+        }
+        .img-card img, .img-card video {
+            transition: transform 0.5s ease;
+        }
+        .img-card:hover img, .img-card:hover video {
+            transform: scale(1.1);
         }
     </style>
 </head>
-<body class="romantic-bg flex flex-col items-center justify-center min-h-screen text-center p-4">
+<body class="text-gray-800">
 
-    <!-- Screen 1: The Question -->
-    <div id="question-container" class="z-10 relative bg-white/80 backdrop-blur-sm p-8 rounded-3xl shadow-2xl max-w-lg w-full transition-all duration-500">
-        
-        <!-- Minion Video 1: Asking -->
-        <!-- poster= shows this GIF while video loads or if file is missing -->
-        <video id="video-ask" class="w-64 h-64 object-cover mx-auto mb-6" autoplay loop muted playsinline poster="https://media.tenor.com/2A2-Jd1lA9QAAAAM/minions-puppy-eyes.gif">
-            <source src="img/minion-ask.mp4" type="video/mp4">
-            <!-- Fallback for old browsers -->
-            <img src="https://media.tenor.com/2A2-Jd1lA9QAAAAM/minions-puppy-eyes.gif" alt="Minion Please">
-        </video>
-        
-        <h1 class="text-5xl md:text-6xl text-red-500 mb-8 leading-tight">Will you be my Valentine? 🌹</h1>
+    <div id="heart-container" class="heart-bg"></div>
 
-        <div class="flex flex-wrap justify-center items-center gap-4 relative w-full h-32">
-            <!-- YES Button -->
-            <button id="yes-btn" class="btn-transition pulse bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-full text-xl shadow-lg transform hover:-translate-y-1 z-20">
-                Yes! ❤️
-            </button>
-
-            <!-- NO Button -->
-            <button id="no-btn" class="btn-transition bg-red-400 hover:bg-red-500 text-white font-bold py-3 px-8 rounded-full text-xl shadow-lg z-20">
-                No
-            </button>
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 glass py-4 px-6 flex justify-between items-center">
+        <div class="cursive text-3xl text-pink-500">To Damsandi</div>
+        <div class="hidden md:flex space-x-8 font-medium">
+            <a href="#home" class="hover:text-pink-500 transition">Home</a>
+            <a href="#journey" class="hover:text-pink-500 transition">Our Journey</a>
+            <a href="#reasons" class="hover:text-pink-500 transition">Reasons Why</a>
+            <a href="#letter" class="hover:text-pink-500 transition">Love Letter</a>
         </div>
-    </div>
+        <div class="md:hidden">
+            <i class="fas fa-heart text-pink-500 text-xl"></i>
+        </div>
+    </nav>
 
-    <!-- Screen 2: The Celebration (Hidden initially) -->
-    <div id="success-container" class="hidden-page z-20 flex-col items-center justify-center w-full h-full absolute top-0 left-0 bg-pink-100">
-        <div class="z-30 p-6 bg-white/60 backdrop-blur-md rounded-3xl shadow-xl text-center">
-            <h1 class="text-6xl md:text-7xl text-pink-600 mb-6 animate-bounce">Yaaay! I knew it! 🎉</h1>
-            
-            <!-- Minion Video 2: Kissing -->
-            <!-- poster= shows this GIF while video loads or if file is missing -->
-            <video id="video-kiss" class="w-64 h-64 object-cover mx-auto mb-6" autoplay loop muted playsinline poster="https://media.tenor.com/7T1c0e3xXyoAAAAM/minion-kiss.gif">
-                <source src="img/minion-kiss.mp4" type="video/mp4">
-                <img src="https://media.tenor.com/7T1c0e3xXyoAAAAM/minion-kiss.gif" alt="Minion Kiss">
-            </video>
-            
-            <p class="text-2xl text-gray-700 font-bold mb-4">You are the best! 💖</p>
-            
-            <div class="mt-4 p-4 bg-white rounded-xl shadow-inner inline-block">
-                <p class="text-sm text-gray-500 mb-2">Playing our song...</p>
-                <!-- Audio Player -->
-                <audio id="love-song" controls class="mx-auto">
-                    <source src="img/ath-alla-durak-gewala-kasun-tharindra.mp3" type="audio/mpeg">
-                    Your browser does not support the audio element.
-                </audio>
+    <!-- Hero Section -->
+    <section id="home" class="min-h-screen flex flex-col justify-center items-center text-center px-6 pt-20">
+        <div class="fade-in">
+            <h1 class="text-5xl md:text-7xl font-bold mb-4 text-pink-600">Hi, Damsandi.</h1>
+            <p class="text-xl md:text-2xl text-gray-600 mb-8 max-w-2xl">
+                I built this little corner of the internet just for you, to remind you how much you mean to me every single day.
+            </p>
+            <div class="relative inline-block">
+                <div class="absolute -inset-1 bg-gradient-to-r from-pink-400 to-rose-400 rounded-full blur opacity-75"></div>
+                <a href="#journey" class="relative px-8 py-3 bg-white rounded-full leading-none flex items-center divide-x divide-gray-200 shadow-lg">
+                    <span class="pr-6 text-pink-600 font-semibold">Our Story</span>
+                    <span class="pl-6 text-gray-900 font-medium">See more &rarr;</span>
+                </a>
             </div>
         </div>
+    </section>
+
+    <!-- Journey Section -->
+    <section id="journey" class="py-20 px-6 max-w-5xl mx-auto">
+        <h2 class="text-4xl font-bold text-center mb-16 cursive text-pink-600">Our Journey Together</h2>
         
-        <!-- Background decorative elements -->
-        <div id="hearts-container" class="absolute inset-0 pointer-events-none overflow-hidden"></div>
-    </div>
+        <div class="relative timeline-line">
+            <!-- Event 1: First Met -->
+            <div class="mb-12 flex flex-col md:flex-row items-center justify-between w-full">
+                <div class="hidden md:block w-5/12"></div>
+                <div class="z-20 flex items-center order-1 bg-pink-500 shadow-xl w-10 h-10 rounded-full">
+                    <h1 class="mx-auto font-semibold text-lg text-white"><i class="fas fa-star text-sm"></i></h1>
+                </div>
+                <div class="order-1 glass rounded-2xl shadow-xl w-full md:w-5/12 px-6 py-4 mt-4 md:mt-0">
+                    <h3 class="mb-1 font-bold text-pink-600 text-xl">The Day We Met</h3>
+                    <p class="text-sm font-semibold text-gray-500">2025.09.26</p>
+                    <p class="mt-2 text-gray-700">The day my world changed. The first moment I saw you is a memory I will cherish forever.</p>
+                </div>
+            </div>
+
+            <!-- Event 2: First Date -->
+            <div class="mb-12 flex flex-col md:flex-row-reverse items-center justify-between w-full">
+                <div class="hidden md:block w-5/12"></div>
+                <div class="z-20 flex items-center order-1 bg-pink-400 shadow-xl w-10 h-10 rounded-full">
+                    <h1 class="mx-auto font-semibold text-lg text-white"><i class="fas fa-utensils text-sm"></i></h1>
+                </div>
+                <div class="order-1 glass rounded-2xl shadow-xl w-full md:w-5/12 px-6 py-4 mt-4 md:mt-0">
+                    <h3 class="mb-1 font-bold text-pink-600 text-xl">Our First Date</h3>
+                    <p class="text-sm font-semibold text-gray-500">2025.10.01</p>
+                    <p class="mt-2 text-gray-700">It was only the beginning, but I already knew that I wanted to spend as much time with you as possible.</p>
+                </div>
+            </div>
+
+            <!-- Event 3: I Love You -->
+            <div class="mb-12 flex flex-col md:flex-row items-center justify-between w-full">
+                <div class="hidden md:block w-5/12"></div>
+                <div class="z-20 flex items-center order-1 bg-rose-500 shadow-xl w-10 h-10 rounded-full">
+                    <h1 class="mx-auto font-semibold text-lg text-white"><i class="fas fa-heart text-sm"></i></h1>
+                </div>
+                <div class="order-1 glass rounded-2xl shadow-xl w-full md:w-5/12 px-6 py-4 mt-4 md:mt-0">
+                    <h3 class="mb-1 font-bold text-pink-600 text-xl">The Three Words</h3>
+                    <p class="text-sm font-semibold text-gray-500">2025.10.04</p>
+                    <p class="mt-2 text-gray-700">I finally said it: "I Love You." And every day since then, I've loved you even more.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Reasons Section -->
+    <section id="reasons" class="py-20 bg-white bg-opacity-40">
+        <div class="max-w-6xl mx-auto px-6">
+            <h2 class="text-4xl font-bold text-center mb-16 cursive text-pink-600">Why I Love You</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="p-8 glass rounded-3xl text-center hover:scale-105 transition transform duration-300">
+                    <div class="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-smile text-pink-500 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-4">Your Smile</h3>
+                    <p class="text-gray-600">It's the brightest thing in my world and it can fix any bad day I'm having instantly.</p>
+                </div>
+                <div class="p-8 glass rounded-3xl text-center hover:scale-105 transition transform duration-300">
+                    <div class="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-star text-pink-500 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-4">Your Kindness</h3>
+                    <p class="text-gray-600">The way you care for Damsandi (yourself!) and everyone around you is truly beautiful.</p>
+                </div>
+                <div class="p-8 glass rounded-3xl text-center hover:scale-105 transition transform duration-300">
+                    <div class="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-moon text-pink-500 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-4">Our Connection</h3>
+                    <p class="text-gray-600">The way we talk and understand each other makes me feel like the luckiest person alive.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Virtual Love Letter -->
+    <section id="letter" class="py-20 px-6 overflow-hidden">
+        <div class="max-w-3xl mx-auto text-center">
+            <h2 class="text-4xl font-bold mb-12 cursive text-pink-600">A Message For You</h2>
+            
+            <div class="relative cursor-pointer group" onclick="toggleLetter()">
+                <div id="envelope" class="bg-pink-200 w-full h-64 rounded-xl shadow-2xl relative flex items-center justify-center overflow-hidden transition-all duration-500">
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <i class="fas fa-envelope text-white text-8xl group-hover:scale-110 transition duration-300"></i>
+                    </div>
+                    <p id="click-hint" class="absolute bottom-4 text-pink-700 font-semibold animate-bounce">Click to open, Damsandi</p>
+                </div>
+
+                <div id="letter-body" class="hidden glass p-10 rounded-xl shadow-2xl text-left mt-8 fade-in">
+                    <p class="cursive text-3xl text-pink-600 mb-6">Dearest Damsandi,</p>
+                    <p class="mb-4 leading-relaxed">
+                        From the moment we met on September 26, my life took on a whole new meaning. Our first date just a few days later confirmed what I already felt—that you are someone incredibly special.
+                    </p>
+                    <p class="mb-4 leading-relaxed">
+                        When I told you "I love you" on October 4, it was the truest thing I've ever said. Thank you for being in my life and for making every day a little brighter.
+                    </p>
+                    <p class="mb-8 leading-relaxed">
+                        I promise to always be here for you, to support you, and to love you more with every passing second.
+                    </p>
+                    <p class="cursive text-2xl text-pink-600">Forever Yours,</p>
+                    <p class="font-bold text-gray-800">Thikka</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Photo Gallery -->
+    <section class="py-20 px-6 max-w-6xl mx-auto">
+        <h2 class="text-4xl font-bold text-center mb-16 cursive text-pink-600">Our Memories</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="aspect-square bg-pink-100 rounded-2xl img-card shadow-lg">
+                <img src="img/i1.jpg" alt="Memory 1" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML='<div class=\'flex items-center justify-center h-full text-pink-400\'>Image 1</div>'">
+            </div>
+            <div class="aspect-square bg-pink-100 rounded-2xl img-card shadow-lg">
+                <img src="img/i2.jpg" alt="Memory 2" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML='<div class=\'flex items-center justify-center h-full text-pink-400\'>Image 2</div>'">
+            </div>
+            <div class="aspect-square bg-pink-100 rounded-2xl img-card shadow-lg">
+                <img src="img/i3.jpg" alt="Memory 3" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML='<div class=\'flex items-center justify-center h-full text-pink-400\'>Image 3</div>'">
+            </div>
+            <!-- Replaced 4th Image with Video -->
+            <div class="aspect-square bg-pink-100 rounded-2xl img-card shadow-lg">
+                <video src="img/i4.mp4" class="w-full h-full object-cover" autoplay loop muted playsinline>
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-12 bg-pink-50 text-center">
+        <div class="cursive text-2xl text-pink-500 mb-4">I Love You, Damsandi</div>
+        <div class="text-gray-500 text-sm">© 2025 • Handcrafted with love by Thikka</div>
+        <div class="mt-4 flex justify-center space-x-4">
+            <i class="fas fa-heart text-pink-300"></i>
+            <i class="fas fa-heart text-pink-400"></i>
+            <i class="fas fa-heart text-pink-500"></i>
+        </div>
+    </footer>
 
     <script>
-        const questionContainer = document.getElementById('question-container');
-        const successContainer = document.getElementById('success-container');
-        const yesBtn = document.getElementById('yes-btn');
-        const noBtn = document.getElementById('no-btn');
-        const audio = document.getElementById('love-song');
-        const heartsContainer = document.getElementById('hearts-container');
-
-        let noClickCount = 0;
-        const phrases = [
-            "No", "Are you sure?", "Really sure?", "Think again!", "Last chance!", 
-            "Surely not?", "You might regret this!", "Give it another thought!", 
-            "Are you absolutely certain?", "This could be a mistake!", "Have a heart!", 
-            "Don't be so cold!", "Change of heart?", "Wouldn't you reconsider?", 
-            "Is that your final answer?", "You're breaking my heart ;("
-        ];
-
         function createHeart() {
-            const heart = document.createElement('div');
-            heart.classList.add('heart');
-            heart.innerHTML = '❤️';
-            heart.style.left = Math.random() * 100 + "vw";
-            heart.style.animationDuration = Math.random() * 2 + 3 + "s";
-            heart.style.fontSize = Math.random() * 20 + 20 + "px";
-            heartsContainer.appendChild(heart);
-            setTimeout(() => { heart.remove(); }, 5000);
+            const container = document.getElementById('heart-container');
+            if (!container) return;
+            const heart = document.createElement('i');
+            heart.classList.add('fas', 'fa-heart', 'floating-heart');
+            const size = Math.random() * 20 + 10 + 'px';
+            const left = Math.random() * 100 + 'vw';
+            const duration = Math.random() * 10 + 5 + 's';
+            heart.style.fontSize = size;
+            heart.style.left = left;
+            heart.style.animationDuration = duration;
+            container.appendChild(heart);
+            setTimeout(() => heart.remove(), 15000);
         }
 
-        noBtn.addEventListener('click', () => {
-            noClickCount++;
-            const textIndex = Math.min(noClickCount, phrases.length - 1);
-            noBtn.innerText = phrases[textIndex];
+        for(let i = 0; i < 15; i++) createHeart();
+        setInterval(createHeart, 2500);
 
-            const currentSize = parseFloat(window.getComputedStyle(yesBtn).fontSize);
-            const newSize = currentSize * 1.5; 
-            yesBtn.style.fontSize = `${newSize}px`;
-            yesBtn.style.padding = `${10 + (noClickCount * 5)}px ${30 + (noClickCount * 10)}px`;
-            yesBtn.classList.remove('pulse');
-        });
-
-        yesBtn.addEventListener('click', () => {
-            questionContainer.style.display = 'none';
-            successContainer.style.display = 'flex';
-            successContainer.classList.remove('hidden-page');
-
-            try {
-                audio.volume = 0.5;
-                audio.play().catch(e => console.log("Audio play failed (file might be missing):", e));
-            } catch (err) {
-                console.log("Audio error");
+        function toggleLetter() {
+            const envelope = document.getElementById('envelope');
+            const letterBody = document.getElementById('letter-body');
+            if (letterBody.classList.contains('hidden')) {
+                envelope.classList.add('opacity-0', 'h-0');
+                setTimeout(() => {
+                    envelope.classList.add('hidden');
+                    letterBody.classList.remove('hidden');
+                }, 400);
             }
-            setInterval(createHeart, 300);
-        });
+        }
     </script>
 </body>
 </html>
