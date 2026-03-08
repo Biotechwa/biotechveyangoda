@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Biotech SMS Portal</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css">
     <style>
         :root {
             --primary: #2563eb;
@@ -26,6 +27,7 @@
             align-items: center;
             justify-content: center;
             overflow: hidden;
+            padding: 20px;
         }
 
         /* Background Animation Circles */
@@ -45,14 +47,13 @@
             50% { transform: translate(30px, -30px); }
         }
 
-        /* Main Card */
         .container {
             background: var(--glass);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
             border: 1px solid var(--border);
             padding: 2.5rem;
-            border-radius: 20px;
+            border-radius: 24px;
             width: 100%;
             max-width: 450px;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
@@ -70,9 +71,12 @@
             margin-bottom: 1.5rem;
             font-weight: 600;
             letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
         }
 
-        /* Input Groups */
         .input-group {
             margin-bottom: 1.5rem;
             position: relative;
@@ -81,17 +85,19 @@
         label {
             display: block;
             margin-bottom: 0.5rem;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: #cbd5e1;
-            font-weight: 500;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         input, textarea {
             width: 100%;
             padding: 12px 15px;
-            background: rgba(0, 0, 0, 0.2);
+            background: rgba(0, 0, 0, 0.3);
             border: 1px solid var(--border);
-            border-radius: 10px;
+            border-radius: 12px;
             color: #fff;
             font-size: 1rem;
             transition: all 0.3s ease;
@@ -100,45 +106,59 @@
 
         input:focus, textarea:focus {
             border-color: var(--secondary);
-            background: rgba(0, 0, 0, 0.4);
+            background: rgba(0, 0, 0, 0.5);
             box-shadow: 0 0 15px rgba(14, 165, 233, 0.3);
         }
 
         textarea {
             resize: vertical;
-            min-height: 100px;
+            min-height: 120px;
+            line-height: 1.5;
         }
 
-        /* Send Button */
+        /* Phone Input Specifics */
+        .iti { width: 100%; }
+        .iti__country-list { 
+            background-color: #1e293b; 
+            border: 1px solid var(--border);
+            color: white;
+            border-radius: 10px;
+        }
+        .iti__country:hover { background-color: #334155; }
+        .iti__selected-flag { border-radius: 10px 0 0 10px; }
+
         .send-btn {
             width: 100%;
-            padding: 14px;
+            padding: 16px;
             background: linear-gradient(90deg, var(--primary), var(--secondary));
             border: none;
-            border-radius: 10px;
+            border-radius: 12px;
             color: white;
             font-size: 1.1rem;
             font-weight: bold;
             cursor: pointer;
-            position: relative;
-            overflow: hidden;
-            transition: transform 0.2s;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
 
-        .send-btn:hover {
-            transform: scale(1.02);
-            box-shadow: 0 0 20px rgba(37, 99, 235, 0.5);
+        .send-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.4);
+            filter: brightness(1.1);
         }
 
-        .send-btn:active {
-            transform: scale(0.98);
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
-        /* Status Messages */
         .status {
             margin-top: 15px;
-            padding: 10px;
-            border-radius: 8px;
+            padding: 12px;
+            border-radius: 10px;
             font-size: 0.9rem;
             text-align: center;
             display: none;
@@ -149,7 +169,6 @@
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* Loader */
         .loader {
             display: none;
             border: 3px solid rgba(255,255,255,0.3);
@@ -158,7 +177,6 @@
             width: 20px;
             height: 20px;
             animation: spin 1s linear infinite;
-            margin: 0 auto;
         }
 
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -171,82 +189,98 @@
     <div class="circle c2"></div>
 
     <div class="container">
-        <h2><i class="fas fa-sms"></i> Biotech SMS</h2>
+        <h2><i class="fas fa-paper-plane text-secondary"></i> Biotech SMS</h2>
         
         <div class="input-group">
-            <label for="phone">Phone Number</label>
-            <input type="text" id="phone" placeholder="0767810623" maxlength="10">
+            <label for="phone">Recipient Number</label>
+            <input type="tel" id="phone">
         </div>
 
         <div class="input-group">
-            <label for="message">Message</label>
-            <textarea id="message" placeholder="Type your message here... (Line breaks supported)"></textarea>
+            <label for="message">Message Content</label>
+            <textarea id="message" placeholder="Type message... (Supports line breaks)"></textarea>
         </div>
 
-        <button class="send-btn" onclick="sendSMS()">
-            <span id="btn-text">Send Message <i class="fas fa-paper-plane"></i></span>
+        <button class="send-btn" id="sendBtn" onclick="sendSMS()">
+            <span id="btn-text">Send Message</span>
+            <i class="fas fa-paper-plane" id="btn-icon"></i>
             <div class="loader" id="loader"></div>
         </button>
 
         <div id="status-box" class="status"></div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
     <script>
-        function sendSMS() {
-            // 1. Get Elements
-            const phoneInput = document.getElementById('phone').value.trim();
-            const messageInput = document.getElementById('message').value; // Don't trim to keep intended format
+        let iti;
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const phoneInput = document.getElementById("phone");
+            iti = window.intlTelInput(phoneInput, {
+                initialCountry: "lk",
+                separateDialCode: true,
+                preferredCountries: ["lk", "ae", "gb", "qa", "au"],
+                utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js"
+            });
+        });
+
+        async function sendSMS() {
+            const messageInput = document.getElementById('message').value;
             const btnText = document.getElementById('btn-text');
+            const btnIcon = document.getElementById('btn-icon');
             const loader = document.getElementById('loader');
             const statusBox = document.getElementById('status-box');
+            const sendBtn = document.getElementById('sendBtn');
 
-            // 2. Validation
-            if (!phoneInput || !messageInput) {
-                showStatus("Please enter both a phone number and a message.", "error");
+            // 1. Validation
+            if (!iti.isValidNumber()) {
+                showStatus("Please enter a valid phone number.", "error");
+                return;
+            }
+            if (!messageInput.trim()) {
+                showStatus("Please enter a message.", "error");
                 return;
             }
 
-            // 3. UI Loading State
+            // 2. Loading State
+            sendBtn.disabled = true;
             btnText.style.display = 'none';
+            btnIcon.style.display = 'none';
             loader.style.display = 'block';
             statusBox.style.display = 'none';
 
-            // 4. Construct URL
-            // Encodes line breaks (\n) and special characters automatically
+            // 3. Construct Payload
+            const fullNumber = iti.getNumber(); // International format e.g. +94...
             const encodedMsg = encodeURIComponent(messageInput);
             
-            // Credentials (HARDCODED)
             const username = "TW01036_biotech_lab_tr";
             const password = "hGHA4S@eKQFOS";
             const src = "BIOTECH+Lab";
             
-            // Build the final link
-            const url = `https://msg.text-ware.com/send_sms.php?username=${username}&password=${password}&src=${src}&dst=${phoneInput}&msg=${encodedMsg}`;
+            // Note: dst is URI encoded to safely pass the '+' sign
+            const url = `https://msg.text-ware.com/send_sms.php?username=${username}&password=${password}&src=${src}&dst=${encodeURIComponent(fullNumber)}&msg=${encodedMsg}`;
 
-            // 5. Send Request
-            // Note: Because of CORS (Browser Security), we utilize 'no-cors' mode or an Image pixel approach.
-            // Since this API likely returns simple text, fetch might be blocked by the browser if the API doesn't allow cross-origin.
-            
-            // METHOD A: Fetch (Professional way, but might get blocked by CORS without backend)
-            fetch(url, { method: 'GET', mode: 'no-cors' })
-            .then(response => {
-                // Because of 'no-cors', we can't see the response content, but we know the request was sent.
+            try {
+                // Using no-cors as many SMS gateways don't have explicit CORS headers for browsers
+                await fetch(url, { method: 'GET', mode: 'no-cors' });
+                
                 setTimeout(() => {
                     resetButton();
                     showStatus("Message sent successfully!", "success");
-                    // clear inputs
                     document.getElementById('message').value = "";
-                }, 1000); // Artificial delay to show animation
-            })
-            .catch(error => {
+                }, 800);
+            } catch (error) {
                 resetButton();
-                showStatus("Failed to send. Check connection.", "error");
+                showStatus("Failed to reach gateway.", "error");
                 console.error('Error:', error);
-            });
+            }
         }
 
         function resetButton() {
+            const sendBtn = document.getElementById('sendBtn');
+            sendBtn.disabled = false;
             document.getElementById('btn-text').style.display = 'inline';
+            document.getElementById('btn-icon').style.display = 'inline';
             document.getElementById('loader').style.display = 'none';
         }
 
