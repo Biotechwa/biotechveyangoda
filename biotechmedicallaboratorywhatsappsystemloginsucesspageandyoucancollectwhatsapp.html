@@ -1279,7 +1279,8 @@
                               `From - BIOTECH LAB`;
 
              const dest = "0" + finalRawNumber;
-             const url = 
+             const url = `https://msg.text-ware.com/send_sms.php?username=&password=src=BIOTECH+Lab&dst=${dest}&msg=${encodeURIComponent(msg)}`;
+            
 
 
             const btn = document.querySelector('button[onclick="sendSMS()"]');
