@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Biotech | AI Report Assistant</title>
+    <title>Biotech | AI Assistant</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -28,41 +28,16 @@
             background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
         }
 
-        /* Animations */
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
-        }
-        
-        @keyframes pulse-ring {
-            0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(255, 255, 255, 0); }
-            100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
-        }
-
-        @keyframes blob {
-            0% { transform: translate(0px, 0px) scale(1); }
-            33% { transform: translate(30px, -50px) scale(1.1); }
-            66% { transform: translate(-20px, 20px) scale(0.9); }
-            100% { transform: translate(0px, 0px) scale(1); }
-        }
-
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
-        }
+        /* Keyframe Animations */
+        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
+        @keyframes pulse-ring { 0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(13, 148, 136, 0.4); } 70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(13, 148, 136, 0); } 100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(13, 148, 136, 0); } }
+        @keyframes blob { 0% { transform: translate(0px, 0px) scale(1); } 33% { transform: translate(30px, -50px) scale(1.1); } 66% { transform: translate(-20px, 20px) scale(0.9); } 100% { transform: translate(0px, 0px) scale(1); } }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
 
         .animate-float { animation: float 3s ease-in-out infinite; }
         .animate-pulse-slow { animation: pulse-ring 2s infinite; }
         .animate-blob { animation: blob 7s infinite alternate; }
-        .animation-delay-2000 { animation-delay: 2s; }
         .animate-shake { animation: shake 0.2s ease-in-out 0s 2; }
 
         .glass-effect {
@@ -101,7 +76,6 @@
             scroll-behavior: smooth;
         }
 
-        /* Message Bubbles */
         .msg {
             max-width: 85%;
             padding: 14px 18px;
@@ -128,18 +102,17 @@
             box-shadow: 0 10px 15px -3px rgba(13, 148, 136, 0.3);
         }
 
-        /* Option Buttons */
         .option-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
+            gap: 10px;
             margin-top: 15px;
         }
 
         .option-btn {
             background: #f8fafc;
             border: 1.5px solid #e2e8f0;
-            padding: 14px;
+            padding: 12px;
             border-radius: 16px;
             text-align: center;
             font-weight: 700;
@@ -170,66 +143,53 @@
             outline: none;
             transition: all 0.2s;
             font-weight: 600;
+            font-size: 16px; /* Prevents auto-zoom on iOS */
         }
         .custom-input:focus {
             background: white;
             border-color: #0d9488;
             box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.1);
         }
-        .input-error {
-            border-color: #ef4444 !important;
-            background: #fef2f2 !important;
-        }
+        .input-error { border-color: #ef4444 !important; background: #fef2f2 !important; }
     </style>
 </head>
-<body class="relative">
+<body>
 
-    <!-- Animated Background Blobs -->
+    <!-- BG Elements -->
     <div class="absolute top-0 left-0 w-80 h-80 bg-teal-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
-    <div class="absolute bottom-0 right-0 w-80 h-80 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
+    <div class="absolute bottom-0 right-0 w-80 h-80 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob" style="animation-delay: 2s;"></div>
 
     <div class="chat-container glass-effect">
-        
-        <!-- Premium Header -->
+        <!-- Header -->
         <div class="bg-gradient-to-r from-teal-600 to-blue-600 p-6 text-center relative overflow-hidden">
             <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 15px 15px;"></div>
-            
-            <div class="relative inline-block mb-3">
-                <div class="absolute inset-0 bg-white rounded-full opacity-20 animate-pulse-slow"></div>
-                <div class="relative bg-white text-teal-600 w-14 h-14 rounded-full flex items-center justify-center shadow-lg mx-auto animate-float">
-                    <i class="fa-solid fa-microscope text-2xl"></i>
-                </div>
+            <div class="relative bg-white text-teal-600 w-12 h-12 rounded-full flex items-center justify-center shadow-lg mx-auto mb-2 animate-float">
+                <i class="fa-solid fa-microscope text-xl"></i>
             </div>
-            
-            <h1 class="text-white font-extrabold text-xl tracking-wide relative z-10">BIOTECH LABORATORY</h1>
-            <p class="text-teal-100 text-[10px] font-medium tracking-widest relative z-10 uppercase">AI Clinical Assistant</p>
-            
-            <button onclick="resetLanguage()" class="absolute top-4 right-4 text-white/50 hover:text-white transition group" title="Change Language">
-                <i class="fa-solid fa-globe group-hover:rotate-12 transition-transform"></i>
+            <h1 class="text-white font-extrabold text-lg tracking-wide">BIOTECH LABORATORY</h1>
+            <p class="text-teal-100 text-[9px] font-bold tracking-[0.2em] uppercase">AI Clinical Portal</p>
+            <button onclick="resetLanguage()" class="absolute top-4 right-4 text-white/50 hover:text-white transition">
+                <i class="fa-solid fa-globe"></i>
             </button>
         </div>
 
         <!-- Chat Area -->
-        <div class="chat-body" id="chatBody">
-            <!-- Messages injected here -->
-        </div>
+        <div class="chat-body" id="chatBody"></div>
 
-        <!-- Progress Footer -->
-        <div class="p-5 bg-white/50 border-t border-teal-100/50 text-center">
-            <div class="flex items-center justify-center gap-2 text-teal-600/60 font-bold text-[10px] tracking-widest uppercase">
-                <i class="fa-solid fa-shield-halved"></i>
-                End-to-End Encrypted Portal
+        <!-- Security Footer -->
+        <div class="p-4 bg-white/50 border-t border-teal-100/50 text-center">
+            <div class="flex items-center justify-center gap-2 text-teal-600/60 font-bold text-[9px] tracking-widest uppercase">
+                <i class="fa-solid fa-lock"></i> Secured Web Access
             </div>
         </div>
 
-        <!-- Language Modal -->
-        <div id="langModal" class="modal-overlay absolute inset-0 bg-white/80 backdrop-blur-md z-50 flex items-center justify-center hidden">
-            <div class="w-full max-w-[320px] p-8 text-center animate-float">
-                <div class="w-20 h-20 bg-teal-600 text-white rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl rotate-3">
-                    <i class="fa-solid fa-language text-3xl"></i>
+        <!-- Language Picker -->
+        <div id="langModal" class="absolute inset-0 bg-white/90 backdrop-blur-md z-50 flex items-center justify-center hidden">
+            <div class="w-full max-w-[300px] p-6 text-center">
+                <div class="w-16 h-16 bg-teal-600 text-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl rotate-3">
+                    <i class="fa-solid fa-language text-2xl"></i>
                 </div>
-                <h3 class="text-2xl font-black text-slate-800 mb-2">Welcome</h3>
-                <p class="text-sm text-slate-500 mb-8">Select your preferred language to begin.</p>
+                <h3 class="text-xl font-bold text-slate-800 mb-6">Select Language</h3>
                 <div class="flex flex-col gap-3">
                     <button onclick="saveAndInit('en')" class="option-btn !bg-white">English</button>
                     <button onclick="saveAndInit('si')" class="option-btn !bg-white" style="font-family: 'Noto Sans Sinhala'">සිංහල</button>
@@ -237,64 +197,61 @@
                 </div>
             </div>
         </div>
-
     </div>
 
     <script>
         const chatBody = document.getElementById('chatBody');
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbw24C_gOzLbDjR3Y7wbo8uH087cDIq2xTi13qGvm4e4m2bOEalZUufo7tq8SFQVXLm-/exec';
+        // YOUR DEPLOYED SCRIPT URL
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbzWPVGayDSH6uWrBROFQjaFi1U6Il-d2x-LMExuW5ejWn-1ZJYLuCkBLHPG7n93ONDN/exec';
         
         let currentLang = 'en';
         let formData = { type: '', num: '', date: '', phone: '' };
 
         const i18n = {
             en: {
-                welcome: "Hello! 👋 I'm your Biotech Assistant. I'll help you access your laboratory reports instantly.",
-                askType: "First, please select your <b>Sample Type</b> code:",
-                askNum: "Great. Now, enter your <b>Sample Number</b>:",
-                askDate: "When was this sample collected?",
-                askPhone: "Finally, enter your registered <b>Phone Number</b>:",
-                phoneError: "⚠️ That doesn't look like a valid number. Please ensure it has <b>exactly 10 digits</b> and <b>starts with 0</b> (e.g., 0712345678).",
-                fetching: "Verifying credentials and fetching report...",
-                ready: "Secure link generated! Redirecting...",
+                welcome: "Hello! 👋 I'm your Biotech Assistant. I'll help you access your lab reports.",
+                askType: "Select your <b>Sample Type</b>:",
+                askNum: "Enter your <b>Sample Number</b>:",
+                askDate: "When was this collected?",
+                askPhone: "Enter your 10-digit <b>Phone Number</b>:",
+                phoneError: "⚠️ Please enter a valid 10-digit number starting with 0.",
+                saving: "Saving your request to our server...",
+                ready: "Record found! Redirecting to report...",
                 btnDone: "Submit"
             },
             si: {
                 welcome: "ආයුබෝවන්! 👋 මම Biotech සහායකයා. ඔබගේ වාර්තා ලබා ගැනීමට මම උදව් කරන්නම්.",
-                askType: "පළමුව, ඔබේ <b>සාම්පල වර්ගය</b> (Sample Type) තෝරන්න:",
-                askNum: "දැන්, ඔබේ <b>සාම්පල අංකය</b> ඇතුළත් කරන්න:",
-                askDate: "සාම්පලය ලබාගත් <b>දිනය</b> තෝරන්න:",
-                askPhone: "අවසාන වශයෙන්, ඔබ ලියාපදිංචි කළ <b>දුරකථන අංකය</b> ඇතුළත් කරන්න:",
-                phoneError: "⚠️ ඇතුළත් කළ අංකය වැරදියි. කරුණාකර එය <b>බින්දුවෙන් (0) ආරම්භ වන</b> ඉලක්කම් 10 ක අංකයක් බව තහවුරු කරගන්න.",
-                fetching: "දත්ත පරීක්ෂා කරමින් පවතී...",
+                askType: "ඔබේ <b>සාම්පල වර්ගය</b> තෝරන්න:",
+                askNum: "<b>සාම්පල අංකය</b> ඇතුළත් කරන්න:",
+                askDate: "සාම්පලය ලබාගත් <b>දිනය</b>:",
+                askPhone: "ඔබේ <b>දුරකථන අංකය</b> ඇතුළත් කරන්න:",
+                phoneError: "⚠️ කරුණාකර නිවැරදි දුරකථන අංකයක් ඇතුළත් කරන්න.",
+                saving: "දත්ත පද්ධතියට ඇතුළත් කරමින් පවතී...",
                 ready: "වාර්තාව සූදානම්! විවෘත වෙමින් පවතී...",
                 btnDone: "ඇතුළත් කරන්න"
             },
             ta: {
-                welcome: "வணக்கம்! 👋 நான் உங்கள் Biotech உதவியாளர். உங்கள் அறிக்கைகளைப் பெற நான் உதவுகிறேன்.",
-                askType: "முதலில், உங்கள் <b>மாதிரி வகை</b>யைத் தேர்ந்தெடுக்கவும்:",
-                askNum: "இப்போது, உங்கள் <b>மாதிரி எண்</b>ணை உள்ளிடவும்:",
-                askDate: "மாதிரி எடுக்கப்பட்ட <b>தேதி</b>யைத் தேர்ந்தெடுக்கவும்:",
-                askPhone: "இறுதியாக, உங்கள் <b>தொலைபேசி எண்</b>ணை உள்ளிடவும்:",
-                phoneError: "⚠️ உள்ளிட்ட எண் தவறானது. அது <b>0 இல் ஆரம்பித்து</b> சரியாக 10 இலக்கங்களைக் கொண்டிருப்பதை உறுதிப்படுத்தவும்.",
-                fetching: "தரவுகளைத் தேடுகிறது...",
+                welcome: "வணக்கம்! 👋 நான் உங்கள் Biotech உதவியாளர்.",
+                askType: "உங்கள் <b>மாதிரி வகை</b>யைத் தேர்ந்தெடுக்கவும்:",
+                askNum: "உங்கள் <b>மாதிரி எண்</b>ணை உள்ளிடவும்:",
+                askDate: "மாதிரி எடுக்கப்பட்ட <b>தேதி</b>:",
+                askPhone: "உங்கள் <b>தொலைபேசி எண்</b>ணை உள்ளிடவும்:",
+                phoneError: "⚠️ சரியான தொலைபேசி எண்ணை உள்ளிடவும்.",
+                saving: "தரவு சேமிக்கப்படுகிறது...",
                 ready: "அறிக்கை தயார்! திறக்கப்படுகிறது...",
                 btnDone: "சமர்ப்பிக்கவும்"
             }
         };
 
-        window.onload = function() {
-            const savedLang = localStorage.getItem('biotech_assistant_lang');
-            if (savedLang && i18n[savedLang]) {
-                initApp(savedLang);
-            } else {
-                document.getElementById('langModal').classList.remove('hidden');
-            }
+        window.onload = () => {
+            const saved = localStorage.getItem('biotech_assistant_lang');
+            if (saved) initApp(saved);
+            else document.getElementById('langModal').classList.remove('hidden');
         };
 
-        function saveAndInit(lang) {
-            localStorage.setItem('biotech_assistant_lang', lang);
-            initApp(lang);
+        function saveAndInit(l) {
+            localStorage.setItem('biotech_assistant_lang', l);
+            initApp(l);
         }
 
         function resetLanguage() {
@@ -302,15 +259,15 @@
             location.reload();
         }
 
-        function initApp(lang) {
-            currentLang = lang;
+        function initApp(l) {
+            currentLang = l;
             document.getElementById('langModal').classList.add('hidden');
             addMessage(i18n[currentLang].welcome, 'bot');
-            setTimeout(() => step1_Type(), 800);
+            setTimeout(step1_Type, 800);
         }
 
         function step1_Type() {
-            const html = `
+            addMessage(`
                 <div>
                     ${i18n[currentLang].askType}
                     <div class="option-grid">
@@ -320,146 +277,129 @@
                         <div class="option-btn" onclick="selectType('BR')">BR</div>
                     </div>
                 </div>
-            `;
-            addMessage(html, 'bot');
+            `, 'bot');
         }
 
-        function selectType(val) {
-            formData.type = val;
-            addMessage(val, 'user');
-            setTimeout(() => step2_Num(), 600);
+        function selectType(v) {
+            formData.type = v;
+            addMessage(v, 'user');
+            setTimeout(step2_Num, 600);
         }
 
         function step2_Num() {
-            const id = 'num_' + Date.now();
-            const html = `
+            const id = 'n' + Date.now();
+            addMessage(`
                 <div>
                     ${i18n[currentLang].askNum}
-                    <div class="mt-4 flex gap-2">
-                        <input type="number" id="${id}" class="custom-input" placeholder="0000" autofocus>
-                        <button onclick="submitNum('${id}')" class="bg-teal-600 text-white w-14 rounded-2xl shadow-lg shadow-teal-200"><i class="fa-solid fa-arrow-right"></i></button>
+                    <div class="mt-3 flex gap-2">
+                        <input type="number" id="${id}" class="custom-input" placeholder="0000">
+                        <button onclick="submitNum('${id}')" class="bg-teal-600 text-white w-12 rounded-2xl flex items-center justify-center"><i class="fa-solid fa-chevron-right"></i></button>
                     </div>
                 </div>
-            `;
-            addMessage(html, 'bot');
+            `, 'bot');
             document.getElementById(id).focus();
         }
 
         function submitNum(id) {
-            const input = document.getElementById(id);
-            if(!input.value) return;
-            formData.num = input.value;
-            input.disabled = true;
-            addMessage(input.value, 'user');
-            setTimeout(() => step3_Date(), 600);
+            const val = document.getElementById(id).value;
+            if(!val) return;
+            formData.num = val;
+            document.getElementById(id).disabled = true;
+            addMessage(val, 'user');
+            setTimeout(step3_Date, 600);
         }
 
         function step3_Date() {
-            const id = 'date_' + Date.now();
+            const id = 'd' + Date.now();
             const today = new Date().toISOString().split('T')[0];
-            const html = `
+            addMessage(`
                 <div>
                     ${i18n[currentLang].askDate}
-                    <div class="mt-4 flex gap-2">
+                    <div class="mt-3 flex gap-2">
                         <input type="date" id="${id}" value="${today}" class="custom-input">
-                        <button onclick="submitDate('${id}')" class="bg-teal-600 text-white w-14 rounded-2xl shadow-lg shadow-teal-200"><i class="fa-solid fa-arrow-right"></i></button>
+                        <button onclick="submitDate('${id}')" class="bg-teal-600 text-white w-12 rounded-2xl flex items-center justify-center"><i class="fa-solid fa-chevron-right"></i></button>
                     </div>
                 </div>
-            `;
-            addMessage(html, 'bot');
+            `, 'bot');
         }
 
         function submitDate(id) {
-            const input = document.getElementById(id);
-            formData.date = input.value;
-            input.disabled = true;
-            addMessage(input.value, 'user');
-            setTimeout(() => step4_Phone(), 600);
+            const val = document.getElementById(id).value;
+            formData.date = val;
+            document.getElementById(id).disabled = true;
+            addMessage(val, 'user');
+            setTimeout(step4_Phone, 600);
         }
 
         function step4_Phone() {
-            const id = 'phone_' + Date.now();
-            const html = `
+            const id = 'p' + Date.now();
+            addMessage(`
                 <div>
                     ${i18n[currentLang].askPhone}
-                    <div class="mt-4 flex gap-2">
+                    <div class="mt-3 flex gap-2">
                         <input type="tel" id="${id}" class="custom-input" placeholder="07XXXXXXXX" maxlength="10">
-                        <button onclick="submitFinal('${id}')" class="bg-teal-700 text-white px-6 rounded-2xl font-bold uppercase text-xs tracking-widest">${i18n[currentLang].btnDone}</button>
+                        <button onclick="submitFinal('${id}')" class="bg-teal-700 text-white px-4 rounded-2xl font-bold text-[10px] uppercase">${i18n[currentLang].btnDone}</button>
                     </div>
                 </div>
-            `;
-            addMessage(html, 'bot');
+            `, 'bot');
             document.getElementById(id).focus();
         }
 
         function submitFinal(id) {
             const input = document.getElementById(id);
-            const phone = input.value.trim();
-            
-            // Validation
-            const isValid = /^0\d{9}$/.test(phone);
-            
-            if (!isValid) {
+            const val = input.value.trim();
+            if(!/^0\d{9}$/.test(val)) {
                 input.classList.add('animate-shake', 'input-error');
                 setTimeout(() => input.classList.remove('animate-shake'), 400);
-                addMessage(i18n[currentLang].phoneError, 'bot');
                 return;
             }
-
-            input.classList.remove('input-error');
-            formData.phone = phone;
+            formData.phone = val;
             input.disabled = true;
-            addMessage(phone, 'user');
-            
-            showLoadingFlow();
+            addMessage(val, 'user');
+            processData();
         }
 
-        async function showLoadingFlow() {
-            const loadingMsg = addMessage(`<div class="typing-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`, 'bot');
+        async function processData() {
+            const loading = addMessage('<div class="typing-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>', 'bot');
             
-            // Prepare data for Google Sheet
+            // 1. Data Object for Spreadsheet
             const params = new URLSearchParams({
                 type: formData.type,
                 sampleNumber: formData.num,
                 date: formData.date,
                 phone: formData.phone,
-                language: currentLang,
-                timestamp: new Date().toLocaleString()
+                language: currentLang
             });
 
-            // Fire and forget data to Google Sheet
-            // We use no-cors because Apps Script might not return CORS headers for simple web apps
-            fetch(`${scriptURL}?${params.toString()}`, {
-                method: 'GET',
-                mode: 'no-cors'
-            }).catch(err => console.log("Logging suppressed or failed", err));
+            // 2. Save to Google Sheet (Fire & Forget)
+            fetch(`${scriptURL}?${params.toString()}`, { method: 'GET', mode: 'no-cors' })
+                .catch(e => console.log("Save failed", e));
 
+            // 3. UX Sequence
             setTimeout(() => {
-                loadingMsg.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2 text-teal-600"></i> ${i18n[currentLang].fetching}`;
+                loading.innerHTML = `<i class="fa-solid fa-database mr-2 text-teal-500"></i> ${i18n[currentLang].saving}`;
                 
                 setTimeout(() => {
-                    loadingMsg.innerHTML = `<i class="fa-solid fa-circle-check text-green-500 mr-2"></i> ${i18n[currentLang].ready}`;
+                    loading.innerHTML = `<i class="fa-solid fa-check-circle text-green-500 mr-2"></i> ${i18n[currentLang].ready}`;
                     
-                    const patientId = formData.type + formData.num;
+                    const id = formData.type + formData.num;
                     const expiry = new Date().getTime() + (14 * 24 * 60 * 60 * 1000);
-                    const encoded = btoa(`${patientId}|${formData.date}|${expiry}`);
-                    const finalUrl = `https://biotechveyangoda.lk/report-preview.html?data=${encoded}`;
-
+                    const encoded = btoa(`${id}|${formData.date}|${expiry}`);
+                    
                     setTimeout(() => {
-                        window.location.href = finalUrl;
-                    }, 1200);
-
+                        window.location.href = `https://biotechveyangoda.lk/report-preview.html?data=${encoded}`;
+                    }, 1500);
                 }, 2000);
-            }, 1200);
+            }, 1000);
         }
 
-        function addMessage(content, sender) {
-            const div = document.createElement('div');
-            div.className = `msg msg-${sender}`;
-            div.innerHTML = content;
-            chatBody.appendChild(div);
+        function addMessage(html, sender) {
+            const d = document.createElement('div');
+            d.className = `msg msg-${sender}`;
+            d.innerHTML = html;
+            chatBody.appendChild(d);
             chatBody.scrollTop = chatBody.scrollHeight;
-            return div;
+            return d;
         }
     </script>
 </body>
