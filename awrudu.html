@@ -244,7 +244,7 @@
             <!-- SCREEN 3: GAMEPLAY (Canvas) -->
             <div id="screen-game" class="screen">
                 <div class="flex justify-between items-center mb-4 shrink-0">
-                    <button onclick="showScreen('screen-menu'); stopGame();" class="text-red-800 font-bold bg-red-100 px-3 py-1.5 rounded-full flex items-center justify-center gap-2 text-xs hover:bg-red-200 transition shadow-sm">
+                    <button onclick="stopGame(); showScreen('screen-menu');" class="text-red-800 font-bold bg-red-100 px-3 py-1.5 rounded-full flex items-center justify-center gap-2 text-xs hover:bg-red-200 transition shadow-sm">
                         <i class="fa-solid fa-house"></i> Home
                     </button>
                     <div class="text-center">
@@ -257,9 +257,10 @@
                 </div>
                 
                 <div class="relative w-full flex-grow rounded-2xl overflow-hidden shadow-inner border-4 border-red-100 bg-white" id="gameArea">
-                    <canvas id="gameCanvas"></canvas>
+                    <canvas id="gameCanvas" style="display: none;"></canvas>
+                    
                     <!-- Overlay for Muttiya Game -->
-                    <div id="muttiyaGrid" class="absolute inset-0 grid grid-cols-3 grid-rows-4 gap-2 p-4 hidden"></div>
+                    <div id="muttiyaGrid" class="absolute inset-0 hidden grid-cols-3 grid-rows-4 gap-2 p-4 bg-white"></div>
                     
                     <!-- Overlay for Kamba Adeema -->
                     <div id="kambaGrid" class="absolute inset-0 hidden flex-col items-center justify-center p-6 bg-orange-50">
@@ -341,6 +342,48 @@
         let rabanShowing = false;
         let rabanTimeouts = [];
 
+        // --- AUDIO SYSTEM (Web Audio API) ---
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        function playDrumSound(index) {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            // 4 different pitches for the 4 Rabans
+            const freqs = [180, 220, 260, 320]; 
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freqs[index], audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(freqs[index] * 0.1, audioCtx.currentTime + 0.15);
+            
+            gain.gain.setValueAtTime(0.8, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.2);
+        }
+
+        function playErrorSound() {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.type = 'sawtooth'; // Harsher sound for errors
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.3);
+            
+            gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
+        }
+
         // --- NAVIGATION ---
         function showScreen(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
@@ -384,6 +427,12 @@
 
         // --- GAME CONTROLLER ---
         function startGame(gameId) {
+            // Clean up ANY old instances, grids, or timers before starting a fresh game
+            stopGame(); 
+            
+            // Unlock audio context on user interaction
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            
             activeGameId = gameId;
             score = 0;
             timeLeft = 30;
@@ -393,9 +442,6 @@
             document.getElementById('gameTitle').innerText = titles[gameId];
             showScreen('screen-game');
             
-            // Clean up old instances
-            stopGame();
-
             if (gameId === 'kawum') initKawumGame();
             if (gameId === 'muttiya') initMuttiyaGame();
             if (gameId === 'kamba') initKambaGame();
@@ -410,11 +456,35 @@
         }
 
         function stopGame() {
+            // Stop ALL background timers perfectly
             clearInterval(gameInterval);
             clearInterval(kambaAiInterval);
             cancelAnimationFrame(animationId);
+            clearTimeout(animationId); 
             rabanTimeouts.forEach(clearTimeout);
-            document.getElementById('muttiyaGrid').innerHTML = ''; // Clear muttiya DOM
+            
+            // Clean up and Hide ALL DOM Overlays perfectly to prevent UI overlapping bugs
+            const gameCanvas = document.getElementById('gameCanvas');
+            if(gameCanvas) gameCanvas.style.display = 'none';
+
+            const muttiyaGrid = document.getElementById('muttiyaGrid');
+            if(muttiyaGrid) {
+                muttiyaGrid.innerHTML = ''; 
+                muttiyaGrid.classList.add('hidden');
+                muttiyaGrid.classList.remove('grid');
+            }
+            
+            const kambaGrid = document.getElementById('kambaGrid');
+            if(kambaGrid) {
+                kambaGrid.classList.add('hidden');
+                kambaGrid.classList.remove('flex');
+            }
+            
+            const rabanGrid = document.getElementById('rabanGrid');
+            if(rabanGrid) {
+                rabanGrid.classList.add('hidden');
+                rabanGrid.classList.remove('grid');
+            }
         }
 
         function endGame() {
@@ -435,7 +505,6 @@
             const ctx = canvas.getContext('2d');
             const container = document.getElementById('gameArea');
             
-            document.getElementById('muttiyaGrid').classList.add('hidden');
             canvas.style.display = 'block';
 
             // Resize canvas to fit container perfectly
@@ -543,11 +612,10 @@
 
         // --- GAME 2: KANA MUTTIYA (DOM Grid based) ---
         function initMuttiyaGame() {
-            const canvas = document.getElementById('gameCanvas');
             const grid = document.getElementById('muttiyaGrid');
             
-            canvas.style.display = 'none';
             grid.classList.remove('hidden');
+            grid.classList.add('grid');
             grid.innerHTML = ''; // Reset
 
             const potCount = 12;
@@ -603,10 +671,6 @@
 
         // --- GAME 3: KAMBA ADEEMA (Tug of War) ---
         function initKambaGame() {
-            document.getElementById('gameCanvas').style.display = 'none';
-            document.getElementById('muttiyaGrid').classList.add('hidden');
-            document.getElementById('rabanGrid').classList.add('hidden');
-            document.getElementById('rabanGrid').classList.remove('grid');
             const grid = document.getElementById('kambaGrid');
             grid.classList.remove('hidden');
             grid.classList.add('flex');
@@ -615,7 +679,6 @@
             updateKambaUI();
 
             kambaAiInterval = setInterval(() => {
-                if(timeLeft <= 0) return;
                 // AI gets stronger as time goes down
                 kambaRopePos -= (2 + Math.floor((30 - timeLeft)/6)); 
                 
@@ -634,7 +697,6 @@
         }
 
         function pullRope() {
-            if(timeLeft <= 0) return;
             kambaRopePos += 5; // Player power
             score += 2; // Farm points by mashing
             
@@ -661,22 +723,18 @@
 
         // --- GAME 4: RABAN MEMORY (Simon Says) ---
         function initRabanGame() {
-            document.getElementById('gameCanvas').style.display = 'none';
-            document.getElementById('muttiyaGrid').classList.add('hidden');
-            document.getElementById('kambaGrid').classList.add('hidden');
-            document.getElementById('kambaGrid').classList.remove('flex');
             const grid = document.getElementById('rabanGrid');
             grid.classList.remove('hidden');
             grid.classList.add('grid');
             
             rabanSequence = [];
+            rabanTimeouts = [];
             score = 0;
             updateUI();
-            setTimeout(nextRabanRound, 500);
+            rabanTimeouts.push(setTimeout(nextRabanRound, 500));
         }
 
         function nextRabanRound() {
-            if(timeLeft <= 0) return;
             rabanSequence.push(Math.floor(Math.random() * 4));
             rabanPlayerIndex = 0;
             playRabanSequence();
@@ -690,7 +748,7 @@
 
             rabanSequence.forEach((btnIndex) => {
                 rabanTimeouts.push(setTimeout(() => {
-                    if(timeLeft <= 0) return;
+                    playDrumSound(btnIndex); // Play sound when AI shows the sequence
                     const btn = document.getElementById('raban' + btnIndex);
                     btn.classList.add('brightness-150', 'scale-110');
                     setTimeout(() => btn.classList.remove('brightness-150', 'scale-110'), 300);
@@ -704,7 +762,7 @@
         }
 
         function hitRaban(index) {
-            if (rabanShowing || timeLeft <= 0) return;
+            if (rabanShowing) return;
 
             const btn = document.getElementById('raban' + index);
             btn.classList.add('brightness-150', 'scale-90');
@@ -712,15 +770,17 @@
 
             if (index === rabanSequence[rabanPlayerIndex]) {
                 // Correct tap
+                playDrumSound(index); // Play sound on correct tap
                 rabanPlayerIndex++;
                 if (rabanPlayerIndex === rabanSequence.length) {
                     // Completed the round
                     score += (rabanSequence.length * 15); // Longer sequences give more points
                     updateUI();
-                    setTimeout(nextRabanRound, 500);
+                    rabanTimeouts.push(setTimeout(nextRabanRound, 500));
                 }
             } else {
                 // Wrong tap! Reset sequence
+                playErrorSound(); // Play error sound
                 score -= 10;
                 if (score < 0) score = 0;
                 updateUI();
@@ -731,7 +791,7 @@
                 
                 // Repeat same sequence
                 rabanPlayerIndex = 0;
-                setTimeout(playRabanSequence, 500);
+                rabanTimeouts.push(setTimeout(playRabanSequence, 500));
             }
         }
 
