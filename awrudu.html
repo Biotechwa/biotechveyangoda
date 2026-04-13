@@ -145,7 +145,7 @@
     
     <div class="festive-element text-5xl" style="top: 10%; left: 8%; animation-duration: 5s;">🎆</div>
     <div class="festive-element text-6xl" style="top: 25%; right: 10%; animation-duration: 7s; opacity: 0.15;">🐦</div>
-    <div class="festive-element text-5xl" style="bottom: 15%; left: 12%; animation-duration: 6s;">🍩</div>
+    <div class="festive-element text-5xl" style="bottom: 15%; left: 12%; animation-duration: 6s;">🥮</div>
     <div class="festive-element text-4xl" style="bottom: 30%; right: 8%; animation-duration: 4s;">🎇</div>
 
     <div class="app-container glass-effect">
@@ -216,6 +216,7 @@
                         <div class="text-4xl mb-2 animate-float">🧺</div>
                         <h3 class="text-sm font-bold text-red-900" style="font-family: 'Noto Sans Sinhala'">කැවුම් ඇල්ලීම</h3>
                         <p class="text-[10px] text-orange-700 font-medium mt-1 leading-tight">Catch the Kawum</p>
+                        <div class="mt-2 text-[10px] bg-orange-100 text-orange-800 inline-block px-2 py-1 rounded">Avoid 💣 & 👹</div>
                     </div>
 
                     <!-- Game 2 -->
@@ -540,15 +541,17 @@
 
             function spawnItem() {
                 const types = [
-                    { emoji: '🍩', points: 10, prob: 0.6 }, // Kawum
-                    { emoji: '🏵️', points: 5, prob: 0.3 },  // Kokis
-                    { emoji: '🧨', points: -10, prob: 0.1 } // Firecracker
+                    { emoji: '🥮', points: 10 },  // Kawum
+                    { emoji: '🏵️', points: 5 },   // Kokis
+                    { emoji: '💣', points: -10 }, // Bomb
+                    { emoji: '👹', points: -15 }  // Devil
                 ];
                 
                 let rand = Math.random();
                 let selected = types[0];
-                if (rand > 0.6 && rand <= 0.9) selected = types[1];
-                if (rand > 0.9) selected = types[2];
+                if (rand > 0.5 && rand <= 0.8) selected = types[1];
+                else if (rand > 0.8 && rand <= 0.9) selected = types[2];
+                else if (rand > 0.9) selected = types[3];
 
                 items.push({
                     x: Math.random() * (canvas.width - 40) + 20,
