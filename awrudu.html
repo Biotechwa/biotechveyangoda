@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Biotech | Digital Awrudu</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Noto+Sans+Sinhala:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: linear-gradient(135deg, #fffbeb 0%, #ffedd5 100%);
+            height: 100dvh; 
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            overflow: hidden;
+            touch-action: none; /* Prevents pull-to-refresh on mobile games */
+        }
+
+        /* Festive Animations */
+        @keyframes float-slow { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-15px) rotate(5deg); } }
+        @keyframes pulse-ring { 0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(180, 83, 9, 0.4); } 70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(180, 83, 9, 0); } 100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(180, 83, 9, 0); } }
+        @keyframes blob { 0% { transform: translate(0px, 0px) scale(1); } 33% { transform: translate(30px, -50px) scale(1.1); } 66% { transform: translate(-20px, 20px) scale(0.9); } 100% { transform: translate(0px, 0px) scale(1); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+        @keyframes pop { 0% { transform: scale(0.8); opacity: 0; } 50% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+
+        .animate-pulse-slow { animation: pulse-ring 2s infinite; }
+        .animate-blob { animation: blob 7s infinite alternate; }
+        .animate-shake { animation: shake 0.2s ease-in-out 0s 2; }
+        .animate-pop { animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .festive-element { position: absolute; pointer-events: none; opacity: 0.3; z-index: 1; animation: float-slow 6s ease-in-out infinite; }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid #fde68a;
+            box-shadow: 0 25px 50px -12px rgba(153, 27, 27, 0.25);
+        }
+
+        .app-container {
+            width: 100%;
+            height: 100%;
+            max-width: 480px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 10;
+        }
+
+        @media (min-width: 640px) {
+            .app-container {
+                height: 90vh;
+                border-radius: 32px;
+                overflow: hidden;
+            }
+        }
+
+        .content-body {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .custom-input {
+            background: #fffbeb;
+            border: 2px solid #fde68a;
+            border-radius: 16px;
+            padding: 14px 16px;
+            width: 100%;
+            outline: none;
+            transition: all 0.2s;
+            font-weight: 600;
+            font-size: 16px;
+            color: #991b1b;
+        }
+        .custom-input:focus {
+            background: white;
+            border-color: #b45309;
+            box-shadow: 0 0 0 4px rgba(180, 83, 9, 0.1);
+        }
+        .input-error { border-color: #ef4444 !important; background: #fef2f2 !important; }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #991b1b 0%, #b45309 100%);
+            color: white;
+            font-weight: 700;
+            padding: 14px;
+            border-radius: 16px;
+            width: 100%;
+            transition: all 0.3s;
+            box-shadow: 0 10px 15px -3px rgba(153, 27, 27, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 15px 20px -3px rgba(153, 27, 27, 0.4); }
+
+        .game-card {
+            background: #fff;
+            border: 2px solid #fef3c7;
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+        .game-card:hover {
+            border-color: #b45309;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(180, 83, 9, 0.2);
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background: #f8fafc;
+            border-radius: 16px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .screen { display: none; width: 100%; height: 100%; flex-direction: column; }
+        .active-screen { display: flex; }
+    </style>
+</head>
+<body>
+
+    <!-- Background Graphics -->
+    <div class="absolute top-0 left-0 w-80 h-80 bg-red-200 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-blob"></div>
+    <div class="absolute bottom-0 right-0 w-80 h-80 bg-yellow-200 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-blob" style="animation-delay: 2s;"></div>
+    
+    <div class="festive-element text-5xl" style="top: 10%; left: 8%; animation-duration: 5s;">🎆</div>
+    <div class="festive-element text-6xl" style="top: 25%; right: 10%; animation-duration: 7s; opacity: 0.15;">🐦</div>
+    <div class="festive-element text-5xl" style="bottom: 15%; left: 12%; animation-duration: 6s;">🍩</div>
+    <div class="festive-element text-4xl" style="bottom: 30%; right: 8%; animation-duration: 4s;">🎇</div>
+
+    <div class="app-container glass-effect">
+        
+        <!-- Premium Header -->
+        <div class="bg-gradient-to-r from-red-800 to-orange-600 p-5 text-center relative overflow-hidden shrink-0">
+            <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 15px 15px;"></div>
+            
+            <div class="flex items-center justify-center gap-3 relative z-10">
+                <div class="relative">
+                    <div class="absolute inset-0 bg-white rounded-full opacity-20 animate-pulse-slow"></div>
+                    <div class="relative bg-white text-red-800 w-12 h-12 rounded-full flex items-center justify-center shadow-lg animate-float">
+                        <i class="fa-solid fa-gamepad text-xl"></i>
+                    </div>
+                </div>
+                <div class="text-left">
+                    <h1 class="text-white font-extrabold text-xl tracking-wide">BIOTECH AWRUDU</h1>
+                    <p class="text-orange-100 text-[10px] font-bold tracking-widest uppercase">Digital Festival Games</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-body">
+
+            <!-- SCREEN 1: LOGIN -->
+            <div id="screen-login" class="screen active-screen justify-center">
+                <div class="text-center mb-8">
+                    <div class="text-6xl mb-4">🪔</div>
+                    <h2 class="text-2xl font-bold text-red-900" style="font-family: 'Noto Sans Sinhala'">සුබ අලුත් අවුරුද්දක්!</h2>
+                    <p class="text-orange-700 text-sm mt-2">Enter your details to start playing and save your score.</p>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-red-800 uppercase tracking-wider mb-2 ml-1">Your Name</label>
+                        <input type="text" id="playerName" class="custom-input" placeholder="e.g. Kamal Perera">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-red-800 uppercase tracking-wider mb-2 ml-1">Phone Number</label>
+                        <input type="tel" id="playerPhone" class="custom-input" placeholder="07XXXXXXXX" maxlength="10">
+                    </div>
+                    <button onclick="handleLogin()" class="btn-primary mt-4">
+                        Let's Play <i class="fa-solid fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- SCREEN 2: GAME MENU -->
+            <div id="screen-menu" class="screen">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-xl font-bold text-red-900">Select a Game</h2>
+                        <div class="flex items-center gap-2 mt-1">
+                            <p class="text-sm text-orange-700 font-medium" id="displayPlayerName">Hello, Player!</p>
+                            <button onclick="showScreen('screen-login')" class="text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full hover:bg-red-200 transition" title="Edit Profile">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-bold shadow-inner">
+                        Biotech Lab
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <!-- Game 1 -->
+                    <div class="game-card p-3" onclick="startGame('kawum')">
+                        <div class="text-4xl mb-2 animate-float">🧺</div>
+                        <h3 class="text-sm font-bold text-red-900" style="font-family: 'Noto Sans Sinhala'">කැවුම් ඇල්ලීම</h3>
+                        <p class="text-[10px] text-orange-700 font-medium mt-1 leading-tight">Catch the Kawum</p>
+                    </div>
+
+                    <!-- Game 2 -->
+                    <div class="game-card p-3" onclick="startGame('muttiya')" style="animation-delay: 0.1s;">
+                        <div class="text-4xl mb-2 animate-float" style="animation-delay: 0.5s;">🏺</div>
+                        <h3 class="text-sm font-bold text-red-900" style="font-family: 'Noto Sans Sinhala'">කණා මුට්ටිය</h3>
+                        <p class="text-[10px] text-orange-700 font-medium mt-1 leading-tight">Break the Pot</p>
+                    </div>
+
+                    <!-- Game 3 -->
+                    <div class="game-card p-3" onclick="startGame('kamba')" style="animation-delay: 0.2s;">
+                        <div class="text-4xl mb-2 animate-float" style="animation-delay: 0.2s;">🪢</div>
+                        <h3 class="text-sm font-bold text-red-900" style="font-family: 'Noto Sans Sinhala'">කඹ ඇදීම</h3>
+                        <p class="text-[10px] text-orange-700 font-medium mt-1 leading-tight">Tug of War</p>
+                    </div>
+
+                    <!-- Game 4 -->
+                    <div class="game-card p-3" onclick="startGame('raban')" style="animation-delay: 0.3s;">
+                        <div class="text-4xl mb-2 animate-float" style="animation-delay: 0.7s;">🥁</div>
+                        <h3 class="text-sm font-bold text-red-900" style="font-family: 'Noto Sans Sinhala'">රබන් ගැසීම</h3>
+                        <p class="text-[10px] text-orange-700 font-medium mt-1 leading-tight">Raban Memory</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN 3: GAMEPLAY (Canvas) -->
+            <div id="screen-game" class="screen">
+                <div class="flex justify-between items-center mb-4 shrink-0">
+                    <button onclick="showScreen('screen-menu'); stopGame();" class="text-red-800 font-bold bg-red-100 px-3 py-1.5 rounded-full flex items-center justify-center gap-2 text-xs hover:bg-red-200 transition shadow-sm">
+                        <i class="fa-solid fa-house"></i> Home
+                    </button>
+                    <div class="text-center">
+                        <h2 class="font-bold text-red-900 uppercase tracking-widest text-sm" id="gameTitle">Game</h2>
+                        <div class="text-xl font-black text-orange-600" id="gameScore">0</div>
+                    </div>
+                    <div class="text-red-800 font-bold bg-orange-100 px-3 py-1 rounded-full flex items-center gap-1 text-sm shadow-sm">
+                        <i class="fa-solid fa-clock"></i> <span id="gameTimer">30</span>s
+                    </div>
+                </div>
+                
+                <div class="relative w-full flex-grow rounded-2xl overflow-hidden shadow-inner border-4 border-red-100 bg-white" id="gameArea">
+                    <canvas id="gameCanvas"></canvas>
+                    <!-- Overlay for Muttiya Game -->
+                    <div id="muttiyaGrid" class="absolute inset-0 grid grid-cols-3 grid-rows-4 gap-2 p-4 hidden"></div>
+                    
+                    <!-- Overlay for Kamba Adeema -->
+                    <div id="kambaGrid" class="absolute inset-0 hidden flex-col items-center justify-center p-6 bg-orange-50">
+                        <div class="w-full flex justify-between px-2 text-5xl mb-6">
+                            <span class="animate-bounce">👹</span>
+                            <span class="animate-bounce" style="animation-delay: 0.5s">🧑</span>
+                        </div>
+                        <div class="w-full h-8 bg-gray-300 rounded-full relative overflow-hidden border-2 border-gray-400 mb-8 shadow-inner">
+                            <div id="kambaRope" class="absolute top-0 bottom-0 left-0 bg-gradient-to-r from-red-600 to-green-500 transition-all duration-75" style="width: 50%"></div>
+                            <div class="absolute top-0 bottom-0 left-1/2 w-1 bg-black z-10 transform -translate-x-1/2"></div>
+                        </div>
+                        <button id="kambaBtn" onclick="pullRope()" class="bg-red-600 text-white font-black text-3xl py-6 px-10 rounded-full shadow-[0_8px_0_#991b1b] active:shadow-[0_0px_0_#991b1b] active:translate-y-[8px] select-none touch-manipulation transition-all w-full uppercase tracking-wider">
+                            PULL! 🪢
+                        </button>
+                    </div>
+
+                    <!-- Overlay for Raban Memory -->
+                    <div id="rabanGrid" class="absolute inset-0 hidden grid-cols-2 gap-4 p-8 bg-orange-50 items-center">
+                        <button id="raban0" onclick="hitRaban(0)" class="aspect-square bg-red-400 rounded-full border-8 border-red-600 text-5xl shadow-lg transition transform active:scale-90 flex items-center justify-center filter hover:brightness-110">🥁</button>
+                        <button id="raban1" onclick="hitRaban(1)" class="aspect-square bg-blue-400 rounded-full border-8 border-blue-600 text-5xl shadow-lg transition transform active:scale-90 flex items-center justify-center filter hover:brightness-110">🥁</button>
+                        <button id="raban2" onclick="hitRaban(2)" class="aspect-square bg-green-400 rounded-full border-8 border-green-600 text-5xl shadow-lg transition transform active:scale-90 flex items-center justify-center filter hover:brightness-110">🥁</button>
+                        <button id="raban3" onclick="hitRaban(3)" class="aspect-square bg-yellow-400 rounded-full border-8 border-yellow-600 text-5xl shadow-lg transition transform active:scale-90 flex items-center justify-center filter hover:brightness-110">🥁</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN 4: GAME OVER -->
+            <div id="screen-gameover" class="screen justify-center items-center text-center">
+                <div class="animate-pop w-full">
+                    <div class="text-7xl mb-4">🏆</div>
+                    <h2 class="text-3xl font-black text-red-900 mb-1">Time's Up!</h2>
+                    <p class="text-orange-700 font-medium mb-6">Here is your final score</p>
+                    
+                    <div class="bg-gradient-to-br from-red-50 to-orange-50 border-2 border-orange-200 rounded-3xl p-8 mb-8 shadow-lg inline-block w-full max-w-[250px]">
+                        <div class="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-700 to-orange-500" id="finalScoreDisplay">0</div>
+                        <div class="text-xs font-bold text-red-400 uppercase tracking-widest mt-2">Points</div>
+                    </div>
+
+                    <div id="saveStatus" class="text-sm font-bold text-orange-600 mb-6 h-6">
+                        <i class="fa-solid fa-spinner fa-spin mr-2"></i> Saving score to leaderboard...
+                    </div>
+
+                    <div class="space-y-3 w-full">
+                        <button onclick="startGame(activeGameId)" class="btn-primary flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-rotate-right"></i> Play Again
+                        </button>
+                        <button onclick="showScreen('screen-menu')" class="w-full bg-orange-100 text-red-900 font-bold padding p-3 rounded-xl hover:bg-orange-200 transition">
+                            Back to Menu
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Background Music -->
+    <audio id="bgMusic" src="https://scx2.b-cdn.net/gfx/audio/asian_koel.mp3" loop></audio>
+
+    <script>
+        // --- CONFIGURATION ---
+        // REPLACE THIS URL WITH YOUR NEW GOOGLE SCRIPT WEB APP URL (For the Games Leaderboard)
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyg3-wgVMDX7bciW2tQYMq6SSvljTgMLbrtURLL_G7dGn0rWFo9urNoJnwhvu-3o6gwIQ/exec"; 
+
+        // --- STATE ---
+        let user = { name: "", phone: "" };
+        let activeGameId = "";
+        let score = 0;
+        let timeLeft = 30;
+        let gameInterval = null;
+        let animationId = null;
+
+        // New Game State Variables
+        let kambaAiInterval = null;
+        let kambaRopePos = 50;
+        
+        let rabanSequence = [];
+        let rabanPlayerIndex = 0;
+        let rabanShowing = false;
+        let rabanTimeouts = [];
+
+        // --- NAVIGATION ---
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
+            document.getElementById(id).classList.add('active-screen');
+        }
+
+        // --- LOGIN LOGIC ---
+        function handleLogin() {
+            const nameInput = document.getElementById('playerName');
+            const phoneInput = document.getElementById('playerPhone');
+            
+            const name = nameInput.value.trim();
+            const phone = phoneInput.value.trim();
+            
+            let valid = true;
+
+            if (name.length < 2) {
+                nameInput.classList.add('animate-shake', 'input-error');
+                setTimeout(() => nameInput.classList.remove('animate-shake'), 400);
+                valid = false;
+            }
+            if (!/^0\d{9}$/.test(phone)) {
+                phoneInput.classList.add('animate-shake', 'input-error');
+                setTimeout(() => phoneInput.classList.remove('animate-shake'), 400);
+                valid = false;
+            }
+
+            if (valid) {
+                user.name = name;
+                user.phone = phone;
+                
+                // Play music on first interaction
+                const audio = document.getElementById('bgMusic');
+                audio.volume = 0.2;
+                audio.play().catch(e => console.log("Audio autoplay restricted."));
+
+                document.getElementById('displayPlayerName').innerText = `Hello, ${name.split(' ')[0]}!`;
+                showScreen('screen-menu');
+            }
+        }
+
+        // --- GAME CONTROLLER ---
+        function startGame(gameId) {
+            activeGameId = gameId;
+            score = 0;
+            timeLeft = 30;
+            updateUI();
+            
+            const titles = { 'kawum': 'Catch Kawum', 'muttiya': 'Kana Muttiya', 'kamba': 'Tug of War', 'raban': 'Raban Memory' };
+            document.getElementById('gameTitle').innerText = titles[gameId];
+            showScreen('screen-game');
+            
+            // Clean up old instances
+            stopGame();
+
+            if (gameId === 'kawum') initKawumGame();
+            if (gameId === 'muttiya') initMuttiyaGame();
+            if (gameId === 'kamba') initKambaGame();
+            if (gameId === 'raban') initRabanGame();
+
+            // Main Timer
+            gameInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('gameTimer').innerText = timeLeft;
+                if (timeLeft <= 0) endGame();
+            }, 1000);
+        }
+
+        function stopGame() {
+            clearInterval(gameInterval);
+            clearInterval(kambaAiInterval);
+            cancelAnimationFrame(animationId);
+            rabanTimeouts.forEach(clearTimeout);
+            document.getElementById('muttiyaGrid').innerHTML = ''; // Clear muttiya DOM
+        }
+
+        function endGame() {
+            stopGame();
+            document.getElementById('finalScoreDisplay').innerText = score;
+            showScreen('screen-gameover');
+            saveScoreToCloud();
+        }
+
+        function updateUI() {
+            document.getElementById('gameScore').innerText = score;
+            document.getElementById('gameTimer').innerText = timeLeft;
+        }
+
+        // --- GAME 1: CATCH THE KAWUM (Canvas) ---
+        function initKawumGame() {
+            const canvas = document.getElementById('gameCanvas');
+            const ctx = canvas.getContext('2d');
+            const container = document.getElementById('gameArea');
+            
+            document.getElementById('muttiyaGrid').classList.add('hidden');
+            canvas.style.display = 'block';
+
+            // Resize canvas to fit container perfectly
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+
+            let player = {
+                x: canvas.width / 2,
+                y: canvas.height - 60,
+                width: 50,
+                height: 50,
+                emoji: '🧺'
+            };
+
+            let items = [];
+            let frameCount = 0;
+
+            // Touch & Mouse Control
+            const movePlayer = (x) => {
+                player.x = Math.max(25, Math.min(canvas.width - 25, x));
+            };
+
+            canvas.addEventListener('touchmove', (e) => {
+                e.preventDefault(); // Stop scrolling
+                const rect = canvas.getBoundingClientRect();
+                movePlayer(e.touches[0].clientX - rect.left);
+            }, {passive: false});
+
+            canvas.addEventListener('mousemove', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                movePlayer(e.clientX - rect.left);
+            });
+
+            function spawnItem() {
+                const types = [
+                    { emoji: '🍩', points: 10, prob: 0.6 }, // Kawum
+                    { emoji: '🏵️', points: 5, prob: 0.3 },  // Kokis
+                    { emoji: '🧨', points: -10, prob: 0.1 } // Firecracker
+                ];
+                
+                let rand = Math.random();
+                let selected = types[0];
+                if (rand > 0.6 && rand <= 0.9) selected = types[1];
+                if (rand > 0.9) selected = types[2];
+
+                items.push({
+                    x: Math.random() * (canvas.width - 40) + 20,
+                    y: -30,
+                    speed: 3 + Math.random() * 3 + (30 - timeLeft) * 0.1, // Speeds up over time
+                    emoji: selected.emoji,
+                    points: selected.points
+                });
+            }
+
+            function gameLoop() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw Sky Background
+                ctx.fillStyle = '#f0f9ff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                frameCount++;
+                if (frameCount % 30 === 0) spawnItem(); // Spawn every half second
+
+                // Draw and Update Items
+                ctx.font = '30px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+
+                for (let i = items.length - 1; i >= 0; i--) {
+                    let item = items[i];
+                    item.y += item.speed;
+                    ctx.fillText(item.emoji, item.x, item.y);
+
+                    // Collision Detection (Circle/Rect approximation)
+                    const distX = Math.abs(item.x - player.x);
+                    const distY = Math.abs(item.y - player.y);
+
+                    if (distX < 35 && distY < 35) {
+                        score += item.points;
+                        if(score < 0) score = 0; // No negative scores
+                        updateUI();
+                        
+                        // Visual feedback flash
+                        ctx.fillStyle = item.points > 0 ? 'rgba(74, 222, 128, 0.5)' : 'rgba(248, 113, 113, 0.5)';
+                        ctx.fillRect(0,0,canvas.width, canvas.height);
+                        
+                        items.splice(i, 1);
+                        continue;
+                    }
+
+                    // Remove if off screen
+                    if (item.y > canvas.height + 30) items.splice(i, 1);
+                }
+
+                // Draw Player
+                ctx.font = '45px Arial';
+                ctx.fillText(player.emoji, player.x, player.y);
+
+                animationId = requestAnimationFrame(gameLoop);
+            }
+
+            gameLoop();
+        }
+
+        // --- GAME 2: KANA MUTTIYA (DOM Grid based) ---
+        function initMuttiyaGame() {
+            const canvas = document.getElementById('gameCanvas');
+            const grid = document.getElementById('muttiyaGrid');
+            
+            canvas.style.display = 'none';
+            grid.classList.remove('hidden');
+            grid.innerHTML = ''; // Reset
+
+            const potCount = 12;
+            let pots = [];
+
+            // Create Grid
+            for(let i=0; i<potCount; i++) {
+                const pot = document.createElement('div');
+                pot.className = 'bg-orange-50 rounded-xl border-2 border-orange-200 flex items-center justify-center text-4xl cursor-pointer transition-all duration-200 transform hover:scale-105';
+                pot.innerHTML = '🏺';
+                pot.onclick = () => hitPot(i);
+                grid.appendChild(pot);
+                pots.push({ el: pot, active: false });
+            }
+
+            function activateRandomPot() {
+                // Deactivate all
+                pots.forEach(p => { p.active = false; p.el.innerHTML = '🏺'; p.el.classList.remove('bg-yellow-200', 'border-yellow-400', 'animate-pulse-slow'); p.el.classList.add('bg-orange-50'); });
+                
+                // Activate one
+                const r = Math.floor(Math.random() * potCount);
+                pots[r].active = true;
+                pots[r].el.classList.remove('bg-orange-50');
+                pots[r].el.classList.add('bg-yellow-200', 'border-yellow-400', 'animate-pulse-slow');
+            }
+
+            function hitPot(index) {
+                const pot = pots[index];
+                if (pot.active) {
+                    score += 10;
+                    pot.el.innerHTML = '💥'; // Break effect
+                    pot.active = false;
+                    updateUI();
+                } else {
+                    score -= 5;
+                    if(score < 0) score = 0;
+                    pot.el.innerHTML = '❌';
+                    pot.el.classList.add('bg-red-100');
+                    setTimeout(() => { pot.el.innerHTML = '🏺'; pot.el.classList.remove('bg-red-100'); }, 300);
+                    updateUI();
+                }
+            }
+
+            // Game Loop for Muttiya
+            let speed = 1000;
+            function runLoop() {
+                activateRandomPot();
+                speed = Math.max(400, 1000 - (30 - timeLeft) * 20); // Gets faster
+                animationId = setTimeout(runLoop, speed);
+            }
+            runLoop();
+        }
+
+        // --- GAME 3: KAMBA ADEEMA (Tug of War) ---
+        function initKambaGame() {
+            document.getElementById('gameCanvas').style.display = 'none';
+            document.getElementById('muttiyaGrid').classList.add('hidden');
+            document.getElementById('rabanGrid').classList.add('hidden');
+            document.getElementById('rabanGrid').classList.remove('grid');
+            const grid = document.getElementById('kambaGrid');
+            grid.classList.remove('hidden');
+            grid.classList.add('flex');
+            
+            kambaRopePos = 50;
+            updateKambaUI();
+
+            kambaAiInterval = setInterval(() => {
+                if(timeLeft <= 0) return;
+                // AI gets stronger as time goes down
+                kambaRopePos -= (2 + Math.floor((30 - timeLeft)/6)); 
+                
+                if (kambaRopePos <= 0) {
+                    score = Math.max(0, score - 10); // Lose points if AI wins
+                    kambaRopePos = 50; // Reset
+                    updateUI();
+                    
+                    const btn = document.getElementById('kambaBtn');
+                    btn.innerHTML = 'AI WON! -10';
+                    btn.classList.replace('bg-red-600', 'bg-gray-500');
+                    setTimeout(() => { btn.innerHTML = 'PULL! 🪢'; btn.classList.replace('bg-gray-500', 'bg-red-600'); }, 500);
+                }
+                updateKambaUI();
+            }, 200);
+        }
+
+        function pullRope() {
+            if(timeLeft <= 0) return;
+            kambaRopePos += 5; // Player power
+            score += 2; // Farm points by mashing
+            
+            if (kambaRopePos >= 100) {
+                score += 50; // Huge bonus for beating AI completely
+                kambaRopePos = 50; // Reset
+                
+                // Visual feedback
+                const btn = document.getElementById('kambaBtn');
+                btn.innerHTML = 'WIN! +50';
+                btn.classList.replace('bg-red-600', 'bg-green-500');
+                setTimeout(() => { btn.innerHTML = 'PULL! 🪢'; btn.classList.replace('bg-green-500', 'bg-red-600'); }, 500);
+            }
+            updateKambaUI();
+            updateUI();
+        }
+
+        function updateKambaUI() {
+            const rope = document.getElementById('kambaRope');
+            rope.style.width = kambaRopePos + '%';
+            if (kambaRopePos > 70) rope.classList.add('bg-green-500');
+            else rope.classList.remove('bg-green-500');
+        }
+
+        // --- GAME 4: RABAN MEMORY (Simon Says) ---
+        function initRabanGame() {
+            document.getElementById('gameCanvas').style.display = 'none';
+            document.getElementById('muttiyaGrid').classList.add('hidden');
+            document.getElementById('kambaGrid').classList.add('hidden');
+            document.getElementById('kambaGrid').classList.remove('flex');
+            const grid = document.getElementById('rabanGrid');
+            grid.classList.remove('hidden');
+            grid.classList.add('grid');
+            
+            rabanSequence = [];
+            score = 0;
+            updateUI();
+            setTimeout(nextRabanRound, 500);
+        }
+
+        function nextRabanRound() {
+            if(timeLeft <= 0) return;
+            rabanSequence.push(Math.floor(Math.random() * 4));
+            rabanPlayerIndex = 0;
+            playRabanSequence();
+        }
+
+        function playRabanSequence() {
+            rabanShowing = true;
+            let delay = 0;
+            rabanTimeouts.forEach(clearTimeout);
+            rabanTimeouts = [];
+
+            rabanSequence.forEach((btnIndex) => {
+                rabanTimeouts.push(setTimeout(() => {
+                    if(timeLeft <= 0) return;
+                    const btn = document.getElementById('raban' + btnIndex);
+                    btn.classList.add('brightness-150', 'scale-110');
+                    setTimeout(() => btn.classList.remove('brightness-150', 'scale-110'), 300);
+                }, delay));
+                delay += 500; // Speed of sequence
+            });
+
+            rabanTimeouts.push(setTimeout(() => {
+                rabanShowing = false;
+            }, delay));
+        }
+
+        function hitRaban(index) {
+            if (rabanShowing || timeLeft <= 0) return;
+
+            const btn = document.getElementById('raban' + index);
+            btn.classList.add('brightness-150', 'scale-90');
+            setTimeout(() => btn.classList.remove('brightness-150', 'scale-90'), 150);
+
+            if (index === rabanSequence[rabanPlayerIndex]) {
+                // Correct tap
+                rabanPlayerIndex++;
+                if (rabanPlayerIndex === rabanSequence.length) {
+                    // Completed the round
+                    score += (rabanSequence.length * 15); // Longer sequences give more points
+                    updateUI();
+                    setTimeout(nextRabanRound, 500);
+                }
+            } else {
+                // Wrong tap! Reset sequence
+                score -= 10;
+                if (score < 0) score = 0;
+                updateUI();
+                
+                const grid = document.getElementById('rabanGrid');
+                grid.classList.add('bg-red-200');
+                setTimeout(() => grid.classList.remove('bg-red-200'), 300);
+                
+                // Repeat same sequence
+                rabanPlayerIndex = 0;
+                setTimeout(playRabanSequence, 500);
+            }
+        }
+
+        // --- CLOUD SAVING ---
+        function saveScoreToCloud() {
+            const statusEl = document.getElementById('saveStatus');
+            statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Saving score to leaderboard...';
+            statusEl.className = 'text-sm font-bold text-orange-600 mb-6 h-6';
+
+            const gameNames = { 'kawum': 'Catch Kawum', 'muttiya': 'Kana Muttiya', 'kamba': 'Tug of War', 'raban': 'Raban Memory' };
+            const gameName = gameNames[activeGameId] || 'Unknown';
+            
+            const params = new URLSearchParams({
+                action: 'saveScore',
+                name: user.name,
+                phone: user.phone,
+                game: gameName,
+                score: score,
+                timestamp: new Date().toLocaleString()
+            });
+
+            // Fire & Forget to Google Script
+            fetch(`${SCRIPT_URL}?${params.toString()}`, { method: 'GET', mode: 'no-cors' })
+                .then(() => {
+                    // Because no-cors is opaque, we just assume success after a brief delay
+                    setTimeout(() => {
+                        statusEl.innerHTML = '<i class="fa-solid fa-check text-green-600 mr-2"></i> Score saved successfully!';
+                        statusEl.classList.add('animate-pop');
+                    }, 1000);
+                })
+                .catch(e => {
+                    console.log("Save error", e);
+                    statusEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-red-500 mr-2"></i> Play locally (offline).';
+                });
+        }
+    </script>
+</body>
+</html>
