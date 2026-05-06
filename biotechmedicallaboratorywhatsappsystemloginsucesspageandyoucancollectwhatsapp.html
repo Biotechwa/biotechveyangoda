@@ -94,6 +94,9 @@
         @media (max-height: 800px) {
             .phone-wrapper { transform: scale(0.8); }
         }
+        @media (max-width: 600px) {
+            .phone-wrapper { transform: scale(0.85); margin-top: 10px; margin-bottom: 20px;}
+        }
 
         .phone-mockup {
             width: 320px;
@@ -115,7 +118,7 @@
             width: 120px; height: 28px; background: #1e293b;
             border-bottom-left-radius: 16px;
             border-bottom-right-radius: 16px;
-            z-index: 20;
+            z-index: 40; /* Increased to stay above browser mockup */
         }
 
         .phone-screen {
@@ -333,18 +336,18 @@
     </div>
 
     <!-- MAIN CONTENT -->
-    <main class="flex-1 h-full relative flex items-center justify-center p-4 lg:p-6 overflow-hidden">
+    <main class="flex-1 h-full relative flex flex-col lg:flex-row items-center justify-start lg:justify-center p-4 lg:p-6 overflow-y-auto custom-scroll w-full">
         
-        <div class="w-full max-w-6xl h-[92vh] glass-panel rounded-[40px] flex flex-col lg:flex-row overflow-hidden shadow-2xl fade-in">
+        <div class="w-full max-w-6xl min-h-max lg:h-[92vh] glass-panel rounded-3xl lg:rounded-[40px] flex flex-col lg:flex-row shadow-2xl fade-in my-auto mx-auto lg:overflow-hidden">
             
             <!-- LEFT: FORM SECTION -->
-            <div class="w-full lg:w-1/2 p-10 lg:p-14 flex flex-col justify-center bg-white/50 relative">
+            <div class="w-full lg:w-1/2 p-6 md:p-10 lg:p-14 flex flex-col justify-center bg-white/50 relative">
                 <!-- Background decoration -->
                 <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-teal-400 via-blue-500 to-indigo-500"></div>
 
-                <div class="mb-10">
+                <div class="mb-8 mt-4 lg:mb-10 lg:mt-0">
                     <span class="text-teal-600 text-[10px] font-extrabold tracking-[0.2em] uppercase mb-3 block">Admin Dashboard</span>
-                    <h2 class="text-4xl font-extrabold text-slate-800 mb-3 tracking-tight">Patient Report Link</h2>
+                    <h2 class="text-3xl lg:text-4xl font-extrabold text-slate-800 mb-3 tracking-tight">Patient Report Link</h2>
                     <p class="text-slate-500 text-sm leading-relaxed font-medium">Generate secure, encrypted download links for patient reports. Links automatically expire in 14 days.</p>
                 </div>
 
@@ -384,7 +387,7 @@
                     </div>
 
                     <!-- Buttons -->
-                    <div class="pt-4 flex gap-4">
+                    <div class="pt-4 flex flex-col md:flex-row gap-4 mb-4 lg:mb-0">
                         <button onclick="sendWhatsApp()" id="sendBtn" class="flex-1 py-4 rounded-2xl border-2 border-slate-100 bg-white text-slate-600 hover:border-teal-100 hover:text-teal-600 font-bold text-sm transition-all flex items-center justify-center gap-2 group opacity-50 cursor-not-allowed disabled:opacity-50">
                             <i class="fa-brands fa-whatsapp text-teal-500 text-lg group-hover:scale-110 transition-transform"></i> Send API
                         </button>
@@ -398,7 +401,7 @@
             </div>
 
             <!-- RIGHT: PREVIEW SECTION -->
-            <div class="w-full lg:w-1/2 bg-slate-50/50 flex flex-col items-center justify-center p-4 lg:p-0 relative">
+            <div id="previewSection" class="w-full lg:w-1/2 bg-slate-50/50 flex flex-col items-center justify-center p-6 lg:p-0 relative min-h-[650px] lg:min-h-0 border-t lg:border-t-0 border-slate-200">
                 
                 <div class="absolute top-8 left-0 w-full text-center">
                     <h3 class="text-xs font-extrabold text-slate-300 uppercase tracking-[0.2em]">Client Preview</h3>
@@ -410,10 +413,10 @@
                 </div>
 
                 <!-- PHONE WRAPPER FOR SCALING -->
-                <div class="phone-wrapper">
+                <div class="phone-wrapper w-full flex justify-center">
                     <div class="phone-mockup">
                         <div class="phone-notch"></div>
-                        <div class="phone-screen">
+                        <div class="phone-screen relative">
                             
                             <!-- WA Header -->
                             <div class="wa-header">
@@ -441,19 +444,20 @@
                             </div>
 
                             <!-- Message Bubble -->
-                            <div class="wa-bubble">
+                            <div class="wa-bubble" id="waBubble">
                                 <div id="previewText" class="whitespace-pre-line text-slate-800">
                                     <span class="text-slate-400 italic">Enter patient details to preview message...</span>
                                 </div>
                                 
-                                <!-- Link Preview Card (Text Only) -->
-                                <div id="linkCard" class="hidden">
+                                <!-- Link Preview Card (Clickable to reopen preview) -->
+                                <div id="linkCard" class="hidden cursor-pointer hover:bg-teal-50 transition-colors" onclick="openBrowserView(document.getElementById('currentLinkStorage').value)">
                                     <div class="link-preview">
                                         <span class="text-[12px] font-bold text-teal-700">Biotech Lab Report Portal</span>
                                         <span class="text-[11px] text-slate-500">biotechveyangoda.lk</span>
                                         <span class="text-[10px] text-slate-400 mt-0.5">Secure PDF Download (Exp: 2 Weeks)</span>
                                     </div>
                                 </div>
+                                <input type="hidden" id="currentLinkStorage" value="" />
 
                                 <div class="text-[11px] text-gray-500 text-right mt-1.5 flex justify-end gap-1 items-center">
                                     <span id="msgTime">10:00 AM</span>
@@ -462,13 +466,47 @@
                             </div>
 
                         </div>
+
+                        <!-- NEW: AUTO OPEN BROWSER MOCKUP WITH CORS BYPASS SCROLLING -->
+                        <div id="browserView" class="absolute bottom-0 left-0 w-full h-[calc(100%-28px)] bg-white z-30 transform translate-y-full transition-transform duration-[400ms] ease-[cubic-bezier(0.22,1,0.36,1)] rounded-b-[40px] flex flex-col overflow-hidden shadow-[0_-15px_40px_rgba(0,0,0,0.15)]">
+                            <!-- Header -->
+                            <div class="bg-slate-50 px-4 py-3 border-b border-slate-200 flex items-center gap-3 relative z-40">
+                                <button onclick="closeBrowserView()" class="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-300 transition-colors shadow-inner cursor-pointer" title="Back to Chat">
+                                    <i class="fa-solid fa-xmark text-xs"></i>
+                                </button>
+                                <div class="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-1.5 flex items-center gap-2 shadow-sm">
+                                    <i class="fa-solid fa-lock text-[10px] text-emerald-500"></i>
+                                    <span class="text-[11px] text-slate-700 font-medium truncate" id="browserUrl">biotechveyangoda.lk</span>
+                                </div>
+                                <i class="fa-solid fa-ellipsis-vertical text-slate-400 text-xs px-1"></i>
+                            </div>
+                            
+                            <!-- Bypassing CORS Wrapper for the Iframe -->
+                            <div class="flex-1 relative bg-slate-100 w-full overflow-hidden">
+                                <!-- Loading overlay -->
+                                <div id="browserLoader" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-50 z-30 transition-opacity duration-300 pointer-events-none">
+                                    <div class="relative w-12 h-12 flex items-center justify-center mb-3">
+                                        <div class="absolute inset-0 border-4 border-slate-200 rounded-full"></div>
+                                        <div class="absolute inset-0 border-4 border-teal-500 rounded-full border-t-transparent animate-spin"></div>
+                                        <i class="fa-solid fa-flask text-teal-500 text-sm"></i>
+                                    </div>
+                                    <span class="text-[11px] text-slate-500 font-bold animate-pulse">Loading Secure Report...</span>
+                                </div>
+                                
+                                <!-- Scrollable Parent Wrapper -->
+                                <div id="iframeWrapper" class="absolute inset-0 z-20 overflow-y-auto custom-scroll w-full h-full">
+                                    <!-- Iframe is given a fixed large height so we can scroll the wrapper instead of the blocked internal window -->
+                                    <iframe id="previewIframe" class="w-full border-none block bg-white" style="height: 1200px;"></iframe>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Hidden Textarea -->
                 <textarea id="messagePreview" class="hidden"></textarea>
 
-                <p class="absolute bottom-8 text-[10px] text-slate-400 font-medium">
+                <p class="absolute bottom-6 lg:bottom-8 text-[10px] text-slate-400 font-medium">
                     Secured by <span class="text-teal-600 font-bold">Biotech Systems</span>
                 </p>
 
@@ -923,6 +961,8 @@
         let iti = null;
         let finalRawNumber = "";
         let isPreviewMode = false;
+        let browserTransitionTimeout = null;
+        window.lastScrolledPatient = ""; // Prevents dashboard spasmodic scroll
 
         // --- VOICE VARIABLES ---
         let callTimerInterval;
@@ -966,7 +1006,6 @@
             // Load saved identity if exists
             const savedId = localStorage.getItem('myBranchIdentity');
             if(savedId) {
-                // document.getElementById('myIdentity').value = savedId; // No need to set value, we hide it
                 // Wait for module to load then listen
                 setTimeout(() => { if(window.listenForCalls) window.listenForCalls(); }, 1500);
             } else {
@@ -1090,13 +1129,17 @@
                 const originalData = `${patientId}|${dateStr}|${expiryTimestamp}`;
                 const encodedData = btoa(originalData);
                 const link = `https://biotechveyangoda.lk/report-preview.html?data=${encodedData}`;
+                
+                // Store in hidden input for clicking Link Card
+                document.getElementById('currentLinkStorage').value = link;
 
+                // Made the link a real anchor <a> tag so it can be clicked
                 const displayMsg = `<strong>Biotech Medical Laboratory Online Report</strong>\n\n` + 
                               `👤 <strong>Patient ID:</strong> ${patientId}\n` +
                               `📅 <strong>Date:</strong> ${dateStr}\n` +
                               `⏳ <strong>Expires in:</strong> 2 Weeks\n\n` + 
                               `● Click the link below to view/download.\n\n` +
-                              `<span class="text-blue-500">${link}</span>\n\n` +
+                              `<a href="${link}" target="_blank" style="pointer-events: auto; position: relative; z-index: 50;" class="text-blue-600 hover:underline break-all">${link}</a>\n\n` +
                               `<em>From - BIOTECH LABORATORY</em>`;
                 
                 const rawMsg = `*Biotech Medical Laboratory Online Report*\n\n` + 
@@ -1111,6 +1154,29 @@
                 previewText.innerHTML = displayMsg;
                 hiddenArea.value = rawMsg;
                 linkCard.classList.remove('hidden'); 
+
+                // NEW: Pop Animation for the WhatsApp bubble to simulate receiving it
+                const bubble = document.getElementById('waBubble');
+                bubble.classList.remove('fade-in', 'shake');
+                void bubble.offsetWidth; // trigger reflow
+                bubble.style.animation = 'fadeIn 0.4s ease-out forwards';
+                
+                // --- ZERO DELAY AND SMART AUTO-SCROLL LOGIC ---
+                clearTimeout(browserTransitionTimeout);
+                browserTransitionTimeout = setTimeout(() => {
+                    openBrowserView(link);
+                    
+                    // Immediately scroll into view on mobile (Only done once per patient so it doesn't jump on every key typed)
+                    const currentPatientId = `${prefix}${num}`;
+                    if(window.innerWidth < 1024 && window.lastScrolledPatient !== currentPatientId) {
+                        window.lastScrolledPatient = currentPatientId;
+                        const previewSection = document.getElementById('previewSection');
+                        if (previewSection) {
+                            previewSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                    }
+                }, 100); // 100ms for "immediate" opening
+
                 return link;
 
             } else {
@@ -1125,8 +1191,89 @@
 
                 previewText.innerHTML = `<span class="text-slate-400 italic">${warning}</span>`;
                 hiddenArea.value = "";
+                
+                // NEW: Close Browser view if inputs become invalid
+                closeBrowserView();
                 return null;
             }
+        }
+
+        // NEW: Auto-open Browser Logic with ROBUST CORS Bypass Scrolling & Auto-Clicking
+        window.openBrowserView = function(url) {
+            const browserView = document.getElementById('browserView');
+            const iframe = document.getElementById('previewIframe');
+            const loader = document.getElementById('browserLoader');
+            const wrapper = document.getElementById('iframeWrapper');
+
+            document.getElementById('browserUrl').innerText = "biotechveyangoda.lk";
+            
+            // Appended parameters: if the external site is updated by your web admin to read these,
+            // it can natively trigger the click & scroll.
+            const autoClickUrl = url + "&autoClick=true&autoView=true";
+            
+            if(iframe.src !== autoClickUrl) {
+                loader.style.display = 'flex';
+                loader.style.opacity = '1';
+                
+                // Reset wrapper scroll to top before loading new link
+                if(wrapper) wrapper.scrollTop = 0;
+                
+                iframe.src = autoClickUrl;
+                
+                iframe.onload = function() {
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.style.display = 'none', 300);
+                    
+                    // 1. CORS BYPASS SCROLL (Visual wrapper scroll)
+                    setTimeout(() => {
+                        if(wrapper) wrapper.scrollTo({ top: 320, behavior: 'smooth' });
+                    }, 400);
+
+                    // 2. AGGRESSIVE INTERNAL AUTO-CLICK & SCROLL
+                    // We run this over 10 seconds to catch both the first page "View Report" button
+                    // AND to scroll down the "Next page" when the actual report/name loads.
+                    let attempts = 0;
+                    let actionInterval = setInterval(() => {
+                        try {
+                            if (iframe.contentWindow && iframe.contentWindow.document) {
+                                const doc = iframe.contentWindow.document;
+                                
+                                // Internal Scroll (Next Page)
+                                iframe.contentWindow.scrollTo({ top: 350, behavior: 'smooth' });
+                                if(doc.documentElement) doc.documentElement.scrollTop = 350;
+                                
+                                // Auto Click "View Report"
+                                const btns = doc.querySelectorAll('a, button, [role="button"], input[type="button"]');
+                                for(let btn of btns) {
+                                    const text = (btn.innerText || btn.value || '').toLowerCase();
+                                    if(text.includes('view report') || text.includes('click here') || text.includes('view')) {
+                                        btn.click();
+                                    }
+                                }
+                            }
+                        } catch (e) {
+                            // Ignored (CORS limits)
+                        }
+                        
+                        attempts++;
+                        if (attempts >= 20) clearInterval(actionInterval); // Run for 10 seconds (20 * 500ms)
+                    }, 500);
+                }
+            }
+
+            // Slide UP
+            browserView.classList.remove('translate-y-full');
+            browserView.classList.add('translate-y-0');
+        }
+
+        window.closeBrowserView = function() {
+            const browserView = document.getElementById('browserView');
+            if(browserView) {
+                // Slide DOWN
+                browserView.classList.remove('translate-y-0');
+                browserView.classList.add('translate-y-full');
+            }
+            if(browserTransitionTimeout) clearTimeout(browserTransitionTimeout);
         }
 
         // Updated History Loader - PREVIEW ONLY
@@ -1136,6 +1283,7 @@
             
             isPreviewMode = true; // Flag to stop input listeners from overwriting
             document.getElementById('historyIndicator').classList.remove('hidden'); // Show indicator
+            window.lastScrolledPatient = ""; // Reset to allow auto-scroll down
 
             // Parse ID (e.g. BN1005)
             let prefix = "BN";
@@ -1187,6 +1335,7 @@
             // 2. Reset Modes
             isPreviewMode = false;
             document.getElementById('historyIndicator').classList.add('hidden');
+            window.lastScrolledPatient = ""; // Reset to allow auto-scroll down
             
             // 3. Render
             updatePreviewFromInputs();
