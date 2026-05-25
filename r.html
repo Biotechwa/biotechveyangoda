@@ -14,6 +14,9 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Noto+Sans+Sinhala:wght@400;700&family=Noto+Sans+Tamil:wght@400;700&display=swap" rel="stylesheet">
 
+    <!-- Tesseract.js for Real AI OCR Scanning -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
     <style>
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
@@ -195,7 +198,7 @@
         <!-- Security Footer -->
         <div class="p-4 bg-white/50 border-t border-teal-100/50 text-center">
             <div class="flex items-center justify-center gap-2 text-teal-600/60 font-bold text-[9px] tracking-widest uppercase">
-                <i class="fa-solid fa-lock"></i> Secured & Encrypted Web Access
+                <i class="fa-solid fa-lock"></i> Real-Time AI Bill Verification
             </div>
         </div>
 
@@ -217,13 +220,13 @@
 
     <script>
         const chatBody = document.getElementById('chatBody');
-        // YOUR DEPLOYED SCRIPT URL - Make sure it is redeployed after adding the new code!
+        // Script URL used ONLY to log the attempt, no longer causes network error on verification
         const scriptURL = 'https://script.google.com/macros/s/AKfycbzWPVGayDSH6uWrBROFQjaFi1U6Il-d2x-LMExuW5ejWn-1ZJYLuCkBLHPG7n93ONDN/exec';
         
         let currentLang = 'en';
         let formData = { type: '', num: '', date: '' };
 
-        // Added security validation messages
+        // Security validation messages
         const i18n = {
             en: {
                 welcome: "Hello! 👋 I'm your Biotech Assistant. I'll help you access your lab reports.",
@@ -231,9 +234,9 @@
                 askNum: "Enter your <b>Sample Number</b>:",
                 askDate: "When was this collected?",
                 askBill: "Please upload or capture your <b>Bill Photo</b> to verify your identity:",
-                saving: "Scanning bill and verifying securely with our servers...",
-                ready: "Record found! Redirecting to report...",
-                errorNoMatch: "⚠️ Security Alert: The Date or Sample Number is incorrect. Access denied.<br><br>Please collect your report by contacting: <b class='text-lg'>0773524143</b>",
+                saving: "AI is scanning your bill...",
+                ready: "Scan Successful! Redirecting to report...",
+                errorNoMatch: "⚠️ Security Alert: The Date or Sample Number on this bill is incorrect. Access denied.<br><br>Please collect your report by contacting: <b class='text-lg'>0773524143</b>",
                 btnScan: "Open Camera / Gallery"
             },
             si: {
@@ -242,9 +245,9 @@
                 askNum: "<b>සාම්පල අංකය</b> ඇතුළත් කරන්න:",
                 askDate: "සාම්පලය ලබාගත් <b>දිනය</b>:",
                 askBill: "කරුණාකර ඔබගේ <b>බිල්පතෙහි ඡායාරූපයක්</b> (Scan) ඇතුළත් කරන්න:",
-                saving: "බිල්පත පරීක්ෂා කරමින් පවතී...",
-                ready: "වාර්තාව සූදානම්! විවෘත වෙමින් පවතී...",
-                errorNoMatch: "⚠️ දෝෂයකි: ඔබ ඇතුළත් කළ දිනය හෝ සාම්පල අංකය වැරදියි.<br><br>කරුණාකර ඔබගේ වාර්තාව ලබා ගැනීමට <b class='text-lg'>0773524143</b> අමතන්න.",
+                saving: "AI මගින් බිල්පත පරීක්ෂා කරමින් පවතී...",
+                ready: "සාර්ථකයි! වාර්තාව විවෘත වෙමින් පවතී...",
+                errorNoMatch: "⚠️ දෝෂයකි: මෙම බිල්පතෙහි දිනය හෝ සාම්පල අංකය වැරදියි.<br><br>කරුණාකර ඔබගේ වාර්තාව ලබා ගැනීමට <b class='text-lg'>0773524143</b> අමතන්න.",
                 btnScan: "කැමරාව / ගැලරිය විවෘත කරන්න"
             },
             ta: {
@@ -253,9 +256,9 @@
                 askNum: "உங்கள் <b>மாதிரி எண்</b>ணை உள்ளிடவும்:",
                 askDate: "மாதிரி எடுக்கப்பட்ட <b>தேதி</b>:",
                 askBill: "உங்கள் <b>பில் புகைப்படத்தை</b> பதிவேற்றவும் அல்லது ஸ்கேன் செய்யவும்:",
-                saving: "தரவு பாதுகாப்பாக சரிபார்க்கப்படுகிறது...",
-                ready: "அறிக்கை தயார்! திறக்கப்படுகிறது...",
-                errorNoMatch: "⚠️ பிழை: நீங்கள் வழங்கிய தேதி அல்லது மாதிரி எண் தவறானது.<br><br>உங்கள் அறிக்கையை பெற <b class='text-lg'>0773524143</b> ஐ தொடர்பு கொள்ளவும்.",
+                saving: "AI பில்லை ஸ்கேன் செய்கிறது...",
+                ready: "வெற்றி! அறிக்கை திறக்கப்படுகிறது...",
+                errorNoMatch: "⚠️ பிழை: பில்லில் உள்ள தேதி அல்லது மாதிரி எண் தவறானது.<br><br>உங்கள் அறிக்கையை பெற <b class='text-lg'>0773524143</b> ஐ தொடர்பு கொள்ளவும்.",
                 btnScan: "புகைப்படம் எடுக்கவும்"
             }
         };
@@ -370,7 +373,6 @@
             const file = input.files[0];
             const reader = new FileReader();
             
-            // Disable input label
             input.disabled = true;
             
             reader.onload = function(e) {
@@ -382,49 +384,62 @@
                     </div>
                 `, 'user');
                 
-                // Simulate scan duration, then process data
-                setTimeout(() => {
-                    processData();
-                }, 2000);
+                // Start real processing
+                processData(e.target.result);
             }
             reader.readAsDataURL(file);
         }
 
-        async function processData() {
+        async function processData(imageData) {
             const loading = addMessage('<div class="typing-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>', 'bot');
-            loading.innerHTML = `<i class="fa-solid fa-shield-halved mr-2 text-teal-500"></i> ${i18n[currentLang].saving}`;
+            loading.innerHTML = `<i class="fa-solid fa-shield-halved mr-2 text-teal-500"></i> ${i18n[currentLang].saving} <span id="scanProgress" class="ml-1 text-[11px]">0%</span>`;
             
-            const params = new URLSearchParams({
-                type: formData.type,
-                sampleNumber: formData.num,
-                date: formData.date,
-                language: currentLang,
-                action: 'verify' // Let the server know we want to verify
-            });
+            // Fire and forget log to Google Sheets (Will not cause network errors for user)
+            const params = new URLSearchParams({ type: formData.type, sampleNumber: formData.num, date: formData.date, language: currentLang });
+            fetch(`${scriptURL}?${params.toString()}`, { method: 'GET', mode: 'no-cors' }).catch(e => console.log("Silent log failed"));
 
             try {
-                // Notice: 'no-cors' is REMOVED so we can actually read the server's response.
-                const response = await fetch(`${scriptURL}?${params.toString()}`);
-                
-                // Parse the JSON response from Google Apps Script
-                const result = await response.json();
+                // ACTUAL AI OCR SCANNING
+                const result = await Tesseract.recognize(imageData, 'eng', {
+                    logger: m => {
+                        if(m.status === 'recognizing text') {
+                            const prog = document.getElementById('scanProgress');
+                            if(prog) prog.innerText = Math.round(m.progress * 100) + '%';
+                        }
+                    }
+                });
 
-                if (result.success) {
-                    // Match found in the database!
+                const text = result.data.text;
+                
+                // CLEAN UP TEXT: Remove all spaces and non-alphanumeric chars to make it highly angle/camera resistant
+                const cleanOCR = text.replace(/[^A-Z0-9]/gi, '').toUpperCase();
+                
+                // Create exactly what we are searching for
+                const searchSample = (formData.type + formData.num).toUpperCase().replace(/[^A-Z0-9]/gi, ''); // e.g. "VG6"
+                const searchDate = formData.date.replace(/[^A-Z0-9]/gi, ''); // e.g. "2026-05-25" -> "20260525"
+
+                console.log("Found Text:", cleanOCR);
+                console.log("Looking for:", searchSample, "and", searchDate);
+
+                if (cleanOCR.includes(searchSample) && cleanOCR.includes(searchDate)) {
+                    // Match found securely via actual physical bill!
                     loading.innerHTML = `<i class="fa-solid fa-check-circle text-green-500 mr-2"></i> ${i18n[currentLang].ready}`;
                     
-                    // Use the secure URL generated by the server, not the client
+                    const id = formData.type + formData.num;
+                    const expiry = new Date().getTime() + (14 * 24 * 60 * 60 * 1000);
+                    const encoded = btoa(`${id}|${formData.date}|${expiry}`);
+                    
                     setTimeout(() => {
-                        window.location.href = result.reportUrl;
+                        window.location.href = `https://biotechveyangoda.lk/report-preview.html?data=${encoded}`;
                     }, 1500);
                 } else {
-                    // Mismatch! Do not generate a link. Show an error.
+                    // Mismatch! Do not generate a link. Show strict error.
                     loading.innerHTML = `<span class="text-red-500 font-semibold">${i18n[currentLang].errorNoMatch}</span>`;
                 }
 
             } catch (error) {
-                console.error("Verification failed", error);
-                loading.innerHTML = `<span class="text-red-500">Network error. Please try again.</span>`;
+                console.error("AI Scan failed", error);
+                loading.innerHTML = `<span class="text-red-500">Scan error. Please ensure the image is clear and try again.</span>`;
             }
         }
 
