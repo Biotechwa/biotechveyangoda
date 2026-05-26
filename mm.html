@@ -14,9 +14,6 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Noto+Sans+Sinhala:wght@400;700&family=Noto+Sans+Tamil:wght@400;700&display=swap" rel="stylesheet">
 
-    <!-- Tesseract.js for Client-Side OCR -->
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-
     <style>
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
@@ -203,7 +200,7 @@
         <!-- Security Footer -->
         <div class="p-4 bg-white/50 border-t border-teal-100/50 text-center">
             <div class="flex items-center justify-center gap-2 text-teal-600/60 font-bold text-[9px] tracking-widest uppercase">
-                <i class="fa-solid fa-shield-halved"></i> Privacy Protected Scan
+                <i class="fa-solid fa-shield-halved"></i> AI Privacy Protected Scan
             </div>
         </div>
 
@@ -238,7 +235,7 @@
                 askDate: "When was this collected?",
                 askBill: "For security, please upload a photo of your <b>Biotech Laboratory Bill</b>:",
                 btnUpload: "📸 Upload Bill",
-                scanning: "Scanning document securely...",
+                scanning: "AI is scanning your document...",
                 scanSuccess: "Verification successful!",
                 scanFail: "Could not match the sample number on the bill. Please ensure the bill is clear.",
                 btnWhatsapp: "<i class='fa-brands fa-whatsapp text-xl'></i> Collect via WhatsApp",
@@ -252,7 +249,7 @@
                 askDate: "සාම්පලය ලබාගත් <b>දිනය</b>:",
                 askBill: "ආරක්ෂාව තහවුරු කිරීම සඳහා, කරුණාකර ඔබගේ <b>Biotech රසායනාගාර බිල්පතෙහි</b> ඡායාරූපයක් උඩුගත කරන්න:",
                 btnUpload: "📸 බිල්පත උඩුගත කරන්න",
-                scanning: "බිල්පත පරීක්ෂා කරමින් පවතී...",
+                scanning: "AI මගින් බිල්පත පරීක්ෂා කරමින් පවතී...",
                 scanSuccess: "තහවුරු කිරීම සාර්ථකයි!",
                 scanFail: "බිල්පතේ ඇති සාම්පල අංකය තහවුරු කළ නොහැක. කරුණාකර පැහැදිලි ඡායාරූපයක් ලබා දෙන්න.",
                 btnWhatsapp: "<i class='fa-brands fa-whatsapp text-xl'></i> WhatsApp හරහා ලබා ගන්න",
@@ -266,7 +263,7 @@
                 askDate: "மாதிரி எடுக்கப்பட்ட <b>தேதி</b>:",
                 askBill: "பாதுகாப்பிற்காக உங்கள் <b>Biotech ஆய்வக ரசீதின்</b> புகைப்படத்தைப் பதிவேற்றவும்:",
                 btnUpload: "📸 ரசீதை பதிவேற்றவும்",
-                scanning: "உங்கள் ரசீது ஸ்கேன் செய்யப்படுகிறது...",
+                scanning: "AI உங்கள் ரசீதை ஸ்கேன் செய்கிறது...",
                 scanSuccess: "சரிபார்ப்பு வெற்றி!",
                 scanFail: "ரசீதில் உள்ள மாதிரி எண்ணை சரிபார்க்க முடியவில்லை. தெளிவான படத்தை வழங்கவும்.",
                 btnWhatsapp: "<i class='fa-brands fa-whatsapp text-xl'></i> WhatsApp மூலம் பெறவும்",
@@ -378,31 +375,6 @@
             `, 'bot');
         }
 
-        // Image Preprocessing to enhance Dot-Matrix Printer text for Tesseract
-        function preprocessImageForOCR(file, callback) {
-            const img = new Image();
-            const reader = new FileReader();
-            
-            reader.onload = (e) => {
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    
-                    // Scale 2x for better dot-matrix resolution
-                    canvas.width = img.width * 2;
-                    canvas.height = img.height * 2;
-                    
-                    // Native canvas filter: blur connects dots, contrast sharpens them, grayscale removes color noise
-                    ctx.filter = 'grayscale(100%) blur(1px) contrast(500%)';
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    
-                    canvas.toBlob(callback, 'image/jpeg', 0.9);
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-
         function handleFileUpload(input, id) {
             if (!input.files || input.files.length === 0) return;
             const file = input.files[0];
@@ -413,17 +385,17 @@
             // Show thumb
             const reader = new FileReader();
             reader.onload = (e) => {
-                addMessage(`<img src="${e.target.result}" class="rounded-xl max-w-full h-auto max-h-48 border border-teal-500/20 object-cover shadow-sm" />`, 'user');
+                const base64String = e.target.result;
+                addMessage(`<img src="${base64String}" class="rounded-xl max-w-full h-auto max-h-48 border border-teal-500/20 object-cover shadow-sm" />`, 'user');
                 
-                // Preprocess and scan
-                preprocessImageForOCR(file, (processedBlob) => {
-                    processBillOCR(processedBlob);
-                });
+                // Extract just the raw base64 data for the API (remove "data:image/jpeg;base64,")
+                const rawBase64 = base64String.split(',')[1];
+                processBillWithGeminiVision(rawBase64, file.type);
             };
             reader.readAsDataURL(file);
         }
 
-        async function processBillOCR(imageBlob) {
+        async function processBillWithGeminiVision(base64Data, mimeType) {
             const loadingMsg = addMessage(`
                 <div class="typing-dots">
                     <i class="fa-solid fa-expand text-teal-500 animate-pulse"></i> 
@@ -431,43 +403,58 @@
                 </div>
             `, 'bot');
 
-            try {
-                const result = await Tesseract.recognize(imageBlob, 'eng');
-                const extractedText = result.data.text.toUpperCase();
-                
-                // Advanced AI Pattern Matching for Dot-Matrix characters
-                // Valid types: BN, VG, NI, BR
-                const ocrMap = {
-                    'B': '[B8EPRD6S5]',
-                    'N': '[NMH]',
-                    'V': '[VYU]',
-                    'G': '[G6COQ]',
-                    'I': '[I1LT]',
-                    'R': '[RAPK8]'
-                };
-                
-                // Build a fuzzy regex for the specific sample number (e.g. BN42 -> /[B8...][NMH]\s*4\s*2/i)
-                let regexStr = '';
-                for (let char of formData.type.toUpperCase()) {
-                    regexStr += ocrMap[char] || char;
-                }
-                regexStr += '[\\s\\-:]*'; // Allow spaces, dashes, or colons between prefix and number
-                for (let char of formData.num.toString()) {
-                    regexStr += char + '[\\s]*'; // Allow spaces between digits
-                }
-                
-                const matchRegex = new RegExp(regexStr, 'i');
+            // =========================================================================
+            // IMPORTANT DEPLOYMENT INSTRUCTION:
+            // When putting this on biotechveyangoda.lk, you must generate a FREE 
+            // API Key from Google AI Studio (https://aistudio.google.com/) and 
+            // paste it between the quotes below. 
+            // For example: const apiKey = "AIzaSyB...";
+            // =========================================================================
+            const apiKey = "AIzaSyBqPSOC8m1E5ncsd5GDycgkZLCXgfjznG0"; 
+            
+            // Note: In production on your own site, use "gemini-1.5-flash" instead of the preview model
+            const modelName = "gemini-1.5-flash";
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
 
-                // Check if the fuzzy regex matches anywhere in the scanned text
-                if (matchRegex.test(extractedText)) {
+            const fullSampleId = `${formData.type}${formData.num}`.toUpperCase();
+            
+            // Give the AI strict instructions on what to look for
+            const promptText = `Look at this dot-matrix printed laboratory receipt. The user is claiming their Sample Number is ${fullSampleId}. The sample number typically starts with BN, VG, NI, or BR. Dot-matrix printers might make 'B' look like '8' or 'N' look like 'H'. Carefully read the receipt. Does the sample number ${fullSampleId} (or a very close dot-matrix misprint of it) exist on this receipt? Reply strictly with the word "YES" if it matches, or "NO" if it does not match.`;
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{
+                            role: "user",
+                            parts: [
+                                { text: promptText },
+                                { inlineData: { mimeType: mimeType, data: base64Data } }
+                            ]
+                        }]
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error("API request failed");
+                }
+
+                const data = await response.json();
+                
+                // Parse the AI's answer
+                const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text?.toUpperCase().trim() || "";
+
+                if (aiResponse.includes("YES")) {
                     loadingMsg.innerHTML = `<i class="fa-solid fa-check-circle text-green-500 text-lg"></i> <span class="font-bold text-green-700 ml-1">${i18n[currentLang].scanSuccess}</span>`;
                     setTimeout(processData, 1000); 
                 } else {
-                    console.log("OCR Text Failed to Match. Tried Regex:", regexStr);
+                    console.log("AI Verification failed. Response:", aiResponse);
                     showWhatsAppFallback(loadingMsg);
                 }
             } catch (err) {
-                console.error("OCR Error: ", err);
+                console.error("AI API Error: ", err);
+                // If API fails (e.g. missing API key on production), fallback gracefully to WhatsApp
                 showWhatsAppFallback(loadingMsg);
             }
         }
@@ -499,7 +486,7 @@
                 type: formData.type,
                 sampleNumber: formData.num,
                 date: formData.date,
-                phone: 'verified_via_bill',
+                phone: 'verified_via_AI_scan',
                 language: currentLang
             });
 
