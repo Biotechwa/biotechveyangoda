@@ -235,7 +235,7 @@
                 askDate: "When was this collected?",
                 askBill: "For security, please upload a photo of your <b>Biotech Laboratory Bill</b>:",
                 btnUpload: "📸 Upload Bill",
-                scanning: "AI is scanning your document...",
+                scanning: "AI is reading your document...",
                 scanSuccess: "Verification successful!",
                 scanFail: "Could not match the sample number on the bill. Please ensure the bill is clear.",
                 btnWhatsapp: "<i class='fa-brands fa-whatsapp text-xl'></i> Collect via WhatsApp",
@@ -379,17 +379,17 @@
             if (!input.files || input.files.length === 0) return;
             const file = input.files[0];
             
-            // Hide button immediately so they don't double click
             document.getElementById(`uploadWrapper-${id}`).style.display = 'none';
 
             const reader = new FileReader();
             reader.onload = (e) => {
-                // To prevent API Payload limits, we MUST compress phone photos first
                 const img = new Image();
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 1024; // Resize large images
-                    const MAX_HEIGHT = 1024;
+                    
+                    // Increased max dimensions massively for better readability by AI
+                    const MAX_WIDTH = 1600; 
+                    const MAX_HEIGHT = 1600;
                     let width = img.width;
                     let height = img.height;
 
@@ -410,13 +410,11 @@
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
 
-                    // Compress to 70% quality JPEG (reduces 10MB to ~150KB)
-                    const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                    // Increased quality to 90% so the dot matrix text isn't destroyed
+                    const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.9);
                     
-                    // Show compressed thumbnail
                     addMessage(`<img src="${compressedDataUrl}" class="rounded-xl max-w-full h-auto max-h-48 border border-teal-500/20 object-cover shadow-sm" />`, 'user');
                     
-                    // Extract just the raw base64 data for the API
                     const rawBase64 = compressedDataUrl.split(',')[1];
                     processBillWithGeminiVision(rawBase64, 'image/jpeg');
                 };
@@ -439,8 +437,9 @@
 
             const fullSampleId = `${formData.type}${formData.num}`.toUpperCase();
             
-            // Highly forgiving instructions for Dot-Matrix
-            const promptText = `Examine this laboratory receipt carefully. Look specifically for the "Sample No" (usually at the top right). The user is claiming their number is ${fullSampleId}. Because this is a dot-matrix printer, letters are often printed with missing dots (e.g. 'B' looks like '8', 'N' looks like 'M' or 'H', 'V' looks like 'U'). Does the text contain ${fullSampleId} or a very obvious dot-matrix misprint of it? Answer STRICTLY with the single word "YES" if found, or "NO" if missing.`;
+            // NEW INSTRUCTIONS: Ask the AI to just read everything. 
+            // We do the logic checking in javascript instead to prevent AI hallucinations.
+            const promptText = `Please extract all the text you can read from this dot-matrix printed receipt. Pay special attention to the 'Sample No' usually located near the middle-right or top-right. Output exactly what you see.`;
 
             try {
                 const response = await fetch(url, {
@@ -458,20 +457,41 @@
                 });
 
                 if (!response.ok) {
-                    const errInfo = await response.text();
-                    console.error("API Error Response:", errInfo);
                     throw new Error("API request failed: " + response.status);
                 }
 
                 const data = await response.json();
-                const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text?.toUpperCase().trim() || "";
                 
-                console.log("AI Answered:", aiResponse); // Useful for debugging in browser console
+                // Get exactly what the AI read from the receipt
+                const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text?.toUpperCase() || "";
+                console.log("AI Read the following text from the receipt:\n", aiResponse);
 
-                if (aiResponse.includes("YES")) {
+                // STRIP EVERYTHING DOWN TO JUST LETTERS AND NUMBERS for clean comparison
+                let cleanedAI = aiResponse.replace(/[^A-Z0-9]/g, '');
+                let expectedNum = fullSampleId.replace(/[^A-Z0-9]/g, '');
+
+                // AI FUZZY FIXER:
+                // Because it's a dot matrix printer, the AI might misread faded characters.
+                // We automatically correct the AI's mistakes before checking for a match.
+                cleanedAI = cleanedAI
+                    .replace(/8/g, 'B')
+                    .replace(/M/g, 'N')
+                    .replace(/H/g, 'N')
+                    .replace(/U/g, 'V')
+                    .replace(/I/g, '1') // Just in case NI looks like N1
+                    .replace(/O/g, '0');
+                
+                // Also fix expected just in case
+                expectedNum = expectedNum.replace(/I/g, '1').replace(/O/g, '0');
+
+                console.log("Searching for:", expectedNum, "Inside:", cleanedAI);
+
+                // Verify if the number exists in the cleaned, corrected text
+                if (cleanedAI.includes(expectedNum) || aiResponse.replace(/[^A-Z0-9]/g, '').includes(expectedNum)) {
                     loadingMsg.innerHTML = `<i class="fa-solid fa-check-circle text-green-500 text-lg"></i> <span class="font-bold text-green-700 ml-1">${i18n[currentLang].scanSuccess}</span>`;
                     setTimeout(processData, 1000); 
                 } else {
+                    console.log("MATCH FAILED!");
                     showWhatsAppFallback(loadingMsg);
                 }
             } catch (err) {
@@ -491,7 +511,7 @@
             const waUrl = `https://wa.me/94773524143?text=${encodedMsg}`;
 
             msgElement.innerHTML = `
-                <div class="text-rose-600 font-medium mb-3 text-sm border border-rose-200 bg-rose-50 p-3 rounded-xl">
+                <div class="text-rose-600 font-medium mb-3 text-sm border border-rose-200 bg-rose-50 p-3 rounded-xl shadow-sm">
                     <i class="fa-solid fa-circle-exclamation mr-1"></i> ${i18n[currentLang].scanFail}
                 </div>
                 <a href="${waUrl}" target="_blank" class="whatsapp-btn">
