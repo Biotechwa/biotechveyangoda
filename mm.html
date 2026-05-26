@@ -14,7 +14,7 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Noto+Sans+Sinhala:wght@400;700&family=Noto+Sans+Tamil:wght@400;700&display=swap" rel="stylesheet">
 
-    <!-- Tesseract.js for Real AI OCR Scanning -->
+    <!-- Tesseract.js for Client-Side OCR -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
     <style>
@@ -36,25 +36,10 @@
         @keyframes pulse-ring { 0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(255, 255, 255, 0); } 100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); } }
         @keyframes blob { 0% { transform: translate(0px, 0px) scale(1); } 33% { transform: translate(30px, -50px) scale(1.1); } 66% { transform: translate(-20px, 20px) scale(0.9); } 100% { transform: translate(0px, 0px) scale(1); } }
         @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
-        @keyframes scan { 0% { top: -10%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
 
         .animate-float { animation: float 3s ease-in-out infinite; }
         .animate-pulse-slow { animation: pulse-ring 2s infinite; }
         .animate-blob { animation: blob 7s infinite alternate; }
-        .animate-shake { animation: shake 0.2s ease-in-out 0s 2; }
-
-        .scan-container { position: relative; overflow: hidden; border-radius: 12px; }
-        .scan-line {
-            position: absolute; width: 100%; height: 5px; background: #22d3ee;
-            box-shadow: 0 0 15px #22d3ee, 0 0 30px #22d3ee;
-            animation: scan 2s ease-in-out infinite alternate; z-index: 20;
-        }
-        .scan-overlay {
-            position: absolute; inset: 0;
-            background: linear-gradient(180deg, rgba(6, 182, 212, 0) 0%, rgba(6, 182, 212, 0.2) 50%, rgba(6, 182, 212, 0) 100%);
-            z-index: 10; pointer-events: none;
-        }
 
         .glass-effect {
             background: rgba(255, 255, 255, 0.9);
@@ -100,6 +85,7 @@
             line-height: 1.6;
             animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             position: relative;
+            word-wrap: break-word;
         }
 
         .msg-bot {
@@ -144,7 +130,7 @@
             box-shadow: 0 4px 12px rgba(13, 148, 136, 0.1);
         }
 
-        .typing-dots { display: flex; gap: 4px; padding: 4px 0; }
+        .typing-dots { display: flex; gap: 4px; padding: 4px 0; align-items: center;}
         .dot { width: 6px; height: 6px; background: #94a3b8; border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; }
         .dot:nth-child(1) { animation-delay: -0.32s; }
         .dot:nth-child(2) { animation-delay: -0.16s; }
@@ -159,14 +145,30 @@
             outline: none;
             transition: all 0.2s;
             font-weight: 600;
-            font-size: 16px; /* Prevents auto-zoom on iOS */
+            font-size: 16px; 
         }
         .custom-input:focus {
             background: white;
             border-color: #0d9488;
             box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.1);
         }
-        .input-error { border-color: #ef4444 !important; background: #fef2f2 !important; }
+        
+        .whatsapp-btn {
+            background-color: #25D366;
+            color: white;
+            border-radius: 16px;
+            padding: 12px 20px;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            margin-top: 10px;
+            transition: 0.2s;
+            width: 100%;
+            justify-content: center;
+        }
+        .whatsapp-btn:hover { background-color: #20bd5a; transform: translateY(-2px); }
     </style>
 </head>
 <body>
@@ -181,9 +183,7 @@
             <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 15px 15px;"></div>
             
             <div class="relative inline-block mb-3">
-                <!-- Outer Pulse Ring -->
                 <div class="absolute inset-0 bg-white rounded-full opacity-20 animate-pulse-slow"></div>
-                <!-- Main Icon Circle -->
                 <div class="relative bg-white text-teal-600 w-14 h-14 rounded-full flex items-center justify-center shadow-lg mx-auto animate-float">
                     <i class="fa-solid fa-microscope text-2xl"></i>
                 </div>
@@ -203,7 +203,7 @@
         <!-- Security Footer -->
         <div class="p-4 bg-white/50 border-t border-teal-100/50 text-center">
             <div class="flex items-center justify-center gap-2 text-teal-600/60 font-bold text-[9px] tracking-widest uppercase">
-                <i class="fa-solid fa-lock"></i> Real-Time AI Bill Verification
+                <i class="fa-solid fa-shield-halved"></i> Privacy Protected Scan
             </div>
         </div>
 
@@ -225,55 +225,55 @@
 
     <script>
         const chatBody = document.getElementById('chatBody');
-        // Script URL used ONLY to log the attempt, no longer causes network error on verification
         const scriptURL = 'https://script.google.com/macros/s/AKfycbzWPVGayDSH6uWrBROFQjaFi1U6Il-d2x-LMExuW5ejWn-1ZJYLuCkBLHPG7n93ONDN/exec';
         
         let currentLang = 'en';
         let formData = { type: '', num: '', date: '' };
 
-        // Security validation messages
         const i18n = {
             en: {
                 welcome: "Hello! 👋 I'm your Biotech Assistant. I'll help you access your lab reports.",
                 askType: "Select your <b>Sample Type</b>:",
                 askNum: "Enter your <b>Sample Number</b>:",
                 askDate: "When was this collected?",
-                askBill: "Please upload or capture your <b>Bill Photo</b> to verify your identity:",
-                saving: "AI is scanning your bill...",
-                ready: "Scan Successful! Redirecting to report...",
-                errorNoMatch: "⚠️ Security Alert: The Date or Sample Number on this bill is incorrect. Access denied.<br><br>Please collect your report by contacting: <b class='text-lg'>0773524143</b>",
-                btnScan: "Open Camera / Gallery"
+                askBill: "For security, please upload a photo of your <b>Biotech Laboratory Bill</b>:",
+                btnUpload: "📸 Upload Bill",
+                scanning: "Scanning document securely...",
+                scanSuccess: "Verification successful!",
+                scanFail: "Could not match the sample number on the bill. Please ensure the bill is clear.",
+                btnWhatsapp: "<i class='fa-brands fa-whatsapp text-xl'></i> Collect via WhatsApp",
+                saving: "Preparing your report...",
+                ready: "Redirecting...",
             },
             si: {
                 welcome: "ආයුබෝවන්! 👋 මම Biotech සහායකයා. ඔබගේ වාර්තා ලබා ගැනීමට මම උදව් කරන්නම්.",
                 askType: "ඔබේ <b>සාම්පල වර්ගය</b> තෝරන්න:",
                 askNum: "<b>සාම්පල අංකය</b> ඇතුළත් කරන්න:",
                 askDate: "සාම්පලය ලබාගත් <b>දිනය</b>:",
-                askBill: "කරුණාකර ඔබගේ <b>බිල්පතෙහි ඡායාරූපයක්</b> (Scan) ඇතුළත් කරන්න:",
-                saving: "AI මගින් බිල්පත පරීක්ෂා කරමින් පවතී...",
-                ready: "සාර්ථකයි! වාර්තාව විවෘත වෙමින් පවතී...",
-                errorNoMatch: "⚠️ දෝෂයකි: මෙම බිල්පතෙහි දිනය හෝ සාම්පල අංකය වැරදියි.<br><br>කරුණාකර ඔබගේ වාර්තාව ලබා ගැනීමට <b class='text-lg'>0773524143</b> අමතන්න.",
-                btnScan: "කැමරාව / ගැලරිය විවෘත කරන්න"
+                askBill: "ආරක්ෂාව තහවුරු කිරීම සඳහා, කරුණාකර ඔබගේ <b>Biotech රසායනාගාර බිල්පතෙහි</b> ඡායාරූපයක් උඩුගත කරන්න:",
+                btnUpload: "📸 බිල්පත උඩුගත කරන්න",
+                scanning: "බිල්පත පරීක්ෂා කරමින් පවතී...",
+                scanSuccess: "තහවුරු කිරීම සාර්ථකයි!",
+                scanFail: "බිල්පතේ ඇති සාම්පල අංකය තහවුරු කළ නොහැක. කරුණාකර පැහැදිලි ඡායාරූපයක් ලබා දෙන්න.",
+                btnWhatsapp: "<i class='fa-brands fa-whatsapp text-xl'></i> WhatsApp හරහා ලබා ගන්න",
+                saving: "වාර්තාව සූදානම් වෙමින් පවතී...",
+                ready: "විවෘත වෙමින් පවතී...",
             },
             ta: {
                 welcome: "வணக்கம்! 👋 நான் உங்கள் Biotech உதவியாளர்.",
                 askType: "உங்கள் <b>மாதிரி வகை</b>யைத் தேர்ந்தெடுக்கவும்:",
                 askNum: "உங்கள் <b>மாதிரி எண்</b>ணை உள்ளிடவும்:",
                 askDate: "மாதிரி எடுக்கப்பட்ட <b>தேதி</b>:",
-                askBill: "உங்கள் <b>பில் புகைப்படத்தை</b> பதிவேற்றவும் அல்லது ஸ்கேன் செய்யவும்:",
-                saving: "AI பில்லை ஸ்கேன் செய்கிறது...",
-                ready: "வெற்றி! அறிக்கை திறக்கப்படுகிறது...",
-                errorNoMatch: "⚠️ பிழை: பில்லில் உள்ள தேதி அல்லது மாதிரி எண் தவறானது.<br><br>உங்கள் அறிக்கையை பெற <b class='text-lg'>0773524143</b> ஐ தொடர்பு கொள்ளவும்.",
-                btnScan: "புகைப்படம் எடுக்கவும்"
+                askBill: "பாதுகாப்பிற்காக உங்கள் <b>Biotech ஆய்வக ரசீதின்</b> புகைப்படத்தைப் பதிவேற்றவும்:",
+                btnUpload: "📸 ரசீதை பதிவேற்றவும்",
+                scanning: "உங்கள் ரசீது ஸ்கேன் செய்யப்படுகிறது...",
+                scanSuccess: "சரிபார்ப்பு வெற்றி!",
+                scanFail: "ரசீதில் உள்ள மாதிரி எண்ணை சரிபார்க்க முடியவில்லை. தெளிவான படத்தை வழங்கவும்.",
+                btnWhatsapp: "<i class='fa-brands fa-whatsapp text-xl'></i> WhatsApp மூலம் பெறவும்",
+                saving: "அறிக்கை தயாராகிறது...",
+                ready: "திறக்கப்படுகிறது...",
             }
         };
-
-        // Scroll to bottom reliably
-        function scrollToBottom() {
-            setTimeout(() => {
-                chatBody.scrollTop = chatBody.scrollHeight;
-            }, 50);
-        }
 
         window.onload = () => {
             const saved = localStorage.getItem('biotech_assistant_lang');
@@ -329,7 +329,7 @@
                     </div>
                 </div>
             `, 'bot');
-            setTimeout(() => document.getElementById(id).focus(), 100);
+            document.getElementById(id).focus();
         }
 
         function submitNum(id) {
@@ -360,127 +360,157 @@
             formData.date = val;
             document.getElementById(id).disabled = true;
             addMessage(val, 'user');
-            setTimeout(step4_Bill, 600);
+            setTimeout(step4_UploadBill, 600);
         }
 
-        function step4_Bill() {
+        function step4_UploadBill() {
             const id = 'file' + Date.now();
             addMessage(`
                 <div>
                     ${i18n[currentLang].askBill}
-                    <div class="mt-4">
-                        <input type="file" id="${id}" accept="image/*" capture="environment" class="hidden" onchange="handleBillUpload(this, '${id}')">
-                        <label for="${id}" class="bg-teal-50 border-2 border-dashed border-teal-400 text-teal-700 w-full py-6 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-teal-100 transition shadow-sm">
-                            <i class="fa-solid fa-expand text-3xl mb-2 text-teal-600 animate-pulse-slow"></i>
-                            <span class="font-bold text-sm uppercase tracking-wider">${i18n[currentLang].btnScan}</span>
+                    <div class="mt-4" id="uploadWrapper-${id}">
+                        <input type="file" id="${id}" accept="image/*" class="hidden" onchange="handleFileUpload(this, '${id}')">
+                        <label for="${id}" class="bg-teal-600 hover:bg-teal-700 text-white px-5 py-3 rounded-2xl font-bold text-sm cursor-pointer inline-flex items-center gap-2 shadow-md w-full justify-center">
+                            ${i18n[currentLang].btnUpload}
                         </label>
                     </div>
                 </div>
             `, 'bot');
         }
 
-        function handleBillUpload(input, id) {
-            if (!input.files || !input.files[0]) return;
-            
-            const file = input.files[0];
-            input.disabled = true;
-            
+        // Image Preprocessing to enhance Dot-Matrix Printer text for Tesseract
+        function preprocessImageForOCR(file, callback) {
+            const img = new Image();
             const reader = new FileReader();
-            reader.onload = function(e) {
-                // Pre-process image using Canvas (Resizes to prevent crashes, creates high contrast for OCR)
-                const img = new Image();
-                img.onload = function() {
+            
+            reader.onload = (e) => {
+                img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 1200; // Resize to max 1200px to avoid memory crash
-                    const scaleSize = MAX_WIDTH / img.width;
-                    const w = img.width > MAX_WIDTH ? MAX_WIDTH : img.width;
-                    const h = img.width > MAX_WIDTH ? img.height * scaleSize : img.height;
-                    
-                    canvas.width = w;
-                    canvas.height = h;
                     const ctx = canvas.getContext('2d');
                     
-                    // Draw resized image
-                    ctx.drawImage(img, 0, 0, w, h);
+                    // Scale 2x for better dot-matrix resolution
+                    canvas.width = img.width * 2;
+                    canvas.height = img.height * 2;
                     
-                    // Convert to high-contrast black & white to ignore paper color/lighting
-                    const imgData = ctx.getImageData(0, 0, w, h);
-                    const data = imgData.data;
-                    for (let i = 0; i < data.length; i += 4) {
-                        const avg = (data[i] + data[i+1] + data[i+2]) / 3;
-                        // Thresholding for pure black/white
-                        const color = avg > 120 ? 255 : 0; 
-                        data[i] = data[i+1] = data[i+2] = color;
-                    }
-                    ctx.putImageData(imgData, 0, 0);
-
-                    // Generate optimized image for AI
-                    const optimizedImg = canvas.toDataURL('image/jpeg', 0.9);
-
-                    // Show user professional scanning interface
-                    addMessage(`
-                        <div class="scan-container max-w-[240px] border-4 border-slate-800 bg-black mx-auto">
-                            <div class="scan-overlay"></div>
-                            <div class="scan-line"></div>
-                            <img src="${e.target.result}" class="w-full h-auto opacity-80" onload="scrollToBottom()">
-                        </div>
-                    `, 'user');
+                    // Native canvas filter: blur connects dots, contrast sharpens them, grayscale removes color noise
+                    ctx.filter = 'grayscale(100%) blur(1px) contrast(500%)';
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                     
-                    // Start real processing using the optimized B&W image
-                    processData(optimizedImg);
+                    canvas.toBlob(callback, 'image/jpeg', 0.9);
                 };
                 img.src = e.target.result;
-            }
+            };
             reader.readAsDataURL(file);
         }
 
-        async function processData(imageData) {
-            const loading = addMessage('<div class="typing-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>', 'bot');
-            loading.innerHTML = `<i class="fa-solid fa-microchip mr-2 text-teal-500"></i> ${i18n[currentLang].saving} <span id="scanProgress" class="ml-1 text-[12px] font-bold text-teal-700">0%</span>`;
-            scrollToBottom();
+        function handleFileUpload(input, id) {
+            if (!input.files || input.files.length === 0) return;
+            const file = input.files[0];
+            
+            // Hide button
+            document.getElementById(`uploadWrapper-${id}`).style.display = 'none';
 
-            // Fire and forget log to Google Sheets (Will not cause network errors for user)
-            const params = new URLSearchParams({ type: formData.type, sampleNumber: formData.num, date: formData.date, language: currentLang });
-            fetch(`${scriptURL}?${params.toString()}`, { method: 'GET', mode: 'no-cors' }).catch(e => console.log("Silent log failed"));
+            // Show thumb
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                addMessage(`<img src="${e.target.result}" class="rounded-xl max-w-full h-auto max-h-48 border border-teal-500/20 object-cover shadow-sm" />`, 'user');
+                
+                // Preprocess and scan
+                preprocessImageForOCR(file, (processedBlob) => {
+                    processBillOCR(processedBlob);
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function processBillOCR(imageBlob) {
+            const loadingMsg = addMessage(`
+                <div class="typing-dots">
+                    <i class="fa-solid fa-expand text-teal-500 animate-pulse"></i> 
+                    <span class="ml-2 font-medium text-teal-700">${i18n[currentLang].scanning}</span>
+                </div>
+            `, 'bot');
 
             try {
-                // ACTUAL AI OCR SCANNING on optimized image
-                const result = await Tesseract.recognize(imageData, 'eng', {
-                    logger: m => {
-                        if(m.status === 'recognizing text') {
-                            const prog = document.getElementById('scanProgress');
-                            if(prog) prog.innerText = Math.round(m.progress * 100) + '%';
-                        }
-                    }
-                });
+                const result = await Tesseract.recognize(imageBlob, 'eng');
+                const extractedText = result.data.text.toUpperCase();
+                
+                // Advanced AI Pattern Matching for Dot-Matrix characters
+                // Valid types: BN, VG, NI, BR
+                const ocrMap = {
+                    'B': '[B8EPRD6S5]',
+                    'N': '[NMH]',
+                    'V': '[VYU]',
+                    'G': '[G6COQ]',
+                    'I': '[I1LT]',
+                    'R': '[RAPK8]'
+                };
+                
+                // Build a fuzzy regex for the specific sample number (e.g. BN42 -> /[B8...][NMH]\s*4\s*2/i)
+                let regexStr = '';
+                for (let char of formData.type.toUpperCase()) {
+                    regexStr += ocrMap[char] || char;
+                }
+                regexStr += '[\\s\\-:]*'; // Allow spaces, dashes, or colons between prefix and number
+                for (let char of formData.num.toString()) {
+                    regexStr += char + '[\\s]*'; // Allow spaces between digits
+                }
+                
+                const matchRegex = new RegExp(regexStr, 'i');
 
-                const text = result.data.text;
-                
-                // CLEAN UP TEXT: Remove spaces/special chars to combat weird camera angles
-                const cleanOCR = text.replace(/[^A-Z0-9]/gi, '').toUpperCase();
-                
-                // 1. Check Sample (e.g. VG6)
-                const searchSample = (formData.type + formData.num).toUpperCase().replace(/[^A-Z0-9]/gi, ''); 
-                
-                // 2. Check Date (Smart check for different formats)
-                // If user entered 2026-05-25, check for 20260525 OR 25052026
-                const rawDate = formData.date; // 2026-05-25
-                const dateParts = rawDate.split('-');
-                const standardDate = rawDate.replace(/[^A-Z0-9]/gi, ''); // 20260525
-                const reverseDate = dateParts[2] + dateParts[1] + dateParts[0]; // 25052026
-                const shortDate = dateParts[2] + dateParts[1] + dateParts[0].substring(2); // 250526
-                
-                const dateRegex = new RegExp(`(${standardDate}|${reverseDate}|${shortDate})`);
+                // Check if the fuzzy regex matches anywhere in the scanned text
+                if (matchRegex.test(extractedText)) {
+                    loadingMsg.innerHTML = `<i class="fa-solid fa-check-circle text-green-500 text-lg"></i> <span class="font-bold text-green-700 ml-1">${i18n[currentLang].scanSuccess}</span>`;
+                    setTimeout(processData, 1000); 
+                } else {
+                    console.log("OCR Text Failed to Match. Tried Regex:", regexStr);
+                    showWhatsAppFallback(loadingMsg);
+                }
+            } catch (err) {
+                console.error("OCR Error: ", err);
+                showWhatsAppFallback(loadingMsg);
+            }
+        }
 
-                console.log("Extracted OCR text:", cleanOCR);
-                
-                const sampleFound = cleanOCR.includes(searchSample);
-                const dateFound = dateRegex.test(cleanOCR);
+        function showWhatsAppFallback(msgElement) {
+            const fullSampleId = `${formData.type}${formData.num}`;
+            const timeStr = new Date().toLocaleTimeString('en-US'); // Includes seconds
 
-                if (sampleFound && dateFound) {
-                    // Match found securely!
-                    loading.innerHTML = `<i class="fa-solid fa-check-circle text-green-500 mr-2 text-lg"></i> <span class="font-bold">${i18n[currentLang].ready}</span>`;
-                    scrollToBottom();
+            // Exactly the requested format
+            const rawMsg = `Please send online report following details\n sample num- ${fullSampleId}\n date - ${formData.date}\n patient send time - ${timeStr}`;
+            
+            const encodedMsg = encodeURIComponent(rawMsg);
+            const waUrl = `https://wa.me/94773524143?text=${encodedMsg}`;
+
+            msgElement.innerHTML = `
+                <div class="text-rose-600 font-medium mb-3 text-sm border border-rose-200 bg-rose-50 p-3 rounded-xl">
+                    <i class="fa-solid fa-circle-exclamation mr-1"></i> ${i18n[currentLang].scanFail}
+                </div>
+                <a href="${waUrl}" target="_blank" class="whatsapp-btn">
+                    ${i18n[currentLang].btnWhatsapp}
+                </a>
+            `;
+        }
+
+        async function processData() {
+            const loading = addMessage('<div class="typing-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>', 'bot');
+            
+            const params = new URLSearchParams({
+                type: formData.type,
+                sampleNumber: formData.num,
+                date: formData.date,
+                phone: 'verified_via_bill',
+                language: currentLang
+            });
+
+            fetch(`${scriptURL}?${params.toString()}`, { method: 'GET', mode: 'no-cors' })
+                .catch(e => console.log("Save failed", e));
+
+            setTimeout(() => {
+                loading.innerHTML = `<i class="fa-solid fa-database mr-2 text-teal-500"></i> ${i18n[currentLang].saving}`;
+                
+                setTimeout(() => {
+                    loading.innerHTML = `<i class="fa-solid fa-lock-open text-green-500 mr-2"></i> ${i18n[currentLang].ready}`;
                     
                     const id = formData.type + formData.num;
                     const expiry = new Date().getTime() + (14 * 24 * 60 * 60 * 1000);
@@ -489,17 +519,8 @@
                     setTimeout(() => {
                         window.location.href = `https://biotechveyangoda.lk/report-preview.html?data=${encoded}`;
                     }, 1500);
-                } else {
-                    // Mismatch! Do not generate a link. Show strict error.
-                    loading.innerHTML = `<div class="bg-red-50 p-3 rounded-lg border border-red-100"><span class="text-red-600 font-semibold text-sm">${i18n[currentLang].errorNoMatch}</span></div>`;
-                    scrollToBottom();
-                }
-
-            } catch (error) {
-                console.error("AI Scan failed", error);
-                loading.innerHTML = `<span class="text-red-500 font-semibold">Scan processing error. Please ensure the image is bright, clear, and try again.</span>`;
-                scrollToBottom();
-            }
+                }, 2000);
+            }, 1000);
         }
 
         function addMessage(html, sender) {
@@ -507,8 +528,8 @@
             d.className = `msg msg-${sender}`;
             d.innerHTML = html;
             chatBody.appendChild(d);
-            scrollToBottom();
-            return d;
+            chatBody.scrollTop = chatBody.scrollHeight;
+            return d; 
         }
     </script>
 </body>
