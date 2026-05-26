@@ -379,18 +379,48 @@
             if (!input.files || input.files.length === 0) return;
             const file = input.files[0];
             
-            // Hide button
+            // Hide button immediately so they don't double click
             document.getElementById(`uploadWrapper-${id}`).style.display = 'none';
 
-            // Show thumb
             const reader = new FileReader();
             reader.onload = (e) => {
-                const base64String = e.target.result;
-                addMessage(`<img src="${base64String}" class="rounded-xl max-w-full h-auto max-h-48 border border-teal-500/20 object-cover shadow-sm" />`, 'user');
-                
-                // Extract just the raw base64 data for the API (remove "data:image/jpeg;base64,")
-                const rawBase64 = base64String.split(',')[1];
-                processBillWithGeminiVision(rawBase64, file.type);
+                // To prevent API Payload limits, we MUST compress phone photos first
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 1024; // Resize large images
+                    const MAX_HEIGHT = 1024;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // Compress to 70% quality JPEG (reduces 10MB to ~150KB)
+                    const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                    
+                    // Show compressed thumbnail
+                    addMessage(`<img src="${compressedDataUrl}" class="rounded-xl max-w-full h-auto max-h-48 border border-teal-500/20 object-cover shadow-sm" />`, 'user');
+                    
+                    // Extract just the raw base64 data for the API
+                    const rawBase64 = compressedDataUrl.split(',')[1];
+                    processBillWithGeminiVision(rawBase64, 'image/jpeg');
+                };
+                img.src = e.target.result;
             };
             reader.readAsDataURL(file);
         }
@@ -403,23 +433,14 @@
                 </div>
             `, 'bot');
 
-            // =========================================================================
-            // IMPORTANT DEPLOYMENT INSTRUCTION:
-            // When putting this on biotechveyangoda.lk, you must generate a FREE 
-            // API Key from Google AI Studio (https://aistudio.google.com/) and 
-            // paste it between the quotes below. 
-            // For example: const apiKey = "AIzaSyB...";
-            // =========================================================================
             const apiKey = "AIzaSyBqPSOC8m1E5ncsd5GDycgkZLCXgfjznG0"; 
-            
-            // Note: In production on your own site, use "gemini-1.5-flash" instead of the preview model
             const modelName = "gemini-1.5-flash";
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
 
             const fullSampleId = `${formData.type}${formData.num}`.toUpperCase();
             
-            // Give the AI strict instructions on what to look for
-            const promptText = `Look at this dot-matrix printed laboratory receipt. The user is claiming their Sample Number is ${fullSampleId}. The sample number typically starts with BN, VG, NI, or BR. Dot-matrix printers might make 'B' look like '8' or 'N' look like 'H'. Carefully read the receipt. Does the sample number ${fullSampleId} (or a very close dot-matrix misprint of it) exist on this receipt? Reply strictly with the word "YES" if it matches, or "NO" if it does not match.`;
+            // Highly forgiving instructions for Dot-Matrix
+            const promptText = `Examine this laboratory receipt carefully. Look specifically for the "Sample No" (usually at the top right). The user is claiming their number is ${fullSampleId}. Because this is a dot-matrix printer, letters are often printed with missing dots (e.g. 'B' looks like '8', 'N' looks like 'M' or 'H', 'V' looks like 'U'). Does the text contain ${fullSampleId} or a very obvious dot-matrix misprint of it? Answer STRICTLY with the single word "YES" if found, or "NO" if missing.`;
 
             try {
                 const response = await fetch(url, {
@@ -437,24 +458,24 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error("API request failed");
+                    const errInfo = await response.text();
+                    console.error("API Error Response:", errInfo);
+                    throw new Error("API request failed: " + response.status);
                 }
 
                 const data = await response.json();
-                
-                // Parse the AI's answer
                 const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text?.toUpperCase().trim() || "";
+                
+                console.log("AI Answered:", aiResponse); // Useful for debugging in browser console
 
                 if (aiResponse.includes("YES")) {
                     loadingMsg.innerHTML = `<i class="fa-solid fa-check-circle text-green-500 text-lg"></i> <span class="font-bold text-green-700 ml-1">${i18n[currentLang].scanSuccess}</span>`;
                     setTimeout(processData, 1000); 
                 } else {
-                    console.log("AI Verification failed. Response:", aiResponse);
                     showWhatsAppFallback(loadingMsg);
                 }
             } catch (err) {
-                console.error("AI API Error: ", err);
-                // If API fails (e.g. missing API key on production), fallback gracefully to WhatsApp
+                console.error("AI System Failure:", err);
                 showWhatsAppFallback(loadingMsg);
             }
         }
