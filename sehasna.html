@@ -1,298 +1,1039 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A Letter for Dammi 💌</title>
+    <title>For My Beautiful Dammi 💜</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+    <!-- Google Fonts: Inter and Dancing Script for elegant romantic touch -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        romantic: ['"Dancing Script"', 'cursive'],
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        lavender: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            200: '#ddd6fe',
+                            300: '#c4b5fd',
+                            400: '#a78bfa',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            800: '#5b21b6',
+                            900: '#4c1d95',
+                            950: '#2e1065',
+                        }
+                    },
+                    animation: {
+                        'float-slow': 'float 8s ease-in-out infinite',
+                        'float-medium': 'float 5s ease-in-out infinite',
+                        'pulse-glow': 'pulseGlow 2s ease-in-out infinite',
+                        'spin-slow': 'spin 12s linear infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px) rotate(0deg)' },
+                            '50%': { transform: 'translateY(-15px) rotate(3deg)' },
+                        },
+                        pulseGlow: {
+                            '0%, 100%': { opacity: '0.6', transform: 'scale(1)' },
+                            '50%': { opacity: '1', transform: 'scale(1.05)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        body {
-            font-family: 'Nunito', sans-serif;
-            margin: 0;
-            overflow: hidden;
+        /* Hide scrollbar for standard cleanliness */
+        ::-webkit-scrollbar {
+            width: 8px;
         }
-
-        /* Animated Pastel Background */
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        ::-webkit-scrollbar-track {
+            background: #1e1b4b;
         }
-        .romantic-bg {
-            background: linear-gradient(-45deg, #ffb6c1, #ffc0cb, #f0e6fa, #e6e6fa, #ffe4e1);
-            background-size: 400% 400%;
-            animation: gradientBG 15s ease infinite;
+        ::-webkit-scrollbar-thumb {
+            background: #6d28d9;
+            border-radius: 4px;
         }
-
-        /* Glassmorphism Card */
-        .glass-card {
-            background: rgba(255, 255, 255, 0.4);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            box-shadow: 0 8px 32px 0 rgba(255, 182, 193, 0.3);
+        ::-webkit-scrollbar-thumb:hover {
+            background: #8b5cf6;
         }
-
-        /* Typography */
-        .font-script {
-            font-family: 'Dancing Script', cursive;
+        
+        /* Interactive Card Flip Classes */
+        .perspective-1000 {
+            perspective: 1000px;
         }
-
-        /* Falling Petals */
-        .petal {
-            position: absolute;
-            background-color: #ffb7c5;
-            border-radius: 15px 0 15px 0;
-            opacity: 0.7;
-            pointer-events: none;
-            animation: fall linear forwards;
-            z-index: 1;
+        .preserve-3d {
+            transform-style: preserve-3d;
         }
-
-        @keyframes fall {
-            0% { transform: translateY(-10vh) rotate(0deg) scale(1); opacity: 0; }
-            10% { opacity: 0.8; }
-            90% { opacity: 0.8; }
-            100% { transform: translateY(110vh) rotate(360deg) scale(0.5); opacity: 0; }
+        .backface-hidden {
+            backface-visibility: hidden;
         }
-
-        /* Step Transitions */
-        .step {
-            display: none;
-            opacity: 0;
-            transition: opacity 0.6s ease-in-out, transform 0.6s ease-in-out;
-            transform: translateY(20px);
-        }
-        .step.active {
-            display: flex;
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        /* Runaway Button */
-        #btn-no {
-            transition: left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), top 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            position: relative; /* Starts relative, becomes fixed via JS */
-            z-index: 50;
-        }
-
-        /* Floating Hearts for Success */
-        .success-heart {
-            position: absolute;
-            font-size: 2rem;
-            animation: floatUp linear forwards;
-            pointer-events: none;
-            z-index: 100;
-        }
-
-        @keyframes floatUp {
-            0% { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(-100vh) scale(1.5) rotate(360deg); opacity: 0; }
+        .rotate-y-180 {
+            transform: rotateY(180deg);
         }
     </style>
 </head>
-<body class="romantic-bg min-h-screen flex items-center justify-center p-4 relative">
+<body class="bg-gradient-to-br from-lavender-950 via-indigo-950 to-purple-950 text-white font-sans min-h-screen relative overflow-x-hidden selection:bg-purple-500 selection:text-white">
 
-    <!-- Petals Container -->
-    <div id="petals-container" class="absolute inset-0 pointer-events-none overflow-hidden"></div>
+    <!-- Ambient Starry Sky Canvas -->
+    <canvas id="starryCanvas" class="absolute inset-0 pointer-events-none z-0"></canvas>
 
-    <!-- Main Glass Card -->
-    <div class="glass-card p-8 md:p-12 rounded-3xl max-w-lg w-full min-h-[400px] flex flex-col items-center justify-center relative z-10 text-center">
+    <!-- Ambient Music Button & Welcome Prompt (Custom Modal) -->
+    <div id="ambientMusicTrigger" class="fixed bottom-6 right-6 z-50 bg-white/10 hover:bg-white/20 border border-lavender-400/30 backdrop-blur-md p-3 rounded-full shadow-lg transition duration-300 cursor-pointer flex items-center gap-2 group">
+        <span id="musicIcon" class="text-xl">🎵</span>
+        <span class="text-xs font-semibold tracking-wider text-lavender-200 group-hover:text-white max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-500 ease-in-out whitespace-nowrap">Play Lullaby</span>
+    </div>
+
+    <!-- Notification Toast Element -->
+    <div id="toastNotification" class="fixed top-6 right-6 z-50 transform translate-y-[-150%] opacity-0 transition-all duration-500 ease-out bg-lavender-900/90 border border-lavender-400/50 backdrop-blur-md px-6 py-3 rounded-xl shadow-2xl flex items-center gap-3">
+        <span class="text-xl">✨</span>
+        <p class="text-sm text-lavender-100 font-medium" id="toastMessage">Welcome, Dammi!</p>
+    </div>
+
+    <!-- MAIN APP CONTAINER -->
+    <div class="relative z-10 flex flex-col items-center justify-between min-h-screen">
         
-        <!-- Step 0: The Envelope -->
-        <div id="step-0" class="step active flex-col items-center w-full">
-            <div class="text-8xl mb-6 animate-pulse hover:scale-110 transition-transform cursor-pointer" onclick="nextStep(0)">💌</div>
-            <h1 class="font-script text-5xl text-pink-600 mb-2">For Dammi</h1>
-            <p class="text-gray-700 font-semibold mb-8 text-lg">A special delivery just for you...</p>
-            <button onclick="nextStep(0)" class="bg-pink-500 hover:bg-pink-600 text-white px-8 py-3 rounded-full font-bold shadow-lg shadow-pink-200 transition-all hover:scale-105 active:scale-95">
-                Open Letter
-            </button>
-        </div>
+        <!-- ================= HERO SECTION ================= -->
+        <header id="home" class="w-full max-w-6xl mx-auto px-4 pt-12 pb-24 text-center flex flex-col items-center justify-center min-h-screen relative">
+            <!-- Sparkles & Floating SVGs -->
+            <div class="absolute top-20 left-10 text-4xl animate-float-slow opacity-60">💜</div>
+            <div class="absolute top-40 right-12 text-3xl animate-float-medium opacity-40">✨</div>
+            <div class="absolute bottom-20 left-1/4 text-2xl animate-float-medium opacity-50">🌸</div>
+            <div class="absolute bottom-40 right-1/4 text-4xl animate-float-slow opacity-70">🦄</div>
 
-        <!-- Step 1: The Confession -->
-        <div id="step-1" class="step flex-col items-center w-full">
-            <div class="text-6xl mb-4">😔</div>
-            <h1 class="font-script text-4xl text-gray-800 mb-4">Hey love...</h1>
-            <p class="text-gray-700 text-lg mb-8 leading-relaxed font-medium">
-                I know things have been a bit tense lately, and I know I'm the reason why. I've been thinking a lot about us...
-            </p>
-            <button onclick="nextStep(1)" class="bg-pink-400 hover:bg-pink-500 text-white px-8 py-3 rounded-full font-bold shadow-lg shadow-pink-200 transition-all hover:scale-105 active:scale-95">
-                Keep Reading ❤️
-            </button>
-        </div>
+            <!-- Glowing Header Card -->
+            <div class="bg-white/5 border border-white/10 backdrop-blur-lg px-8 py-12 rounded-3xl shadow-2xl max-w-3xl w-full relative overflow-hidden group hover:border-lavender-500/40 transition duration-500">
+                <div class="absolute -top-24 -left-24 w-48 h-48 bg-purple-500/20 rounded-full blur-3xl group-hover:bg-purple-500/30 transition duration-500"></div>
+                <div class="absolute -bottom-24 -right-24 w-48 h-48 bg-lavender-500/20 rounded-full blur-3xl group-hover:bg-lavender-500/30 transition duration-500"></div>
 
-        <!-- Step 2: The Apology -->
-        <div id="step-2" class="step flex-col items-center w-full">
-            <div class="text-6xl mb-4">🥀</div>
-            <h1 class="font-script text-4xl text-gray-800 mb-4">I'm truly sorry.</h1>
-            <p class="text-gray-700 text-lg mb-8 leading-relaxed font-medium">
-                You are the most beautiful, amazing person in my life. Seeing you upset absolutely breaks my heart, because your smile means everything to me.
-            </p>
-            <button onclick="nextStep(2)" class="bg-pink-400 hover:bg-pink-500 text-white px-8 py-3 rounded-full font-bold shadow-lg shadow-pink-200 transition-all hover:scale-105 active:scale-95">
-                Just one more thing...
-            </button>
-        </div>
+                <p class="text-lavender-300 font-bold tracking-widest text-sm uppercase mb-3 animate-pulse">Our Secret Universe</p>
+                
+                <h1 class="text-6xl md:text-8xl font-romantic text-transparent bg-clip-text bg-gradient-to-r from-lavender-200 via-purple-300 to-pink-300 drop-shadow-lg mb-6">
+                    Hey Dammi
+                </h1>
+                
+                <p class="text-base md:text-lg text-lavender-200/90 leading-relaxed max-w-xl mx-auto mb-8 font-light">
+                    Every galaxy needs a center, and in my universe, <span class="text-lavender-300 font-semibold underline decoration-wavy decoration-purple-400">it is always you.</span> Welcome to a little celestial corner built just for you.
+                </p>
 
-        <!-- Step 3: The Question -->
-        <div id="step-3" class="step flex-col items-center w-full">
-            <div class="text-7xl mb-4 animate-bounce">🥺</div>
-            <h1 class="font-script text-5xl text-pink-600 mb-4">Will you forgive me?</h1>
-            <p class="text-gray-700 text-lg mb-10 leading-relaxed font-medium">
-                I promise to make it up to you and do better. Can we go back to being happy together?
-            </p>
-            
-            <div class="flex flex-col sm:flex-row justify-center items-center gap-4 w-full h-32 sm:h-12 relative">
-                <button id="btn-yes" onclick="showSuccess()" class="w-48 bg-gradient-to-r from-pink-400 to-rose-400 hover:from-pink-500 hover:to-rose-500 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-transform hover:scale-110 z-20">
-                    Yes, I forgive you! 🥰
-                </button>
-                <button id="btn-no" class="w-48 bg-gray-400 text-white font-bold py-3 px-6 rounded-full shadow-lg z-20 cursor-not-allowed">
-                    No, I'm still mad 😠
-                </button>
+                <!-- CTA Row -->
+                <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                    <a href="#letterSection" class="px-8 py-3.5 bg-gradient-to-r from-purple-600 to-lavender-600 hover:from-purple-500 hover:to-lavender-500 text-white font-medium rounded-full shadow-lg hover:shadow-purple-500/30 transform hover:-translate-y-0.5 active:translate-y-0 transition duration-300 flex items-center gap-2">
+                        <span>Open Your Surprise</span>
+                        <span class="animate-bounce">👇</span>
+                    </a>
+                    <button onclick="playIntroMelody()" class="px-6 py-3.5 bg-white/5 hover:bg-white/10 border border-white/10 text-lavender-100 font-medium rounded-full backdrop-blur-md transition duration-300 flex items-center gap-2">
+                        <span>Tap for Magic</span>
+                        <span>🔮</span>
+                    </button>
+                </div>
             </div>
-        </div>
 
-        <!-- Step 4: Success -->
-        <div id="step-4" class="step flex-col items-center w-full">
-            <div class="text-7xl mb-4">💖</div>
-            <h1 class="font-script text-6xl text-pink-600 mb-4">Thank You!</h1>
-            <p class="text-gray-800 text-xl mb-4 leading-relaxed font-bold">
-                You're the absolute best, Dammi! 
-            </p>
-            <p class="text-pink-500 text-lg font-bold">
-                I love you to the moon and back! 🚀🌙
-            </p>
-        </div>
+            <!-- Scroll indicator -->
+            <div class="absolute bottom-10 flex flex-col items-center animate-bounce opacity-80">
+                <span class="text-xs text-lavender-400 uppercase tracking-widest mb-1">Scroll to Explore</span>
+                <svg class="w-5 h-5 text-lavender-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+            </div>
+        </header>
+
+        <!-- ================= LIVE LOVE COUNTER ================= -->
+        <section id="counterSection" class="w-full max-w-5xl mx-auto px-6 py-20">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-romantic text-lavender-300 mb-2">Our Love Story in Numbers</h2>
+                <p class="text-sm text-lavender-200/60 font-light">Every single second counts when I am with you.</p>
+            </div>
+
+            <!-- Customizer Box -->
+            <div class="mb-8 bg-white/5 border border-white/5 rounded-2xl p-4 max-w-md mx-auto flex flex-col md:flex-row items-center justify-between gap-3 backdrop-blur-md">
+                <span class="text-xs text-lavender-200 font-semibold">Change Start Date:</span>
+                <input type="date" id="anniversaryDatePicker" class="bg-lavender-900/60 border border-lavender-400/30 text-lavender-100 text-xs rounded-lg focus:ring-purple-500 focus:border-purple-500 p-2 outline-none cursor-pointer" value="2024-01-01" onchange="updateAnniversaryDate()">
+            </div>
+
+            <!-- Digital Counter Grid -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+                <!-- Days Card -->
+                <div class="bg-gradient-to-b from-white/10 to-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-md relative overflow-hidden group hover:border-lavender-500/50 transition-all duration-300">
+                    <span class="absolute top-2 right-2 text-xl opacity-30">📆</span>
+                    <h3 id="countDays" class="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-200 to-lavender-100 mb-2">00</h3>
+                    <p class="text-xs uppercase tracking-widest text-lavender-300">Days Shared</p>
+                </div>
+                <!-- Hours Card -->
+                <div class="bg-gradient-to-b from-white/10 to-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-md relative overflow-hidden group hover:border-lavender-500/50 transition-all duration-300">
+                    <span class="absolute top-2 right-2 text-xl opacity-30">✨</span>
+                    <h3 id="countHours" class="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-200 to-lavender-100 mb-2">00</h3>
+                    <p class="text-xs uppercase tracking-widest text-lavender-300">Hours Laughing</p>
+                </div>
+                <!-- Minutes Card -->
+                <div class="bg-gradient-to-b from-white/10 to-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-md relative overflow-hidden group hover:border-lavender-500/50 transition-all duration-300">
+                    <span class="absolute top-2 right-2 text-xl opacity-30">⏳</span>
+                    <h3 id="countMinutes" class="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-200 to-lavender-100 mb-2">00</h3>
+                    <p class="text-xs uppercase tracking-widest text-lavender-300">Minutes Talking</p>
+                </div>
+                <!-- Seconds Card -->
+                <div class="bg-gradient-to-b from-white/10 to-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-md relative overflow-hidden group hover:border-lavender-500/50 transition-all duration-300">
+                    <span class="absolute top-2 right-2 text-xl opacity-30">💓</span>
+                    <h3 id="countSeconds" class="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-300 to-purple-300 mb-2">00</h3>
+                    <p class="text-xs uppercase tracking-widest text-pink-300 animate-pulse">Heartbeats Counted</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= INTERACTIVE ENVELOPE / LOVE LETTER ================= -->
+        <section id="letterSection" class="w-full max-w-4xl mx-auto px-6 py-20 flex flex-col items-center justify-center min-h-[80vh]">
+            <div class="text-center mb-10">
+                <h2 class="text-4xl font-romantic text-lavender-300 mb-2">A Letter Sealed with Love</h2>
+                <p class="text-sm text-lavender-200/60">Break the virtual purple wax seal to reveal what is inside...</p>
+            </div>
+
+            <!-- Interactive Envelope Container -->
+            <div id="envelopeContainer" class="w-full max-w-lg relative z-20 cursor-pointer group transition-all duration-500 flex flex-col items-center justify-center">
+                
+                <!-- Sealed Envelope Graphic -->
+                <div id="envelopeGraphic" class="w-full bg-gradient-to-tr from-lavender-900 to-purple-800 border-2 border-lavender-400/40 rounded-3xl p-8 shadow-2xl relative transition duration-500 hover:scale-[1.02] flex flex-col items-center justify-center text-center aspect-[1.6]">
+                    <div class="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-lavender-800/50 via-transparent to-transparent opacity-50"></div>
+                    
+                    <!-- Envelope flap triangles -->
+                    <div class="absolute top-0 inset-x-0 h-1/2 border-b-2 border-dashed border-lavender-300/30 rounded-t-3xl bg-lavender-950/20"></div>
+                    
+                    <!-- Heart Wax Seal -->
+                    <div id="waxSeal" onclick="openEnvelope()" class="w-16 h-16 rounded-full bg-gradient-to-br from-pink-500 via-purple-600 to-purple-800 border border-pink-400 flex items-center justify-center shadow-lg hover:shadow-pink-500/50 hover:scale-110 active:scale-95 transition-all duration-300 z-30 relative cursor-pointer">
+                        <span class="text-2xl animate-pulse">💜</span>
+                    </div>
+                    
+                    <p class="text-xs font-semibold tracking-widest text-lavender-300 uppercase mt-4 z-20">Click the seal to open</p>
+                    <p class="text-romantic text-3xl text-pink-300 mt-2 z-20">To: Dammi</p>
+                </div>
+
+                <!-- Unfolded Letter Scroll (Initially hidden) -->
+                <div id="loveLetter" class="hidden w-full bg-gradient-to-b from-purple-950 to-indigo-950 border-2 border-lavender-400/60 rounded-3xl p-8 md:p-12 shadow-2xl relative transition-all duration-500 text-left">
+                    <div class="absolute top-4 right-4 text-xs bg-white/10 hover:bg-white/20 border border-white/20 rounded-full px-3 py-1 cursor-pointer transition" onclick="closeEnvelope()">
+                        Close ✕
+                    </div>
+                    
+                    <p class="text-romantic text-4xl text-lavender-300 mb-6 border-b border-lavender-500/30 pb-3">My Sweet Dammi,</p>
+                    
+                    <div class="space-y-4 text-lavender-200 leading-relaxed font-light text-sm md:text-base">
+                        <p>
+                            They say that beauty lies in the eyes of the beholder, but every time I look at you, I realize it actually resides entirely in you. Your soft smile, the gentle kindness you carry, and the magic in your laughter light up my darkest days.
+                        </p>
+                        <p>
+                            This little website is just a tiny mirror of the grand universe I hold inside my heart for you. I wanted to build something as unique and magical as you are—bathed in your favorite purple tones and filled with endless affection.
+                        </p>
+                        <p>
+                            Thank you for being my anchor, my peace, and my favorite adventure. I promise to stand by you through every high and low, painting our days with colors of joy, respect, and infinite romance.
+                        </p>
+                    </div>
+
+                    <div class="mt-8 border-t border-lavender-500/30 pt-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <div>
+                            <p class="text-xs text-lavender-400 uppercase tracking-wider">With all my love,</p>
+                            <p class="text-romantic text-3xl text-pink-300 mt-1">Your Favorite Person</p>
+                        </div>
+                        <button onclick="copySweetQuote()" class="text-xs bg-lavender-800/40 hover:bg-lavender-800/80 text-lavender-200 border border-lavender-500/30 px-4 py-2 rounded-lg transition flex items-center gap-1.5">
+                            <span>📋</span> Copy Secret Quote
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ================= VIRTUAL FLOWER BOUQUET BUILDER ================= -->
+        <section id="flowerMeadow" class="w-full max-w-5xl mx-auto px-6 py-20">
+            <div class="text-center mb-10">
+                <h2 class="text-4xl font-romantic text-lavender-300 mb-2">Dammi's Violet Flower Garden</h2>
+                <p class="text-sm text-lavender-200/60">Tap to plant beautiful purple flowers, forming your own custom bouquet of devotion.</p>
+            </div>
+
+            <!-- Garden Control Board -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <!-- Controls list -->
+                <div class="md:col-span-1 bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-md flex flex-col justify-between">
+                    <div>
+                        <h4 class="text-md font-bold text-lavender-100 mb-4">Choose Flower Specie</h4>
+                        <div class="space-y-3">
+                            <button onclick="setFlowerType('rose', '💜')" class="flower-selector-btn w-full p-3 bg-purple-600/40 hover:bg-purple-600/60 rounded-xl flex items-center justify-between text-left transition border-2 border-purple-500">
+                                <span class="text-sm font-medium">Violet Rose</span>
+                                <span class="text-xl">💜</span>
+                            </button>
+                            <button onclick="setFlowerType('lavender', '🪻')" class="flower-selector-btn w-full p-3 bg-white/5 hover:bg-white/10 rounded-xl flex items-center justify-between text-left transition border-2 border-transparent">
+                                <span class="text-sm font-medium">Sweet Lavender</span>
+                                <span class="text-xl">🪻</span>
+                            </button>
+                            <button onclick="setFlowerType('orchid', '🌸')" class="flower-selector-btn w-full p-3 bg-white/5 hover:bg-white/10 rounded-xl flex items-center justify-between text-left transition border-2 border-transparent">
+                                <span class="text-sm font-medium">Wild Orchid</span>
+                                <span class="text-xl">🌸</span>
+                            </button>
+                            <button onclick="setFlowerType('sparkle', '✨')" class="flower-selector-btn w-full p-3 bg-white/5 hover:bg-white/10 rounded-xl flex items-center justify-between text-left transition border-2 border-transparent">
+                                <span class="text-sm font-medium">Cosmic Glow</span>
+                                <span class="text-xl">✨</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 space-y-2">
+                        <button onclick="clearGarden()" class="w-full py-2.5 bg-red-950/40 hover:bg-red-900/40 text-red-300 border border-red-900/50 rounded-xl text-xs font-semibold tracking-wider uppercase transition">
+                            Reset Meadow
+                        </button>
+                        <p class="text-[10px] text-lavender-400 text-center">Every tap inside the grid blooms a new symbol of love!</p>
+                    </div>
+                </div>
+
+                <!-- Meadow Sandbox Interactive Area -->
+                <div class="md:col-span-3">
+                    <div id="gardenSandbox" class="w-full h-96 bg-gradient-to-b from-indigo-950/80 to-purple-950/80 border-2 border-dashed border-lavender-400/40 rounded-3xl relative overflow-hidden cursor-crosshair shadow-inner" onclick="plantFlower(event)">
+                        
+                        <!-- Helper Text Overlay -->
+                        <div id="gardenEmptyText" class="absolute inset-0 flex flex-col items-center justify-center text-center p-8 pointer-events-none select-none">
+                            <span class="text-4xl mb-3 animate-float-slow">🌾</span>
+                            <h5 class="text-lg font-semibold text-lavender-300">The Meadow is Awaiting You</h5>
+                            <p class="text-xs text-lavender-400 max-w-sm mt-1">Tap anywhere in this area to plant selected flowers and watch them bloom into beautiful purple bouquets with gentle synth notes.</p>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= REASONS I LOVE YOU INTERACTIVE CARDS ================= -->
+        <section id="reasonsSection" class="w-full max-w-5xl mx-auto px-6 py-20">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-romantic text-lavender-300 mb-2">Moments of Gratitude</h2>
+                <p class="text-sm text-lavender-200/60">Click on each celestial constellation to reveal a reason why my heart beats for you.</p>
+            </div>
+
+            <!-- Flip Cards Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Card 1 -->
+                <div class="w-full h-64 perspective-1000 cursor-pointer" onclick="flipCard(this)">
+                    <div class="w-full h-full preserve-3d transition-transform duration-500 relative bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md">
+                        <!-- Front Face -->
+                        <div class="absolute inset-0 backface-hidden flex flex-col justify-center items-center p-6 text-center">
+                            <span class="text-4xl mb-4 bg-purple-950/50 p-4 rounded-full border border-purple-800">👑</span>
+                            <h3 class="text-xl font-semibold text-lavender-100">Your Infinite Grace</h3>
+                            <p class="text-xs text-lavender-400 mt-2">The gentle way you treat the world.</p>
+                            <span class="text-[10px] text-purple-400 font-bold mt-4 animate-pulse">TAP TO REVEAL</span>
+                        </div>
+                        <!-- Back Face -->
+                        <div class="absolute inset-0 backface-hidden rotate-y-180 flex flex-col justify-center items-center p-6 text-center bg-gradient-to-b from-purple-900 to-indigo-900 rounded-2xl border-2 border-purple-500">
+                            <h3 class="text-lg font-romantic text-pink-300 mb-3">Pure Grace</h3>
+                            <p class="text-sm text-lavender-100 font-light leading-relaxed">
+                                No matter how stressful life gets, your sheer kindness towards other humans is a constant lesson to me. You make me want to be a much better version of myself every single day.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="w-full h-64 perspective-1000 cursor-pointer" onclick="flipCard(this)">
+                    <div class="w-full h-full preserve-3d transition-transform duration-500 relative bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md">
+                        <!-- Front Face -->
+                        <div class="absolute inset-0 backface-hidden flex flex-col justify-center items-center p-6 text-center">
+                            <span class="text-4xl mb-4 bg-purple-950/50 p-4 rounded-full border border-purple-800">🧸</span>
+                            <h3 class="text-xl font-semibold text-lavender-100">Your Safe Warmth</h3>
+                            <p class="text-xs text-lavender-400 mt-2">How your presence turns any place into home.</p>
+                            <span class="text-[10px] text-purple-400 font-bold mt-4 animate-pulse">TAP TO REVEAL</span>
+                        </div>
+                        <!-- Back Face -->
+                        <div class="absolute inset-0 backface-hidden rotate-y-180 flex flex-col justify-center items-center p-6 text-center bg-gradient-to-b from-purple-900 to-indigo-900 rounded-2xl border-2 border-purple-500">
+                            <h3 class="text-lg font-romantic text-pink-300 mb-3">Our Safe Haven</h3>
+                            <p class="text-sm text-lavender-100 font-light leading-relaxed">
+                                Simply talking to you after a heavy work day makes all my anxiety instantly melt away. Your voice is a melody of pure comfort, and your hugs are my absolute home.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="w-full h-64 perspective-1000 cursor-pointer" onclick="flipCard(this)">
+                    <div class="w-full h-full preserve-3d transition-transform duration-500 relative bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md">
+                        <!-- Front Face -->
+                        <div class="absolute inset-0 backface-hidden flex flex-col justify-center items-center p-6 text-center">
+                            <span class="text-4xl mb-4 bg-purple-950/50 p-4 rounded-full border border-purple-800">🍭</span>
+                            <h3 class="text-xl font-semibold text-lavender-100">Your Playful Sparkle</h3>
+                            <p class="text-xs text-lavender-400 mt-2">Your cute expressions & silly little jokes.</p>
+                            <span class="text-[10px] text-purple-400 font-bold mt-4 animate-pulse">TAP TO REVEAL</span>
+                        </div>
+                        <!-- Back Face -->
+                        <div class="absolute inset-0 backface-hidden rotate-y-180 flex flex-col justify-center items-center p-6 text-center bg-gradient-to-b from-purple-900 to-indigo-900 rounded-2xl border-2 border-purple-500">
+                            <h3 class="text-lg font-romantic text-pink-300 mb-3">Sweet Silliness</h3>
+                            <p class="text-sm text-lavender-100 font-light leading-relaxed">
+                                The way your nose crinkles when you laugh, or your high-pitched excitement over tiny treats and flowers. You hold an innocent light that keeps my life cheerful and sweet.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 4 -->
+                <div class="w-full h-64 perspective-1000 cursor-pointer" onclick="flipCard(this)">
+                    <div class="w-full h-full preserve-3d transition-transform duration-500 relative bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md">
+                        <!-- Front Face -->
+                        <div class="absolute inset-0 backface-hidden flex flex-col justify-center items-center p-6 text-center">
+                            <span class="text-4xl mb-4 bg-purple-950/50 p-4 rounded-full border border-purple-800">💡</span>
+                            <h3 class="text-xl font-semibold text-lavender-100">Your Brilliant Soul</h3>
+                            <p class="text-xs text-lavender-400 mt-2">Your insights & beautiful creative intelligence.</p>
+                            <span class="text-[10px] text-purple-400 font-bold mt-4 animate-pulse">TAP TO REVEAL</span>
+                        </div>
+                        <!-- Back Face -->
+                        <div class="absolute inset-0 backface-hidden rotate-y-180 flex flex-col justify-center items-center p-6 text-center bg-gradient-to-b from-purple-900 to-indigo-900 rounded-2xl border-2 border-purple-500">
+                            <h3 class="text-lg font-romantic text-pink-300 mb-3">Brilliant Minds</h3>
+                            <p class="text-sm text-lavender-100 font-light leading-relaxed">
+                                I love how passionate you get when discussing your favorite topics. Hearing you describe your goals and dreams gives me so much drive. You are as smart as you are drop-dead gorgeous!
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 5 -->
+                <div class="w-full h-64 perspective-1000 cursor-pointer" onclick="flipCard(this)">
+                    <div class="w-full h-full preserve-3d transition-transform duration-500 relative bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md">
+                        <!-- Front Face -->
+                        <div class="absolute inset-0 backface-hidden flex flex-col justify-center items-center p-6 text-center">
+                            <span class="text-4xl mb-4 bg-purple-950/50 p-4 rounded-full border border-purple-800">🔮</span>
+                            <h3 class="text-xl font-semibold text-lavender-100">Our Infinite Future</h3>
+                            <p class="text-xs text-lavender-400 mt-2">The shared horizons waiting for us.</p>
+                            <span class="text-[10px] text-purple-400 font-bold mt-4 animate-pulse">TAP TO REVEAL</span>
+                        </div>
+                        <!-- Back Face -->
+                        <div class="absolute inset-0 backface-hidden rotate-y-180 flex flex-col justify-center items-center p-6 text-center bg-gradient-to-b from-purple-900 to-indigo-900 rounded-2xl border-2 border-purple-500">
+                            <h3 class="text-lg font-romantic text-pink-300 mb-3">Our Tomorrow</h3>
+                            <p class="text-sm text-lavender-100 font-light leading-relaxed">
+                                Thinking about our future triggers the happiest butterflies in my stomach. Travel, cozy mornings, simple dinners, and growing old in sweet peace with you is my ultimate dream.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 6 -->
+                <div class="w-full h-64 perspective-1000 cursor-pointer" onclick="flipCard(this)">
+                    <div class="w-full h-full preserve-3d transition-transform duration-500 relative bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md">
+                        <!-- Front Face -->
+                        <div class="absolute inset-0 backface-hidden flex flex-col justify-center items-center p-6 text-center">
+                            <span class="text-4xl mb-4 bg-purple-950/50 p-4 rounded-full border border-purple-800">🌸</span>
+                            <h3 class="text-xl font-semibold text-lavender-100">Everything & More</h3>
+                            <p class="text-xs text-lavender-400 mt-2">Just because you are simply YOU.</p>
+                            <span class="text-[10px] text-purple-400 font-bold mt-4 animate-pulse">TAP TO REVEAL</span>
+                        </div>
+                        <!-- Back Face -->
+                        <div class="absolute inset-0 backface-hidden rotate-y-180 flex flex-col justify-center items-center p-6 text-center bg-gradient-to-b from-purple-900 to-indigo-900 rounded-2xl border-2 border-purple-500">
+                            <h3 class="text-lg font-romantic text-pink-300 mb-3">Simply Beautiful</h3>
+                            <p class="text-sm text-lavender-100 font-light leading-relaxed">
+                                I don't need a list of reasons to cherish you. I love you for the easy silence we share, your beautiful spirit, and the comfort of holding your hand. I love you unconditionally, Dammi.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= CELESTIAL PROMISE SPINNING WHEEL ================= -->
+        <section id="wheelSection" class="w-full max-w-4xl mx-auto px-6 py-20 flex flex-col items-center">
+            <div class="text-center mb-10">
+                <h2 class="text-4xl font-romantic text-lavender-300 mb-2">Dammi's Oracle of Promises</h2>
+                <p class="text-sm text-lavender-200/60">Spin the celestial dial to receive a sweet promise or a cute truth from my heart.</p>
+            </div>
+
+            <div class="flex flex-col md:flex-row items-center justify-center gap-12 w-full">
+                <!-- Interactive Spinning Wheel -->
+                <div class="relative w-72 h-72 md:w-80 md:h-80 flex items-center justify-center">
+                    <!-- The indicator pointer -->
+                    <div class="absolute -top-4 z-30 text-3xl transform rotate-180 text-lavender-300 filter drop-shadow">⭐</div>
+                    
+                    <!-- Wheel Base -->
+                    <div id="fortuneWheel" class="w-full h-full rounded-full border-4 border-lavender-400/40 bg-gradient-to-tr from-purple-900 via-indigo-900 to-lavender-900 shadow-2xl relative overflow-hidden transition-all duration-[4000ms] ease-out flex items-center justify-center">
+                        <!-- Visual sector lines -->
+                        <div class="absolute w-full h-0.5 bg-lavender-400/20 transform rotate-0"></div>
+                        <div class="absolute w-full h-0.5 bg-lavender-400/20 transform rotate-45"></div>
+                        <div class="absolute w-full h-0.5 bg-lavender-400/20 transform rotate-90"></div>
+                        <div class="absolute w-full h-0.5 bg-lavender-400/20 transform rotate-135"></div>
+
+                        <!-- Inside content segments -->
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <!-- Floating emojis on slices -->
+                            <div class="absolute transform -translate-y-24 rotate-0 text-xl font-bold">🍿</div>
+                            <div class="absolute transform -translate-x-16 -translate-y-16 rotate-45 text-xl font-bold">🌸</div>
+                            <div class="absolute transform -translate-x-24 rotate-90 text-xl font-bold">🧸</div>
+                            <div class="absolute transform -translate-x-16 translate-y-16 rotate-135 text-xl font-bold">💫</div>
+                            <div class="absolute transform translate-y-24 rotate-180 text-xl font-bold">🧁</div>
+                            <div class="absolute transform translate-x-16 translate-y-16 rotate-[225deg] text-xl font-bold">🍕</div>
+                            <div class="absolute transform translate-x-24 rotate-[270deg] text-xl font-bold">💌</div>
+                            <div class="absolute transform translate-x-16 -translate-y-16 rotate-[315deg] text-xl font-bold">🏡</div>
+                        </div>
+
+                        <!-- Inner core button indicator -->
+                        <div onclick="spinTheWheel()" class="w-16 h-16 rounded-full bg-lavender-100 border-2 border-lavender-400 flex items-center justify-center shadow-lg hover:bg-white cursor-pointer active:scale-95 transition-all duration-150 z-20">
+                            <span class="text-2xl text-purple-950 font-bold tracking-tighter">SPIN</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Display area for active Fortune -->
+                <div class="bg-white/5 border border-white/10 rounded-2xl p-6 md:p-8 backdrop-blur-md max-w-sm w-full text-center relative overflow-hidden">
+                    <div class="absolute -top-6 -left-6 text-6xl opacity-10">🔮</div>
+                    <p class="text-xs text-lavender-400 uppercase tracking-widest font-semibold mb-2">The Oracle Speaks</p>
+                    <div id="promiseResultBox" class="min-h-36 flex flex-col items-center justify-center">
+                        <span class="text-3xl mb-3" id="promiseEmoji">✨</span>
+                        <p id="promiseText" class="text-base text-lavender-100 leading-relaxed font-light italic">"Click Spin to draw a sweet truth or beautiful promise of love..."</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= STARDUST GLOW ART BOARD ================= -->
+        <section id="loveBoard" class="w-full max-w-5xl mx-auto px-6 py-20 text-center">
+            <div class="mb-10">
+                <h2 class="text-4xl font-romantic text-lavender-300 mb-2">Love Letter Generator</h2>
+                <p class="text-sm text-lavender-200/60">Generate a custom love note with cute words of adoration to share with each other.</p>
+            </div>
+
+            <!-- Dynamic Interactive Generator Box -->
+            <div class="bg-white/5 border border-white/10 rounded-3xl p-8 backdrop-blur-md max-w-2xl mx-auto relative overflow-hidden">
+                <div class="absolute top-2 right-2 text-3xl opacity-10">✍️</div>
+                
+                <div class="space-y-4 mb-6 text-left">
+                    <label class="block text-xs font-semibold text-lavender-300 uppercase tracking-wider">Describe your mood today:</label>
+                    <select id="loveMoodSelect" class="w-full bg-lavender-950/60 border border-lavender-400/30 text-lavender-100 text-sm rounded-xl p-3 outline-none focus:border-purple-400 transition">
+                        <option value="sweet">Feeling Super Cozy & Sweet 🥰</option>
+                        <option value="romantic">Passionate & Truly Devoted 🌹</option>
+                        <option value="silly">Cute, Giggly & Playful 🤪</option>
+                        <option value="cosmic">Deep, Spiritual & Beyond the Stars 🌌</option>
+                    </select>
+                </div>
+
+                <button onclick="generateCustomLoveNote()" class="w-full py-3.5 bg-gradient-to-r from-purple-600 to-lavender-600 hover:from-purple-500 hover:to-lavender-500 text-white font-medium rounded-xl shadow-lg transition duration-300">
+                    Generate My Romantic Note
+                </button>
+
+                <div id="loveNoteResult" class="hidden mt-6 bg-lavender-900/40 border border-lavender-500/20 rounded-2xl p-6 text-left relative">
+                    <p id="loveNoteText" class="text-sm md:text-base text-lavender-200 leading-relaxed italic"></p>
+                    <div class="mt-4 flex justify-between items-center text-xs">
+                        <span class="text-lavender-400">Created for Dammi 💜</span>
+                        <button onclick="copyGeneratedNote()" class="px-3 py-1.5 bg-lavender-800 hover:bg-lavender-700 text-lavender-100 rounded-lg transition flex items-center gap-1">
+                            <span>📋</span> Copy Note
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= FOOTER ================= -->
+        <footer class="w-full border-t border-white/10 bg-lavender-950/50 backdrop-blur-lg py-12 text-center mt-20 relative z-20">
+            <div class="max-w-6xl mx-auto px-4 flex flex-col items-center">
+                <div class="text-3xl font-romantic text-pink-300 mb-2">Designed for Dammi, Always & Forever</div>
+                <p class="text-xs text-lavender-300/60 max-w-md mb-6">
+                    A special handcrafted cosmic gift. Built with interactive magic to show that true beauty spans galaxies and colors the universe in beautiful violet.
+                </p>
+                <p class="text-[10px] text-lavender-400/40">© 2026 Universe of Dammi. Made with absolute love.</p>
+            </div>
+        </footer>
 
     </div>
 
+    <!-- ================= JAVASCRIPT LOGIC ================= -->
     <script>
-        // --- Petal Animation Logic ---
-        function createPetal() {
-            const container = document.getElementById('petals-container');
-            const petal = document.createElement('div');
-            petal.classList.add('petal');
-            
-            // Randomize petal properties
-            const size = Math.random() * 10 + 10; // 10px to 20px
-            petal.style.width = `${size}px`;
-            petal.style.height = `${size}px`;
-            
-            petal.style.left = `${Math.random() * 100}vw`;
-            
-            // Random fall duration between 5s and 12s
-            const duration = Math.random() * 7 + 5;
-            petal.style.animationDuration = `${duration}s`;
-            
-            // Random slight color variation
-            const colors = ['#ffb7c5', '#ffc0cb', '#ff69b4', '#fff0f5'];
-            petal.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        // Set your custom start date below
+        let anniversaryDate = new Date("2025-10-04T00:19:45");
 
-            container.appendChild(petal);
+        // Starry Sky Canvas Background Implementation
+        const canvas = document.getElementById('starryCanvas');
+        const ctx = canvas.getContext('2d');
+        let stars = [];
+        let mouseTrail = [];
 
-            // Remove petal after it falls
-            setTimeout(() => {
-                petal.remove();
-            }, duration * 1000);
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = document.documentElement.scrollHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Star Blueprint Constructor
+        class Star {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 1.5 + 0.5;
+                this.baseAlpha = Math.random() * 0.5 + 0.1;
+                this.alpha = this.baseAlpha;
+                this.glowSpeed = Math.random() * 0.02 + 0.005;
+                this.color = `rgba(${167 + Math.random() * 50}, ${139 + Math.random() * 50}, ${250}, ${this.alpha})`;
+            }
+            update() {
+                this.alpha += this.glowSpeed;
+                if (this.alpha > 0.9 || this.alpha < 0.1) {
+                    this.glowSpeed = -this.glowSpeed;
+                }
+                this.color = `rgba(167, 139, 250, ${Math.abs(this.alpha)})`;
+            }
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
         }
 
-        // Create petals continuously
-        setInterval(createPetal, 400);
-
-        // --- Step Navigation Logic ---
-        function nextStep(currentStepIndex) {
-            const currentStep = document.getElementById(`step-${currentStepIndex}`);
-            const nextStep = document.getElementById(`step-${currentStepIndex + 1}`);
-
-            // Fade out current
-            currentStep.style.opacity = '0';
-            currentStep.style.transform = 'translateY(-20px)';
-            
-            setTimeout(() => {
-                currentStep.classList.remove('active');
-                currentStep.style.transform = 'translateY(20px)'; // reset for future if needed
-                
-                // Fade in next
-                nextStep.classList.add('active');
-                // Small delay to allow display:flex to apply before changing opacity
-                setTimeout(() => {
-                    nextStep.style.opacity = '1';
-                    nextStep.style.transform = 'translateY(0)';
-                }, 50);
-            }, 600); // Wait for fade out transition
+        // Initialize stars dynamically spread out
+        function initStars() {
+            stars = [];
+            const starCount = Math.floor(canvas.width * canvas.height / 7000);
+            for (let i = 0; i < starCount; i++) {
+                stars.push(new Star());
+            }
         }
+        initStars();
 
-        // --- Runaway Button Logic ---
-        const btnNo = document.getElementById('btn-no');
+        // Mouse move particle interaction
+        window.addEventListener('mousemove', (e) => {
+            const scrollY = window.scrollY || document.documentElement.scrollTop;
+            mouseTrail.push({
+                x: e.clientX,
+                y: e.clientY + scrollY,
+                alpha: 1.0,
+                size: Math.random() * 3 + 1,
+                color: Math.random() > 0.5 ? '#a78bfa' : '#fda4af'
+            });
+            if (mouseTrail.length > 40) mouseTrail.shift();
+        });
 
-        function moveButton(e) {
-            if(e.type === 'touchstart') e.preventDefault(); // prevent touch click
+        // Touch event fallback support
+        window.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 0) {
+                const scrollY = window.scrollY || document.documentElement.scrollTop;
+                mouseTrail.push({
+                    x: e.touches[0].clientX,
+                    y: e.touches[0].clientY + scrollY,
+                    alpha: 1.0,
+                    size: Math.random() * 3 + 1,
+                    color: '#8b5cf6'
+                });
+                if (mouseTrail.length > 40) mouseTrail.shift();
+            }
+        });
 
-            // Ensure the button detaches from the flexbox layout
-            btnNo.style.position = 'fixed';
+        // Background Animation Loop
+        function animateBackground() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            const btnWidth = btnNo.offsetWidth;
-            const btnHeight = btnNo.offsetHeight;
+            // Draw Stars
+            stars.forEach(star => {
+                star.update();
+                star.draw();
+            });
+
+            // Draw Mouse Trail Particles
+            mouseTrail.forEach((particle, index) => {
+                particle.alpha -= 0.02;
+                if (particle.alpha <= 0) {
+                    mouseTrail.splice(index, 1);
+                    return;
+                }
+                ctx.fillStyle = particle.color;
+                ctx.globalAlpha = particle.alpha;
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1.0; // Reset canvas transparency
             
-            // Calculate safe boundaries based on the whole window
-            const maxX = window.innerWidth - btnWidth - 20;
-            const maxY = window.innerHeight - btnHeight - 20;
-            
-            // Random coordinates within safe zones
-            const newX = Math.max(20, Math.floor(Math.random() * maxX));
-            const newY = Math.max(20, Math.floor(Math.random() * maxY));
-            
-            btnNo.style.left = `${newX}px`;
-            btnNo.style.top = `${newY}px`;
+            requestAnimationFrame(animateBackground);
         }
+        animateBackground();
 
-        // Trigger on both mouse enter and touch
-        btnNo.addEventListener('mouseover', moveButton);
-        btnNo.addEventListener('touchstart', moveButton);
 
-        // --- Success Logic ---
-        function showSuccess() {
-            nextStep(3); // Hide step 3, show step 4
-            
-            // Hide runaway button completely
-            btnNo.style.display = 'none';
+        // LIVE LOVE COUNTER LOGIC
+        function calculateLoveTime() {
+            const now = new Date();
+            const difference = now - anniversaryDate;
 
-            // Create a massive burst of hearts
-            const emojis = ['❤️', '💖', '🥰', '✨', '🌹'];
-            for (let i = 0; i < 50; i++) {
-                setTimeout(() => {
-                    const heart = document.createElement('div');
-                    heart.innerHTML = emojis[Math.floor(Math.random() * emojis.length)];
-                    heart.classList.add('success-heart');
-                    
-                    heart.style.left = `${Math.random() * 100}vw`;
-                    // Start from bottom of screen
-                    heart.style.bottom = '-50px';
-                    
-                    const size = Math.random() * 2 + 1; // 1rem to 3rem
-                    heart.style.fontSize = `${size}rem`;
-                    
-                    const duration = Math.random() * 2 + 2; // 2s to 4s
-                    heart.style.animationDuration = `${duration}s`;
-                    
-                    document.body.appendChild(heart);
-                    
-                    setTimeout(() => heart.remove(), duration * 1000);
-                }, i * 50);
+            if (difference <= 0) {
+                document.getElementById('countDays').innerText = "00";
+                document.getElementById('countHours').innerText = "00";
+                document.getElementById('countMinutes').innerText = "00";
+                document.getElementById('countSeconds').innerText = "00";
+                return;
             }
 
-            // Keep shooting some hearts after the initial burst
-            setInterval(() => {
-                const heart = document.createElement('div');
-                heart.innerHTML = '💖';
-                heart.classList.add('success-heart');
-                heart.style.left = `${Math.random() * 100}vw`;
-                heart.style.bottom = '-50px';
-                heart.style.animationDuration = `${Math.random() * 2 + 3}s`;
-                document.body.appendChild(heart);
-                setTimeout(() => heart.remove(), 5000);
-            }, 300);
+            const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+            document.getElementById('countDays').innerText = days < 10 ? "0" + days : days;
+            document.getElementById('countHours').innerText = hours < 10 ? "0" + hours : hours;
+            document.getElementById('countMinutes').innerText = minutes < 10 ? "0" + minutes : minutes;
+            document.getElementById('countSeconds').innerText = seconds < 10 ? "0" + seconds : seconds;
         }
+        setInterval(calculateLoveTime, 1000);
+        calculateLoveTime(); // Run immediately
+
+        // Update Counter Anniversary function
+        function updateAnniversaryDate() {
+            const dateInput = document.getElementById('anniversaryDatePicker').value;
+            if (dateInput) {
+                anniversaryDate = new Date(dateInput + "T00:00:00");
+                showToast("Date changed to: " + dateInput + "! 💖");
+            }
+        }
+
+
+        // TOAST NOTIFICATIONS UI SYSTEM
+        let toastTimeout;
+        function showToast(message) {
+            const toast = document.getElementById('toastNotification');
+            const msgEl = document.getElementById('toastMessage');
+            
+            msgEl.innerText = message;
+            toast.style.transform = "translateY(0)";
+            toast.style.opacity = "1";
+
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.style.transform = "translateY(-150%)";
+                toast.style.opacity = "0";
+            }, 3500);
+        }
+
+
+        // LOVE LETTER INTERACTION (ENVELOPE OPEN / CLOSE)
+        function openEnvelope() {
+            const envelopeGraphic = document.getElementById('envelopeGraphic');
+            const loveLetter = document.getElementById('loveLetter');
+
+            envelopeGraphic.classList.add('hidden');
+            loveLetter.classList.remove('hidden');
+            
+            // Play beautiful sparkling arpeggio chime chime
+            playEnchantedChimeSeries();
+            showToast("You cracked open my secret thoughts, Dammi! 🥰💜");
+        }
+
+        function closeEnvelope() {
+            const envelopeGraphic = document.getElementById('envelopeGraphic');
+            const loveLetter = document.getElementById('loveLetter');
+
+            loveLetter.classList.add('hidden');
+            envelopeGraphic.classList.remove('hidden');
+        }
+
+        function copySweetQuote() {
+            const quote = "Dammi, your warmth turns any stormy night into a quiet, beautiful starscape. I love you to the moon and back!";
+            // Best Practice Copy Pattern
+            const dummy = document.createElement("textarea");
+            document.body.appendChild(dummy);
+            dummy.value = quote;
+            dummy.select();
+            document.execCommand("copy");
+            document.body.removeChild(dummy);
+
+            showToast("Quote copied to clipboard! Share it or save it! 💌");
+        }
+
+
+        // FLOWER MEADOW SANDBOX BUILDER LOGIC
+        let activeFlowerType = 'rose';
+        let activeFlowerEmoji = '💜';
+
+        function setFlowerType(type, emoji) {
+            activeFlowerType = type;
+            activeFlowerEmoji = emoji;
+
+            // Update border styling on selector button
+            const buttons = document.querySelectorAll('.flower-selector-btn');
+            buttons.forEach(btn => {
+                btn.classList.remove('border-purple-500');
+                btn.classList.add('border-transparent');
+            });
+
+            // Highlight current clicked
+            event.currentTarget.classList.add('border-purple-500');
+            event.currentTarget.classList.remove('border-transparent');
+            
+            showToast("Selected " + type.toUpperCase() + "! Now tap on the garden to plant.");
+        }
+
+        function plantFlower(e) {
+            const sandbox = document.getElementById('gardenSandbox');
+            const emptyText = document.getElementById('gardenEmptyText');
+            
+            // Hide the instructions overlay upon first action
+            emptyText.classList.add('hidden');
+
+            const rect = sandbox.getBoundingClientRect();
+            // Align flower center on touch/click target point
+            const x = e.clientX - rect.left - 20; 
+            const y = e.clientY - rect.top - 20;
+
+            // Generate Flower Element
+            const flower = document.createElement('div');
+            flower.className = "absolute text-4xl cursor-pointer select-none transition-all duration-500 transform hover:scale-125 scale-0 animate-bounce";
+            flower.style.left = `${x}px`;
+            flower.style.top = `${y}px`;
+            flower.innerText = activeFlowerEmoji;
+
+            // Set custom message tooltips based on the planted item
+            let hoverMessage = "Fresh bloom of love";
+            if (activeFlowerType === 'rose') hoverMessage = "Dammi's Beautiful Rose 💜";
+            if (activeFlowerType === 'lavender') hoverMessage = "Peace & Lavender Bliss 🪻";
+            if (activeFlowerType === 'orchid') hoverMessage = "Your elegance blooms 🌸";
+            if (activeFlowerType === 'sparkle') hoverMessage = "A twinkle in your eyes! ✨";
+            flower.title = hoverMessage;
+
+            // Append to sandbox canvas element
+            sandbox.appendChild(flower);
+
+            // Trigger synth melody notes procedurally based on screen coordinates (very magical)
+            const noteFreq = 220 + (x / rect.width) * 440; // Frequency mapped left-to-right
+            playChime(noteFreq);
+
+            // Pop in animation delay
+            setTimeout(() => {
+                flower.classList.remove('scale-0');
+                flower.classList.add('scale-100');
+            }, 50);
+        }
+
+        function clearGarden() {
+            const sandbox = document.getElementById('gardenSandbox');
+            // Remove everything except the helper overlay template
+            const flowers = sandbox.querySelectorAll('div:not(#gardenEmptyText)');
+            flowers.forEach(f => f.remove());
+            
+            const emptyText = document.getElementById('gardenEmptyText');
+            emptyText.classList.remove('hidden');
+
+            showToast("Meadow reset! Plant something fresh! 🌟");
+        }
+
+
+        // CARDS CLICK FLIP ANIMATION ACTION
+        function flipCard(cardContainer) {
+            const innerCard = cardContainer.querySelector('.preserve-3d');
+            innerCard.classList.toggle('rotate-y-180');
+            playChime(330); // Gentle chime on click
+        }
+
+
+        // CELESTIAL PROMISE SPINNING WHEEL LOGIC
+        let isSpinning = false;
+        const promises = [
+            { text: "I promise to always bring you sweet treats whenever you are sad.", emoji: "🍿" },
+            { text: "I promise to hold your hand through every crowd, keeping you safe.", emoji: "🌸" },
+            { text: "You are the sweetest creature I've ever encountered. My cozy bear forever.", emoji: "🧸" },
+            { text: "I promise to help you conquer all your grand dreams and career goals.", emoji: "💫" },
+            { text: "I promise to learn to make your favorite drinks perfectly.", emoji: "🧁" },
+            { text: "Our cozy movie nights and quiet dinners are my favorite moments in time.", emoji: "🍕" },
+            { text: "Every letter I write to you carries 100% of my true and devoted heart.", emoji: "💌" },
+            { text: "I promise to build a calm, warm, and beautiful home for both of us.", emoji: "🏡" }
+        ];
+
+        function spinTheWheel() {
+            if (isSpinning) return;
+            isSpinning = true;
+
+            const wheel = document.getElementById('fortuneWheel');
+            // Spin a random grand angle (5 full spins + extra degrees)
+            const randomExtraDegrees = Math.floor(Math.random() * 360);
+            const totalDegrees = 1800 + randomExtraDegrees;
+            
+            wheel.style.transform = `rotate(${totalDegrees}deg)`;
+
+            // Map degrees back to the selected sector slice (8 divisions total, each 45deg)
+            const segmentSize = 45;
+            // Subtract extra degrees to get index pointing to top
+            const targetSegmentIndex = Math.floor(((360 - (randomExtraDegrees % 360)) / segmentSize)) % 8;
+            const chosenPromise = promises[targetSegmentIndex];
+
+            // Trigger rising synth chords while spinning
+            let counter = 0;
+            const spinSoundInterval = setInterval(() => {
+                playChime(300 + (counter * 50));
+                counter++;
+                if (counter > 15) clearInterval(spinSoundInterval);
+            }, 250);
+
+            // Wait for transitions to finish (4000ms transition on css)
+            setTimeout(() => {
+                document.getElementById('promiseEmoji').innerText = chosenPromise.emoji;
+                document.getElementById('promiseText').innerText = `"${chosenPromise.text}"`;
+                
+                // Final chime triumph chord
+                playTriumphantChimes();
+
+                showToast("A fresh promise drawn for you, Dammi! 🔮✨");
+                isSpinning = false;
+            }, 4100);
+        }
+
+
+        // DYNAMIC MOOD LOVE NOTE GENERATOR LOGIC
+        const dynamicLetters = {
+            sweet: [
+                "My dearest Dammi, you make everyday feel like a cozy blanket on a crisp rainy evening. Seeing your face is my absolute favorite highlight. Have a beautiful, bright day today!",
+                "Sweetest Dammi, thinking of your cute laughs makes my heart flutter. I hope your cup is full of tea and your mind is filled with happy clouds today."
+            ],
+            romantic: [
+                "To the ruler of my dreams, Dammi: Your gorgeous eyes hold deep galaxies that leave me spellbound. I appreciate every precious breath you share with me. I love you infinitely.",
+                "Dammi, you are the most exquisite melody playing in the theater of my soul. Every second with you feels like classic cinema filled with sweet poetry."
+            ],
+            silly: [
+                "Hey Dammi! You are sillier than a clumsy kitten, and I want to tickle your toes all day long! Thanks for putting up with my dumb jokes, you cute potato!",
+                "Dammi, you're the only person I'd gladly share my last slice of crispy pizza with! That means you are incredibly, terribly important to me."
+            ],
+            cosmic: [
+                "Dear Dammi, our energies crossed in this infinite universe because we are made of the exact same star particles. Across life cycles, space, and time—it has always been you.",
+                "Dammi, you are my cosmic center of gravity. Everything beautiful in this galaxy orbits your glorious spirit. I am eternally tethered to your orbit."
+            ]
+        };
+
+        function generateCustomLoveNote() {
+            const mood = document.getElementById('loveMoodSelect').value;
+            const notes = dynamicLetters[mood];
+            const randomIndex = Math.floor(Math.random() * notes.length);
+            const selectedNote = notes[randomIndex];
+
+            const resultBox = document.getElementById('loveNoteResult');
+            const resultText = document.getElementById('loveNoteText');
+
+            resultText.innerText = selectedNote;
+            resultBox.classList.remove('hidden');
+            
+            playChime(440);
+            playChime(554);
+            showToast("Fresh love note created for you, Dammi! ✍️💜");
+        }
+
+        function copyGeneratedNote() {
+            const text = document.getElementById('loveNoteText').innerText;
+            const dummy = document.createElement("textarea");
+            document.body.appendChild(dummy);
+            dummy.value = text;
+            dummy.select();
+            document.execCommand("copy");
+            document.body.removeChild(dummy);
+
+            showToast("Copied note to clipboard! Send it to your partner! 💌");
+        }
+
+
+        // WEB AUDIO API PROCEDURAL MUSIC CHIMES SYNTHESIZER
+        // Completely offline, no dependencies, pure majestic romantic sounds
+        let audioCtx = null;
+
+        function getAudioContext() {
+            if (!audioCtx) {
+                // Initialize modern cross-browser audio environment
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+            }
+            // Resume if browser paused it
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        // Plays a crystal, sparkling celestial chime note
+        function playChime(frequency) {
+            try {
+                const ctx = getAudioContext();
+                
+                // Create Nodes
+                const osc = ctx.createOscillator();
+                const gainNode = ctx.createGain();
+                
+                osc.connect(gainNode);
+                gainNode.connect(ctx.destination);
+                
+                // Pure sine bell-wave
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(frequency, ctx.currentTime);
+                
+                // Gain Envelope for perfect Chime tail-decay
+                gainNode.gain.setValueAtTime(0.001, ctx.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0.15, ctx.currentTime + 0.05); // quick soft attack
+                gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.2); // smooth ring decay
+                
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 1.3);
+            } catch (err) {
+                console.log("Audio contextual block: user gesture required first.");
+            }
+        }
+
+        // Sequential lovely arpeggio play on actions
+        function playEnchantedChimeSeries() {
+            const chords = [261.63, 329.63, 392.00, 523.25]; // C major celestial arpeggio
+            chords.forEach((note, i) => {
+                setTimeout(() => playChime(note), i * 150);
+            });
+        }
+
+        // Triumphant double chord for achievements
+        function playTriumphantChimes() {
+            const notes = [440, 554, 659, 880]; // Gorgeous major chord stack
+            notes.forEach((note, i) => {
+                setTimeout(() => playChime(note), i * 80);
+            });
+        }
+
+        // Play relaxing background sweet tune
+        let lullabyInterval = null;
+        let isLullabyPlaying = false;
+
+        function playIntroMelody() {
+            getAudioContext();
+            playEnchantedChimeSeries();
+            showToast("Magic chimes unlocked! 🔮 Tap anywhere to create sound.");
+        }
+
+        // Connect general screen tap to ambient notes
+        document.body.addEventListener('click', (e) => {
+            // Avoid triggers when tapping on interactive garden buttons specifically
+            if (e.target.closest('#gardenSandbox') || e.target.closest('#waxSeal') || e.target.closest('#fortuneWheel')) return;
+            
+            // Draw soft chime note based on page height positioning
+            const randomPentatonic = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25]; // Dreamy Pentatonic Scale
+            const choice = randomPentatonic[Math.floor(Math.random() * randomPentatonic.length)];
+            playChime(choice);
+        });
+
+        // Ambient Lullaby Music Trigger Action
+        document.getElementById('ambientMusicTrigger').addEventListener('click', () => {
+            getAudioContext();
+            const musicIcon = document.getElementById('musicIcon');
+            
+            if (isLullabyPlaying) {
+                clearInterval(lullabyInterval);
+                isLullabyPlaying = false;
+                musicIcon.innerText = "🎵";
+                showToast("Ambient chimes muted.");
+            } else {
+                isLullabyPlaying = true;
+                musicIcon.innerText = "🔇";
+                showToast("Relaxing ambient notes loop started... 💜");
+                
+                // Gentle infinite loop of soft chimes
+                const baseMelody = [329.63, 392.00, 440.00, 523.25, 392.00];
+                let index = 0;
+                lullabyInterval = setInterval(() => {
+                    playChime(baseMelody[index % baseMelody.length] * 0.5); // softer octave
+                    index++;
+                }, 2000);
+            }
+        });
     </script>
 </body>
 </html>
