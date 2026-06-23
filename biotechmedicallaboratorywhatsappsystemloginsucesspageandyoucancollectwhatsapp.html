@@ -6,161 +6,246 @@
     <title>Biotech Admin | Command Center</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Configure Tailwind to use manual class-based dark mode
+        tailwind.config = { darkMode: 'class' }
+        
+        // Init theme immediately to prevent flashing. Default to dark mode.
+        if (localStorage.theme === 'light') {
+            document.documentElement.classList.remove('dark');
+        } else {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- Fonts -->
+    <!-- Fonts & Theme CSS -->
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
         
+        /* --- CSS VARIABLES FOR THEME RESPONSIVENESS --- */
+        :root {
+            /* Light Theme Defaults */
+            --bg-body: #f0f9ff;
+            --text-main: #334155;
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(255, 255, 255, 1);
+            --glass-shadow: 0 25px 50px -12px rgba(13, 148, 136, 0.1);
+            
+            --input-bg: #f8fafc;
+            --input-border: #e2e8f0;
+            --input-focus-border: #0d9488;
+            --input-focus-shadow: 0 0 0 4px rgba(20, 184, 166, 0.1);
+
+            --phone-outer: #cbd5e1;
+            --phone-inner: #e2e8f0;
+            --phone-bg: #fff;
+            --phone-notch: #1e293b;
+
+            --wa-bg: #e5ddd5;
+            --wa-header: rgba(240, 242, 245, 0.95);
+            --wa-header-border: rgba(0,0,0,0.05);
+            --wa-bubble: #d9fdd3;
+            --wa-text: #111b21;
+            --wa-subtext: #667781;
+            --wa-link-bg: rgba(0,0,0,0.03);
+            
+            --toast-bg: rgba(255, 255, 255, 0.95);
+            --toast-border: rgba(20, 184, 166, 0.5);
+            --toast-shadow: 0 10px 25px rgba(20, 184, 166, 0.15);
+            --toast-icon: #0d9488;
+            --toast-text: #1e293b;
+        }
+
+        html.dark {
+            /* Gemini Dark Theme Defaults */
+            --bg-body: #05101a;
+            --text-main: #f8fafc;
+            --glass-bg: rgba(15, 23, 42, 0.65);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+            
+            --input-bg: rgba(30, 41, 59, 0.7);
+            --input-border: rgba(71, 85, 105, 0.5);
+            --input-focus-border: #3b82f6;
+            --input-focus-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+
+            --phone-outer: #0f172a;
+            --phone-inner: #1e293b;
+            --phone-bg: #000;
+            --phone-notch: #020617;
+
+            --wa-bg: #0b141a;
+            --wa-header: rgba(32, 44, 51, 0.95);
+            --wa-header-border: rgba(255,255,255,0.05);
+            --wa-bubble: #005c4b;
+            --wa-text: #e9edef;
+            --wa-subtext: #8696a0;
+            --wa-link-bg: rgba(255,255,255,0.05);
+            
+            --toast-bg: rgba(15, 23, 42, 0.85);
+            --toast-border: rgba(139, 92, 246, 0.5);
+            --toast-shadow: 0 0 25px rgba(139, 92, 246, 0.25), inset 0 0 15px rgba(59, 130, 246, 0.15);
+            --toast-icon: #a78bfa;
+            --toast-text: #f8fafc;
+        }
+
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #f0f9ff;
-            background-image: 
-                radial-gradient(at 0% 0%, rgba(20, 184, 166, 0.15) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.15) 0px, transparent 50%);
-            background-size: cover;
-            background-attachment: fixed;
-            color: #334155; 
+            background-color: var(--bg-body);
+            color: var(--text-main); 
             overflow: hidden;
+            position: relative;
+            transition: background-color 0.5s ease;
         }
+
+        /* --- LIGHT BACKGROUND GRADIENTS --- */
+        .bg-light-gradients {
+            position: absolute; inset: 0; z-index: -2; pointer-events: none;
+            background-image: radial-gradient(at 0% 0%, rgba(20, 184, 166, 0.15) 0px, transparent 50%),
+                              radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.15) 0px, transparent 50%);
+            background-size: cover; background-attachment: fixed;
+            transition: opacity 0.5s ease;
+        }
+        html.dark .bg-light-gradients { opacity: 0; }
+
+        /* --- GEMINI ILLUMINATION BACKGROUND (DARK ONLY) --- */
+        body::before, body::after, .bg-orb-3 {
+            content: ''; position: absolute; border-radius: 50%;
+            z-index: -1; pointer-events: none;
+            opacity: 0; transition: opacity 0.8s ease;
+        }
+        body::before {
+            width: 80vw; height: 80vh; filter: blur(120px);
+            background: radial-gradient(circle, rgba(22, 126, 159, 0.45) 0%, transparent 70%);
+            top: -20vh; left: -20vw; animation: float 12s infinite alternate ease-in-out;
+        }
+        body::after {
+            width: 80vw; height: 80vh; filter: blur(120px);
+            background: radial-gradient(circle, rgba(26, 106, 183, 0.4) 0%, transparent 70%);
+            bottom: -30vh; right: -10vw; animation: float 12s infinite alternate ease-in-out; animation-delay: -6s;
+        }
+        .bg-orb-3 {
+            width: 60vw; height: 60vh; filter: blur(100px);
+            background: radial-gradient(circle, rgba(16, 141, 119, 0.3) 0%, transparent 60%);
+            top: 40%; left: 30%; animation: float-reverse 15s infinite alternate ease-in-out;
+        }
+
+        html.dark body::before, html.dark body::after { opacity: 0.45; }
+        html.dark .bg-orb-3 { opacity: 0.3; }
+
+        @keyframes float { 0% { transform: translate(0, 0); } 100% { transform: translate(60px, 80px); } }
+        @keyframes float-reverse { 0% { transform: translate(0, 0); } 100% { transform: translate(-50px, -70px); } }
 
         /* --- UI UTILITIES --- */
         .glass-panel {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 1);
-            box-shadow: 0 25px 50px -12px rgba(13, 148, 136, 0.1);
+            background: var(--glass-bg);
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow);
+            transition: all 0.5s ease;
         }
 
         .input-group {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            transition: all 0.2s ease;
+            background: var(--input-bg); border: 1px solid var(--input-border);
+            transition: all 0.3s ease;
         }
         .input-group:focus-within {
-            border-color: #0d9488; /* Teal 600 */
-            background: #fff;
-            box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.1);
+            border-color: var(--input-focus-border);
+            box-shadow: var(--input-focus-shadow);
         }
 
-        .gradient-btn {
-            background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
-        }
-        .gradient-btn:hover {
-            background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
-        }
+        .gradient-btn { background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%); }
+        .gradient-btn:hover { background: linear-gradient(135deg, #0f766e 0%, #115e59 100%); }
+        html.dark .gradient-btn { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); border: 1px solid rgba(167, 139, 250, 0.4); box-shadow: 0 10px 20px -5px rgba(124, 58, 237, 0.4); }
+        html.dark .gradient-btn:hover { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); box-shadow: 0 15px 25px -5px rgba(124, 58, 237, 0.5); }
 
-        .history-item {
-            cursor: pointer;
-            transition: all 0.2s ease;
+        .history-item { cursor: pointer; transition: all 0.2s ease; }
+        .history-item:hover { transform: translateX(4px); }
+        html.dark .history-item:hover { box-shadow: -4px 0 15px rgba(59, 130, 246, 0.15); }
+        .history-item:active { transform: scale(0.98) translateX(4px); }
+
+        /* --- TOAST / RECENT SAVE BOX ANIMATION --- */
+        #toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 12px; pointer-events: none; }
+        .save-toast {
+            background: var(--toast-bg); backdrop-filter: blur(16px); border: 1px solid var(--toast-border);
+            box-shadow: var(--toast-shadow); border-radius: 16px; padding: 16px 24px; display: flex; align-items: center; gap: 16px;
+            transform: translateX(120%); transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
         }
-        .history-item:hover {
-            transform: translateX(4px);
-        }
-        .history-item:active {
-            transform: scale(0.98) translateX(4px);
+        .save-toast.show { transform: translateX(0); }
+        .toast-icon { color: var(--toast-icon); font-size: 28px; animation: pulse-gemini 2s infinite; }
+        .toast-text { color: var(--toast-text); }
+        
+        @keyframes pulse-gemini {
+            0%, 100% { filter: drop-shadow(0 0 5px var(--toast-icon)); }
+            50% { filter: drop-shadow(0 0 12px var(--toast-icon)); }
         }
 
         /* --- CALL ANIMATIONS --- */
-        .pulse-ring {
-            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
-            animation: pulse-green 2s infinite;
-        }
-        @keyframes pulse-green {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
-        }
-
+        .pulse-ring { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); animation: pulse-green 2s infinite; }
+        html.dark .pulse-ring { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); animation: pulse-blue 2s infinite; }
+        @keyframes pulse-green { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
+        @keyframes pulse-blue { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); } }
+        
         .ringing-icon { animation: ring 1s infinite ease-in-out; }
         @keyframes ring { 0% { transform: rotate(0); } 10% { transform: rotate(10deg); } 20% { transform: rotate(-10deg); } 30% { transform: rotate(10deg); } 40% { transform: rotate(-10deg); } 100% { transform: rotate(0); } }
-
 
         /* --- ANIMATIONS --- */
         .fade-in { animation: fadeIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards; opacity: 0; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
         .shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
         @keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } }
 
-        /* --- STATIC PHONE MOCKUP (Scaled to Fit) --- */
-        .phone-wrapper {
-            transform: scale(0.9);
-            transform-origin: center;
-            transition: transform 0.3s ease;
-        }
-        @media (max-height: 800px) {
-            .phone-wrapper { transform: scale(0.8); }
-        }
-        @media (max-width: 600px) {
-            .phone-wrapper { transform: scale(0.85); margin-top: 10px; margin-bottom: 20px;}
-        }
+        /* --- STATIC PHONE MOCKUP (Themed) --- */
+        .phone-wrapper { transform: scale(0.9); transform-origin: center; transition: transform 0.3s ease; }
+        @media (max-height: 800px) { .phone-wrapper { transform: scale(0.8); } }
+        @media (max-width: 600px) { .phone-wrapper { transform: scale(0.85); margin-top: 10px; margin-bottom: 20px;} }
 
         .phone-mockup {
-            width: 320px;
-            height: 640px;
-            background: #fff;
-            border-radius: 50px;
-            box-shadow: 
-                0 0 0 4px #e2e8f0,
-                0 0 0 8px #cbd5e1,
-                0 30px 60px rgba(0,0,0,0.15);
-            position: relative;
-            overflow: hidden;
-            margin: auto;
-            border: 8px solid #1e293b; /* Dark Slate Frame */
+            width: 320px; height: 640px; background: var(--phone-bg); border-radius: 50px;
+            box-shadow: 0 0 0 4px var(--phone-inner), 0 0 0 8px var(--phone-outer), 0 30px 60px rgba(0,0,0,0.25);
+            position: relative; overflow: hidden; margin: auto; border: 8px solid var(--phone-notch);
+            transition: all 0.5s ease;
         }
 
         .phone-notch {
             position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-            width: 120px; height: 28px; background: #1e293b;
-            border-bottom-left-radius: 16px;
-            border-bottom-right-radius: 16px;
-            z-index: 40; /* Increased to stay above browser mockup */
+            width: 120px; height: 28px; background: var(--phone-notch);
+            border-bottom-left-radius: 16px; border-bottom-right-radius: 16px; z-index: 40;
+            transition: background 0.5s ease;
         }
 
+        /* --- WHATSAPP UI (Themed) --- */
         .phone-screen {
-            width: 100%; height: 100%;
-            background: #e5ddd5;
+            width: 100%; height: 100%; background: var(--wa-bg);
             background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
-            background-size: 350px;
-            background-blend-mode: soft-light;
-            display: flex; flex-direction: column;
-            padding-top: 40px;
+            background-size: 350px; background-blend-mode: soft-light; 
+            display: flex; flex-direction: column; padding-top: 40px; transition: background 0.5s ease;
         }
+        html.dark .phone-screen { background-blend-mode: overlay; opacity: 0.95; }
 
-        /* --- WHATSAPP UI --- */
         .wa-header {
-            background: rgba(240, 242, 245, 0.95);
-            backdrop-filter: blur(5px);
-            padding: 10px 15px;
-            display: flex; align-items: center; gap: 10px;
-            border-bottom: 1px solid rgba(0,0,0,0.05);
-            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
-            cursor: default;
+            background: var(--wa-header); backdrop-filter: blur(5px);
+            padding: 10px 15px; display: flex; align-items: center; gap: 10px;
+            border-bottom: 1px solid var(--wa-header-border); cursor: default;
+            transition: all 0.5s ease;
         }
         .wa-bubble {
-            background: #d9fdd3;
-            padding: 12px;
-            border-radius: 12px; border-top-right-radius: 0;
-            box-shadow: 0 1px 1px rgba(0,0,0,0.1);
-            font-size: 13px; line-height: 1.5; color: #111b21;
+            background: var(--wa-bubble); padding: 12px; border-radius: 12px; border-top-right-radius: 0;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.1); font-size: 13px; line-height: 1.5; color: var(--wa-text);
             position: relative; margin: 15px 15px 10px auto; max-width: 85%;
+            transition: all 0.5s ease;
         }
+        html.dark .wa-bubble { box-shadow: 0 1px 1px rgba(0,0,0,0.3); }
         .wa-bubble::after {
             content: ''; position: absolute; top: 0; right: -10px; width: 0; height: 0;
-            border: 10px solid transparent; border-top-color: #d9fdd3; border-left-color: #d9fdd3;
+            border: 10px solid transparent; border-top-color: var(--wa-bubble); border-left-color: var(--wa-bubble);
+            transition: border-color 0.5s ease;
         }
-        
         .link-preview {
-            background: rgba(0,0,0,0.03);
-            border-radius: 8px;
-            margin-top: 8px;
-            padding: 10px;
-            border-left: 4px solid #0d9488;
-            display: flex; flex-direction: column; gap: 2px;
+            background: var(--wa-link-bg); border-radius: 8px; margin-top: 8px;
+            padding: 10px; border-left: 4px solid #00a884; display: flex; flex-direction: column; gap: 2px;
+            transition: background 0.5s ease;
         }
 
         /* Custom Scrollbar */
@@ -168,13 +253,29 @@
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
         .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        html.dark .custom-scroll::-webkit-scrollbar-thumb { background: #475569; }
+        html.dark .custom-scroll::-webkit-scrollbar-thumb:hover { background: #64748b; }
 
-        /* Phone Input overrides */
+        /* Phone Input overrides Theme */
         .iti__selected-flag { background-color: transparent !important; }
-        .iti__country-list { background-color: white; border: 1px solid #e2e8f0; color: #334155; }
+        .iti__country-list { background-color: #fff; border: 1px solid #e2e8f0; color: #334155; }
+        html.dark .iti__country-list { background-color: #1e293b !important; border: 1px solid #334155 !important; color: #f8fafc !important; }
+        html.dark .iti__country.iti__highlight { background-color: #334155 !important; }
+        html.dark .iti__divider { border-bottom: 1px solid #334155 !important; }
     </style>
 </head>
 <body class="flex h-screen w-full">
+
+    <div class="bg-light-gradients"></div>
+    <div class="bg-orb-3"></div>
+
+    <!-- THEME TOGGLE BUTTON -->
+    <button onclick="toggleTheme()" class="fixed top-4 lg:top-6 right-4 lg:right-6 z-50 w-10 h-10 rounded-full glass-panel flex items-center justify-center shadow-lg transition-transform hover:scale-110 border border-slate-200 dark:border-slate-700 cursor-pointer">
+        <i id="themeToggleIcon" class="fa-solid fa-moon text-slate-500 text-lg transition-colors"></i>
+    </button>
+
+    <!-- RECENT SAVE BOX CONTAINER -->
+    <div id="toast-container"></div>
 
     <!-- AUDIO: Ringtone & Remote Stream -->
     <audio id="ringtone" loop>
@@ -183,18 +284,18 @@
     <audio id="remoteAudio" autoplay playsinline class="hidden"></audio>
 
     <!-- LEFT SIDEBAR (History & Voice) -->
-    <aside class="w-80 h-full bg-white border-r border-slate-100 flex flex-col z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)] shrink-0 transform transition-transform duration-300 md:translate-x-0 -translate-x-full fixed md:relative" id="sidebar">
+    <aside class="w-80 h-full bg-white/95 dark:bg-[#0b132b]/80 backdrop-blur-2xl border-r border-slate-100 dark:border-slate-800 flex flex-col z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)] dark:shadow-[4px_0_24px_rgba(0,0,0,0.3)] shrink-0 transform transition-all duration-300 md:translate-x-0 -translate-x-full fixed md:relative" id="sidebar">
         <!-- Logo Area -->
-        <div class="p-8 border-b border-slate-50">
+        <div class="p-8 border-b border-slate-50 dark:border-slate-800">
             <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-2xl bg-teal-50 flex items-center justify-center text-teal-600 shadow-sm border border-teal-100">
-                    <i class="fa-solid fa-microscope text-xl"></i>
+                <div class="w-12 h-12 rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(16,141,119,0.4)] shrink-0 border-2 border-slate-100 dark:border-slate-700 transition-colors bg-white">
+                    <i class="fa-solid fa-microscope text-[26px] text-[#0a6c56]"></i>
                 </div>
                 <div>
-                    <h1 class="font-extrabold text-slate-800 text-sm tracking-wide">BIOTECH LABS</h1>
+                    <h1 class="font-extrabold text-slate-800 dark:text-white text-sm tracking-wide transition-colors">BIOTECH LABS</h1>
                     <div class="flex items-center gap-2 mt-1">
                         <!-- Dynamic Status Dot -->
-                        <span id="connectionStatusDot" class="w-2 h-2 rounded-full bg-slate-300"></span>
+                        <span id="connectionStatusDot" class="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-500 transition-colors"></span>
                         <span id="connectionStatusText" class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Connecting...</span>
                     </div>
                 </div>
@@ -202,10 +303,10 @@
         </div>
 
         <!-- VOICE CALL SYSTEM -->
-        <div class="px-6 py-4 bg-slate-50/50 border-b border-slate-100">
+        <div class="px-6 py-4 bg-slate-50/50 dark:bg-slate-900/40 border-b border-slate-100 dark:border-slate-800 transition-colors">
             <div class="flex justify-between items-center mb-2">
                 <h3 class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Live Voice Link</h3>
-                <div class="w-2 h-2 rounded-full bg-teal-400"></div>
+                <div class="w-2 h-2 rounded-full bg-teal-400 dark:bg-blue-400 shadow-none dark:shadow-[0_0_8px_rgba(96,165,250,0.8)] transition-all"></div>
             </div>
             
             <!-- Connection State: Idle -->
@@ -214,7 +315,7 @@
                 <!-- My Identity (Setup Phase) -->
                 <div id="setupPhase">
                     <label class="text-[9px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Set My Location</label>
-                    <select id="myIdentity" onchange="updateIdentity()" class="w-full bg-white border border-slate-200 text-teal-700 text-[10px] font-bold rounded-lg p-1.5 outline-none focus:border-teal-400 transition-colors cursor-pointer shadow-sm">
+                    <select id="myIdentity" onchange="updateIdentity()" class="w-full bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 text-teal-700 dark:text-blue-400 text-[10px] font-bold rounded-lg p-1.5 outline-none focus:border-teal-400 dark:focus:border-blue-500 transition-colors cursor-pointer shadow-sm">
                         <option value="" disabled selected>Select...</option>
                         <option value="HEAD OFFICE">Head Office</option>
                         <option value="VEYANGODA">Veyangoda</option>
@@ -230,34 +331,34 @@
                     <label class="text-[9px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Quick Call</label>
                     <div class="grid grid-cols-6 gap-1">
                         
-                        <button onclick="startCall('BANDARANAYAKE')" class="relative aspect-square rounded-md bg-white border border-slate-200 hover:bg-teal-50 hover:border-teal-200 hover:text-teal-700 text-[10px] font-bold text-slate-600 transition-all shadow-sm flex items-center justify-center group" title="Bandaranayake">
+                        <button onclick="startCall('BANDARANAYAKE')" class="relative aspect-square rounded-md bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 hover:bg-teal-50 dark:hover:bg-[#334155] hover:border-teal-200 dark:hover:border-blue-800 hover:text-teal-700 dark:hover:text-blue-400 text-[10px] font-bold text-slate-600 dark:text-slate-300 transition-all shadow-sm flex items-center justify-center group" title="Bandaranayake">
                             BN
-                            <span id="dot-BANDARANAYAKE" class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-400 border border-white"></span>
+                            <span id="dot-BANDARANAYAKE" class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-400 dark:bg-red-500 border border-white dark:border-[#1e293b] transition-colors"></span>
                         </button>
                         
-                        <button onclick="startCall('VEYANGODA')" class="relative aspect-square rounded-md bg-white border border-slate-200 hover:bg-teal-50 hover:border-teal-200 hover:text-teal-700 text-[10px] font-bold text-slate-600 transition-all shadow-sm flex items-center justify-center group" title="Veyangoda">
+                        <button onclick="startCall('VEYANGODA')" class="relative aspect-square rounded-md bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 hover:bg-teal-50 dark:hover:bg-[#334155] hover:border-teal-200 dark:hover:border-blue-800 hover:text-teal-700 dark:hover:text-blue-400 text-[10px] font-bold text-slate-600 dark:text-slate-300 transition-all shadow-sm flex items-center justify-center group" title="Veyangoda">
                             VG
-                            <span id="dot-VEYANGODA" class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-400 border border-white"></span>
+                            <span id="dot-VEYANGODA" class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-400 dark:bg-red-500 border border-white dark:border-[#1e293b] transition-colors"></span>
                         </button>
                         
-                        <button onclick="startCall('BANDURAGODA')" class="relative aspect-square rounded-md bg-white border border-slate-200 hover:bg-teal-50 hover:border-teal-200 hover:text-teal-700 text-[10px] font-bold text-slate-600 transition-all shadow-sm flex items-center justify-center group" title="Banduragoda">
+                        <button onclick="startCall('BANDURAGODA')" class="relative aspect-square rounded-md bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 hover:bg-teal-50 dark:hover:bg-[#334155] hover:border-teal-200 dark:hover:border-blue-800 hover:text-teal-700 dark:hover:text-blue-400 text-[10px] font-bold text-slate-600 dark:text-slate-300 transition-all shadow-sm flex items-center justify-center group" title="Banduragoda">
                             BR
-                            <span id="dot-BANDURAGODA" class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-400 border border-white"></span>
+                            <span id="dot-BANDURAGODA" class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-400 dark:bg-red-500 border border-white dark:border-[#1e293b] transition-colors"></span>
                         </button>
                         
-                        <button onclick="startCall('Naiwala')" class="relative aspect-square rounded-md bg-white border border-slate-200 hover:bg-teal-50 hover:border-teal-200 hover:text-teal-700 text-[10px] font-bold text-slate-600 transition-all shadow-sm flex items-center justify-center group" title="Naiwala">
+                        <button onclick="startCall('Naiwala')" class="relative aspect-square rounded-md bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 hover:bg-teal-50 dark:hover:bg-[#334155] hover:border-teal-200 dark:hover:border-blue-800 hover:text-teal-700 dark:hover:text-blue-400 text-[10px] font-bold text-slate-600 dark:text-slate-300 transition-all shadow-sm flex items-center justify-center group" title="Naiwala">
                             NI
-                            <span id="dot-Naiwala" class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-400 border border-white"></span>
+                            <span id="dot-Naiwala" class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-400 dark:bg-red-500 border border-white dark:border-[#1e293b] transition-colors"></span>
                         </button>
                         
-                        <button onclick="startCall('HEAD OFFICE')" class="relative aspect-square rounded-md bg-white border border-slate-200 hover:bg-teal-50 hover:border-teal-200 hover:text-teal-700 text-[10px] font-bold text-slate-600 transition-all shadow-sm flex items-center justify-center group" title="Head Office">
+                        <button onclick="startCall('HEAD OFFICE')" class="relative aspect-square rounded-md bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 hover:bg-teal-50 dark:hover:bg-[#334155] hover:border-teal-200 dark:hover:border-blue-800 hover:text-teal-700 dark:hover:text-blue-400 text-[10px] font-bold text-slate-600 dark:text-slate-300 transition-all shadow-sm flex items-center justify-center group" title="Head Office">
                             HO
-                            <span id="dot-HEAD_OFFICE" class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-400 border border-white"></span>
+                            <span id="dot-HEAD_OFFICE" class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-400 dark:bg-red-500 border border-white dark:border-[#1e293b] transition-colors"></span>
                         </button>
                         
-                        <button onclick="startCall('ADMIN')" class="relative aspect-square rounded-md bg-slate-100 border border-slate-300 hover:bg-slate-200 text-[10px] font-bold text-slate-700 transition-all shadow-sm flex items-center justify-center group" title="Admin">
+                        <button onclick="startCall('ADMIN')" class="relative aspect-square rounded-md bg-slate-100 dark:bg-blue-900/30 border border-slate-300 dark:border-blue-800/50 hover:bg-slate-200 dark:hover:bg-blue-800/50 text-[10px] font-bold text-slate-700 dark:text-blue-200 transition-all shadow-sm flex items-center justify-center group" title="Admin">
                             AD
-                            <span id="dot-ADMIN" class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-400 border border-white"></span>
+                            <span id="dot-ADMIN" class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-400 dark:bg-red-500 border border-white dark:border-[#1e293b] transition-colors"></span>
                         </button>
 
                     </div>
@@ -267,18 +368,18 @@
 
             <!-- Connection State: Active -->
             <div id="voiceActiveState" class="hidden mt-2">
-                <div class="bg-white border border-teal-100 rounded-xl p-3 shadow-sm text-center mb-2 relative overflow-hidden">
-                    <div class="absolute inset-0 bg-teal-50 opacity-50 pulse-ring"></div>
+                <div class="bg-white dark:bg-[#1e293b] border border-teal-100 dark:border-blue-900/50 rounded-xl p-3 shadow-sm text-center mb-2 relative overflow-hidden transition-colors">
+                    <div class="absolute inset-0 bg-teal-50 dark:bg-blue-900/30 opacity-50 pulse-ring"></div>
                     <div class="relative z-10">
-                        <div class="text-[10px] font-bold text-teal-600 uppercase mb-1" id="callStatusText">Calling...</div>
-                        <div class="text-xs font-extrabold text-slate-700" id="callTimer">00:00</div>
+                        <div class="text-[10px] font-bold text-teal-600 dark:text-blue-400 uppercase mb-1 transition-colors" id="callStatusText">Calling...</div>
+                        <div class="text-xs font-extrabold text-slate-700 dark:text-white transition-colors" id="callTimer">00:00</div>
                     </div>
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="toggleMute()" id="muteBtn" class="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg transition-colors border border-slate-200">
+                    <button onclick="toggleMute()" id="muteBtn" class="flex-1 py-2 bg-slate-100 dark:bg-[#334155] hover:bg-slate-200 dark:hover:bg-[#475569] text-slate-600 dark:text-white rounded-lg transition-colors border border-slate-200 dark:border-slate-600">
                         <i class="fa-solid fa-microphone"></i>
                     </button>
-                    <button onclick="endCall()" class="flex-1 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-lg transition-colors shadow-sm">
+                    <button onclick="endCall()" class="flex-1 py-2 bg-rose-500 dark:bg-rose-600 hover:bg-rose-600 dark:hover:bg-rose-500 text-white rounded-lg transition-colors shadow-sm">
                         <i class="fa-solid fa-phone-slash"></i>
                     </button>
                 </div>
@@ -288,47 +389,47 @@
         <!-- History Header -->
         <div class="p-6 pb-2 flex justify-between items-center">
             <h3 class="text-xs font-extrabold text-slate-400 uppercase tracking-widest">Recent Activity</h3>
-            <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-1 rounded-lg font-bold" id="countBadge">0</span>
+            <span class="text-[10px] bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-300 px-2 py-1 rounded-lg font-bold border border-transparent dark:border-blue-800/50 transition-colors" id="countBadge">0</span>
         </div>
 
         <!-- History List -->
         <div class="flex-1 overflow-y-auto custom-scroll p-4 space-y-3" id="sentItemsList">
-            <div class="flex flex-col items-center justify-center h-40 text-slate-400 text-xs gap-3">
-                <i class="fa-solid fa-circle-notch fa-spin text-teal-500 text-xl"></i>
+            <div class="flex flex-col items-center justify-center h-40 text-slate-400 dark:text-slate-500 text-xs gap-3">
+                <i class="fa-solid fa-circle-notch fa-spin text-teal-500 dark:text-blue-500 text-xl"></i>
                 <span class="font-medium">Syncing Database...</span>
             </div>
         </div>
 
         <!-- Footer Actions -->
-        <div class="p-6 border-t border-slate-50">
-            <button id="clearHistoryBtn" class="w-full py-3 text-xs font-bold text-slate-500 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all flex items-center justify-center gap-2 border border-slate-100 hover:border-red-100">
+        <div class="p-6 border-t border-slate-50 dark:border-slate-800 transition-colors">
+            <button id="clearHistoryBtn" class="w-full py-3 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all flex items-center justify-center gap-2 border border-slate-100 dark:border-slate-700 hover:border-red-100 dark:hover:border-red-900/50">
                 <i class="fa-regular fa-trash-can"></i> Clear History
             </button>
         </div>
     </aside>
 
     <!-- MOBILE TOGGLE -->
-    <button onclick="document.getElementById('sidebar').classList.toggle('-translate-x-full')" class="md:hidden fixed top-4 left-4 z-50 p-3 bg-white text-teal-600 rounded-xl shadow-lg border border-slate-100">
+    <button onclick="document.getElementById('sidebar').classList.toggle('-translate-x-full')" class="md:hidden fixed top-4 left-4 z-50 p-3 bg-white dark:bg-[#1e293b] text-teal-600 dark:text-blue-400 rounded-xl shadow-lg dark:shadow-[0_0_15px_rgba(59,130,246,0.3)] border border-slate-100 dark:border-blue-900 transition-colors">
         <i class="fa-solid fa-bars"></i>
     </button>
 
     <!-- INCOMING CALL MODAL (Hidden by default) -->
-    <div id="incomingCallModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm fade-in">
-        <div class="bg-white rounded-3xl shadow-2xl p-8 w-80 text-center border-4 border-white relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-teal-400 to-blue-500"></div>
+    <div id="incomingCallModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 dark:bg-[#020617]/80 backdrop-blur-sm dark:backdrop-blur-md fade-in">
+        <div class="bg-white dark:bg-[#1e293b] rounded-3xl shadow-2xl p-8 w-80 text-center border-4 border-white dark:border-slate-700 relative overflow-hidden transition-colors">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-teal-400 dark:from-blue-400 to-blue-500 dark:to-purple-500"></div>
             
-            <div class="w-20 h-20 bg-teal-50 rounded-full flex items-center justify-center mx-auto mb-4 ringing-icon shadow-lg border border-teal-100">
-                <i class="fa-solid fa-phone text-3xl text-teal-500"></i>
+            <div class="w-20 h-20 bg-teal-50 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4 ringing-icon shadow-lg dark:shadow-[0_0_20px_rgba(59,130,246,0.4)] border border-teal-100 dark:border-blue-800/50 transition-colors">
+                <i class="fa-solid fa-phone text-3xl text-teal-500 dark:text-blue-400"></i>
             </div>
             
-            <h3 class="text-slate-800 font-extrabold text-lg mb-1">Incoming Call</h3>
-            <p class="text-slate-500 text-xs font-medium mb-8">From: <span id="callerName" class="text-teal-600 font-bold">Unknown</span></p>
+            <h3 class="text-slate-800 dark:text-white font-extrabold text-lg mb-1 transition-colors">Incoming Call</h3>
+            <p class="text-slate-500 dark:text-slate-400 text-xs font-medium mb-8">From: <span id="callerName" class="text-teal-600 dark:text-blue-400 font-bold">Unknown</span></p>
             
             <div class="flex justify-center gap-4">
-                <button onclick="rejectCall()" class="w-12 h-12 rounded-full bg-rose-100 text-rose-500 hover:bg-rose-500 hover:text-white transition flex items-center justify-center shadow-sm">
+                <button onclick="rejectCall()" class="w-12 h-12 rounded-full bg-rose-100 dark:bg-rose-900/30 border border-transparent dark:border-rose-800/50 text-rose-500 hover:bg-rose-500 dark:hover:bg-rose-600 hover:text-white transition flex items-center justify-center shadow-sm">
                     <i class="fa-solid fa-phone-slash"></i>
                 </button>
-                <button onclick="answerCall()" class="w-12 h-12 rounded-full bg-green-500 text-white hover:bg-green-600 transition flex items-center justify-center shadow-lg animate-bounce">
+                <button onclick="answerCall()" class="w-12 h-12 rounded-full bg-green-500 dark:bg-emerald-600 text-white hover:bg-green-600 dark:hover:bg-emerald-500 transition flex items-center justify-center shadow-lg dark:shadow-[0_0_15px_rgba(5,150,105,0.6)] animate-bounce">
                     <i class="fa-solid fa-phone"></i>
                 </button>
             </div>
@@ -338,17 +439,17 @@
     <!-- MAIN CONTENT -->
     <main class="flex-1 h-full relative flex flex-col lg:flex-row items-center justify-start lg:justify-center p-4 lg:p-6 overflow-y-auto custom-scroll w-full">
         
-        <div class="w-full max-w-6xl min-h-max lg:h-[92vh] glass-panel rounded-3xl lg:rounded-[40px] flex flex-col lg:flex-row shadow-2xl fade-in my-auto mx-auto lg:overflow-hidden">
+        <div class="w-full max-w-6xl min-h-max lg:h-[92vh] glass-panel rounded-3xl lg:rounded-[40px] flex flex-col lg:flex-row shadow-2xl fade-in my-auto mx-auto lg:overflow-hidden relative z-10">
             
             <!-- LEFT: FORM SECTION -->
-            <div class="w-full lg:w-1/2 p-6 md:p-10 lg:p-14 flex flex-col justify-center bg-white/50 relative">
+            <div class="w-full lg:w-1/2 p-6 md:p-10 lg:p-14 flex flex-col justify-center bg-white/50 dark:bg-[#0f172a]/40 relative border-b lg:border-b-0 lg:border-r border-transparent dark:border-slate-700/50 transition-colors">
                 <!-- Background decoration -->
-                <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-teal-400 via-blue-500 to-indigo-500"></div>
+                <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-teal-400 dark:from-blue-500 via-blue-500 dark:via-indigo-500 to-indigo-500 dark:to-purple-500"></div>
 
                 <div class="mb-8 mt-4 lg:mb-10 lg:mt-0">
-                    <span class="text-teal-600 text-[10px] font-extrabold tracking-[0.2em] uppercase mb-3 block">Admin Dashboard</span>
-                    <h2 class="text-3xl lg:text-4xl font-extrabold text-slate-800 mb-3 tracking-tight">Patient Report Link</h2>
-                    <p class="text-slate-500 text-sm leading-relaxed font-medium">Generate secure, encrypted download links for patient reports. Links automatically expire in 14 days.</p>
+                    <span class="text-teal-600 dark:text-blue-400 text-[10px] font-extrabold tracking-[0.2em] uppercase mb-3 block dark:drop-shadow-[0_0_8px_rgba(96,165,250,0.5)] transition-colors">Admin Dashboard</span>
+                    <h2 class="text-3xl lg:text-4xl font-extrabold text-slate-800 dark:text-white mb-3 tracking-tight transition-colors">Patient Report Link</h2>
+                    <p class="text-slate-500 dark:text-slate-300 text-sm leading-relaxed font-medium transition-colors">Generate secure, encrypted download links for patient reports. Links automatically expire in 14 days.</p>
                 </div>
 
                 <div class="space-y-6">
@@ -357,42 +458,42 @@
                     <div class="flex gap-4">
                         <div class="w-1/3 input-group rounded-2xl p-2">
                             <label class="block text-[10px] text-slate-400 uppercase font-bold px-3 pt-1">Prefix</label>
-                            <select id="vgSelection" class="w-full bg-transparent text-slate-700 font-bold p-2 text-lg outline-none cursor-pointer">
-                                <option value="BN">BN</option>
-                                <option value="VG">VG</option>
-                                <option value="NI">NI</option>
-                                <option value="BR">BR</option>
+                            <select id="vgSelection" class="w-full bg-transparent text-slate-700 dark:text-white font-bold p-2 text-lg outline-none cursor-pointer transition-colors">
+                                <option value="BN" class="dark:bg-slate-800">BN</option>
+                                <option value="VG" class="dark:bg-slate-800">VG</option>
+                                <option value="NI" class="dark:bg-slate-800">NI</option>
+                                <option value="BR" class="dark:bg-slate-800">BR</option>
                             </select>
                         </div>
                         <div class="w-2/3 input-group rounded-2xl p-2">
                             <label class="block text-[10px] text-slate-400 uppercase font-bold px-3 pt-1">Number</label>
-                            <input type="number" id="vgNum" placeholder="1005" class="w-full bg-transparent text-slate-700 font-mono text-lg p-2 outline-none placeholder-slate-300" />
+                            <input type="number" id="vgNum" placeholder="1005" class="w-full bg-transparent text-slate-700 dark:text-white font-mono text-lg p-2 outline-none placeholder-slate-300 dark:placeholder-slate-500 transition-colors" />
                         </div>
                     </div>
 
                     <!-- Date -->
                     <div class="input-group rounded-2xl p-2">
                         <label class="block text-[10px] text-slate-400 uppercase font-bold px-3 pt-1">Report Date</label>
-                        <input type="date" id="date" class="w-full bg-transparent text-slate-700 font-medium p-2 outline-none" />
+                        <input type="date" id="date" class="w-full bg-transparent text-slate-700 dark:text-white font-medium p-2 outline-none dark:[color-scheme:dark] transition-colors" />
                     </div>
 
                     <!-- WhatsApp Number -->
                     <div class="input-group rounded-2xl p-2 relative">
                         <label class="block text-[10px] text-slate-400 uppercase font-bold px-3 pt-1">WhatsApp Mobile</label>
-                        <input type="tel" id="phoneNum" class="w-full bg-transparent text-slate-700 text-lg p-2 outline-none" placeholder="76 781 0623" />
+                        <input type="tel" id="phoneNum" class="w-full bg-transparent text-slate-700 dark:text-white text-lg p-2 outline-none transition-colors" placeholder="76 781 0623" />
                         <!-- Error Tag -->
-                        <div id="phoneError" class="absolute right-4 top-5 bg-rose-50 text-rose-500 text-[10px] font-bold px-2 py-1 rounded-lg hidden items-center gap-1 border border-rose-100">
+                        <div id="phoneError" class="absolute right-4 top-5 bg-rose-50 dark:bg-rose-900/50 text-rose-500 dark:text-rose-400 text-[10px] font-bold px-2 py-1 rounded-lg hidden items-center gap-1 border border-rose-100 dark:border-rose-800/50 transition-colors">
                             <i class="fa-solid fa-circle-exclamation"></i> 9 Digits
                         </div>
                     </div>
 
                     <!-- Buttons -->
                     <div class="pt-4 flex flex-col md:flex-row gap-4 mb-4 lg:mb-0">
-                        <button onclick="sendWhatsApp()" id="sendBtn" class="flex-1 py-4 rounded-2xl border-2 border-slate-100 bg-white text-slate-600 hover:border-teal-100 hover:text-teal-600 font-bold text-sm transition-all flex items-center justify-center gap-2 group opacity-50 cursor-not-allowed disabled:opacity-50">
-                            <i class="fa-brands fa-whatsapp text-teal-500 text-lg group-hover:scale-110 transition-transform"></i> Send API
+                        <button onclick="sendWhatsApp()" id="sendBtn" class="flex-1 py-4 rounded-2xl border-2 border-slate-100 dark:border-slate-700 bg-white dark:bg-[#1e293b] text-slate-600 dark:text-slate-300 hover:border-teal-100 dark:hover:border-blue-500 hover:text-teal-600 dark:hover:text-blue-400 dark:hover:shadow-[0_0_15px_rgba(59,130,246,0.2)] font-bold text-sm transition-all flex items-center justify-center gap-2 group opacity-50 cursor-not-allowed disabled:opacity-50">
+                            <i class="fa-brands fa-whatsapp text-teal-500 dark:text-emerald-400 text-lg group-hover:scale-110 transition-transform dark:drop-shadow-[0_0_5px_rgba(52,211,153,0.5)]"></i> Send API
                         </button>
 
-                        <button onclick="sendWhatsAppWeb()" id="sendWebBtn" class="flex-[1.5] py-4 rounded-2xl gradient-btn text-white font-bold text-sm shadow-xl shadow-teal-500/20 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2 opacity-50 cursor-not-allowed disabled:opacity-50">
+                        <button onclick="sendWhatsAppWeb()" id="sendWebBtn" class="flex-[1.5] py-4 rounded-2xl gradient-btn text-white font-bold text-sm transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2 opacity-50 cursor-not-allowed disabled:opacity-50">
                              <i class="fa-brands fa-whatsapp text-xl"></i> Web Manual
                         </button>
                     </div>
@@ -401,33 +502,33 @@
             </div>
 
             <!-- RIGHT: PREVIEW SECTION -->
-            <div id="previewSection" class="w-full lg:w-1/2 bg-slate-50/50 flex flex-col items-center justify-center p-6 lg:p-0 relative min-h-[650px] lg:min-h-0 border-t lg:border-t-0 border-slate-200">
+            <div id="previewSection" class="w-full lg:w-1/2 bg-slate-50/50 dark:bg-[#020617]/30 flex flex-col items-center justify-center p-6 lg:p-0 relative min-h-[650px] lg:min-h-0 border-t lg:border-t-0 border-slate-200 dark:border-transparent transition-colors">
                 
                 <div class="absolute top-8 left-0 w-full text-center">
-                    <h3 class="text-xs font-extrabold text-slate-300 uppercase tracking-[0.2em]">Client Preview</h3>
+                    <h3 class="text-xs font-extrabold text-slate-300 dark:text-slate-500 uppercase tracking-[0.2em] transition-colors">Client Preview</h3>
                 </div>
 
                 <!-- HISTORY OVERLAY INDICATOR -->
-                <div id="historyIndicator" class="hidden absolute top-16 z-30 bg-amber-100 text-amber-700 border border-amber-200 px-3 py-1 rounded-full text-[10px] font-bold shadow-sm animate-bounce">
+                <div id="historyIndicator" class="hidden absolute top-16 z-30 bg-amber-100 dark:bg-purple-900/60 text-amber-700 dark:text-purple-200 border border-amber-200 dark:border-purple-700/50 px-3 py-1 rounded-full text-[10px] font-bold shadow-sm dark:shadow-[0_0_15px_rgba(168,85,247,0.4)] animate-bounce dark:backdrop-blur-md transition-colors">
                     <i class="fa-solid fa-clock-rotate-left mr-1"></i> Viewing History Record
                 </div>
 
                 <!-- PHONE WRAPPER FOR SCALING -->
-                <div class="phone-wrapper w-full flex justify-center">
+                <div class="phone-wrapper w-full flex justify-center mt-6">
                     <div class="phone-mockup">
                         <div class="phone-notch"></div>
                         <div class="phone-screen relative">
                             
                             <!-- WA Header -->
                             <div class="wa-header">
-                                <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 text-[10px] font-bold">
+                                <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-[#64748b] flex items-center justify-center text-slate-500 dark:text-[#e2e8f0] text-[10px] font-bold transition-colors">
                                     <i class="fa-solid fa-user"></i>
                                 </div>
                                 <div class="flex-1">
-                                    <div class="text-[14px] font-bold text-black" id="headerContactName">Biotech Lab <i class="fa-solid fa-certificate text-teal-500 text-[10px] ml-1"></i></div>
-                                    <div class="text-[10px] text-gray-500">online</div>
+                                    <div class="text-[14px] font-bold text-black dark:text-white transition-colors" id="headerContactName">Biotech Lab <i class="fa-solid fa-certificate text-teal-500 dark:text-[#00a884] text-[10px] ml-1 transition-colors"></i></div>
+                                    <div class="text-[10px] text-gray-500 dark:text-gray-400 transition-colors">online</div>
                                 </div>
-                                <div class="flex gap-4 text-teal-600 text-lg pr-2">
+                                <div class="flex gap-4 text-teal-600 dark:text-[#e2e8f0] text-lg pr-2 transition-colors">
                                     <i class="fa-solid fa-video"></i>
                                     <i class="fa-solid fa-phone"></i>
                                 </div>
@@ -435,67 +536,65 @@
 
                             <!-- Date Pill -->
                             <div class="flex justify-center my-4">
-                                <span class="bg-gray-200 text-[11px] text-gray-600 px-3 py-1 rounded-lg font-medium shadow-sm">Today</span>
+                                <span class="bg-gray-200 dark:bg-[#202c33] text-[11px] text-gray-600 dark:text-[#8696a0] px-3 py-1 rounded-lg font-medium shadow-sm border border-transparent dark:border-white/5 transition-colors">Today</span>
                             </div>
 
                             <!-- Encryption -->
-                            <div class="text-[11px] text-center text-gray-500 bg-[#ffecb3] mx-6 p-2 rounded-lg mb-4 shadow-sm text-[10px] leading-tight border border-[#ffe082]">
+                            <div class="text-[11px] text-center text-gray-500 dark:text-[#ffd279] bg-[#ffecb3] dark:bg-[#202c33] mx-6 p-2 rounded-lg mb-4 shadow-sm text-[10px] leading-tight border border-[#ffe082] dark:border-white/5 transition-colors">
                                 <i class="fa-solid fa-lock text-[8px] mr-1"></i> Messages and calls are end-to-end encrypted. No one outside of this chat can read or listen to them.
                             </div>
 
                             <!-- Message Bubble -->
                             <div class="wa-bubble" id="waBubble">
-                                <div id="previewText" class="whitespace-pre-line text-slate-800">
-                                    <span class="text-slate-400 italic">Enter patient details to preview message...</span>
+                                <div id="previewText" class="whitespace-pre-line text-slate-800 dark:text-white transition-colors">
+                                    <span class="text-slate-400 dark:text-white/60 italic transition-colors">Enter patient details to preview message...</span>
                                 </div>
                                 
-                                <!-- Link Preview Card (Clickable to reopen preview) -->
-                                <div id="linkCard" class="hidden cursor-pointer hover:bg-teal-50 transition-colors" onclick="openBrowserView(document.getElementById('currentLinkStorage').value)">
+                                <!-- Link Preview Card -->
+                                <div id="linkCard" class="hidden cursor-pointer hover:bg-teal-50 dark:hover:bg-white/5 transition-colors" onclick="openBrowserView(document.getElementById('currentLinkStorage').value)">
                                     <div class="link-preview">
-                                        <span class="text-[12px] font-bold text-teal-700">Biotech Lab Report Portal</span>
-                                        <span class="text-[11px] text-slate-500">biotechveyangoda.lk</span>
-                                        <span class="text-[10px] text-slate-400 mt-0.5">Secure PDF Download (Exp: 2 Weeks)</span>
+                                        <span class="text-[12px] font-bold text-teal-700 dark:text-[#00a884] transition-colors">Biotech Lab Report Portal</span>
+                                        <span class="text-[11px] text-slate-500 dark:text-gray-400 transition-colors">biotechveyangoda.lk</span>
+                                        <span class="text-[10px] text-slate-400 dark:text-gray-500 mt-0.5 transition-colors">Secure PDF Download (Exp: 2 Weeks)</span>
                                     </div>
                                 </div>
                                 <input type="hidden" id="currentLinkStorage" value="" />
 
-                                <div class="text-[11px] text-gray-500 text-right mt-1.5 flex justify-end gap-1 items-center">
+                                <div class="text-[11px] text-gray-500 dark:text-white/50 text-right mt-1.5 flex justify-end gap-1 items-center transition-colors">
                                     <span id="msgTime">10:00 AM</span>
-                                    <i class="fa-solid fa-check-double text-blue-400"></i>
+                                    <i class="fa-solid fa-check-double text-blue-400 dark:text-[#53bdeb] transition-colors"></i>
                                 </div>
                             </div>
 
                         </div>
 
-                        <!-- NEW: AUTO OPEN BROWSER MOCKUP WITH CORS BYPASS SCROLLING -->
-                        <div id="browserView" class="absolute bottom-0 left-0 w-full h-[calc(100%-28px)] bg-white z-30 transform translate-y-full transition-transform duration-[400ms] ease-[cubic-bezier(0.22,1,0.36,1)] rounded-b-[40px] flex flex-col overflow-hidden shadow-[0_-15px_40px_rgba(0,0,0,0.15)]">
+                        <!-- AUTO OPEN BROWSER MOCKUP WITH CORS BYPASS SCROLLING -->
+                        <div id="browserView" class="absolute bottom-0 left-0 w-full h-[calc(100%-28px)] bg-white dark:bg-[#0f172a] z-30 transform translate-y-full transition-transform duration-[400ms] ease-[cubic-bezier(0.22,1,0.36,1)] rounded-b-[40px] flex flex-col overflow-hidden shadow-[0_-15px_40px_rgba(0,0,0,0.15)] dark:shadow-[0_-15px_40px_rgba(0,0,0,0.5)] border-t border-transparent dark:border-slate-800 transition-colors">
                             <!-- Header -->
-                            <div class="bg-slate-50 px-4 py-3 border-b border-slate-200 flex items-center gap-3 relative z-40">
-                                <button onclick="closeBrowserView()" class="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-300 transition-colors shadow-inner cursor-pointer" title="Back to Chat">
+                            <div class="bg-slate-50 dark:bg-[#1e293b] px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex items-center gap-3 relative z-40 transition-colors">
+                                <button onclick="closeBrowserView()" class="w-7 h-7 rounded-full bg-slate-200 dark:bg-[#334155] flex items-center justify-center text-slate-600 dark:text-white hover:bg-slate-300 dark:hover:bg-[#475569] transition-colors shadow-inner cursor-pointer" title="Back to Chat">
                                     <i class="fa-solid fa-xmark text-xs"></i>
                                 </button>
-                                <div class="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-1.5 flex items-center gap-2 shadow-sm">
+                                <div class="flex-1 bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-1.5 flex items-center gap-2 shadow-sm transition-colors">
                                     <i class="fa-solid fa-lock text-[10px] text-emerald-500"></i>
-                                    <span class="text-[11px] text-slate-700 font-medium truncate" id="browserUrl">biotechveyangoda.lk</span>
+                                    <span class="text-[11px] text-slate-700 dark:text-slate-300 font-medium truncate transition-colors" id="browserUrl">biotechveyangoda.lk</span>
                                 </div>
                                 <i class="fa-solid fa-ellipsis-vertical text-slate-400 text-xs px-1"></i>
                             </div>
                             
                             <!-- Bypassing CORS Wrapper for the Iframe -->
-                            <div class="flex-1 relative bg-slate-100 w-full overflow-hidden">
+                            <div class="flex-1 relative bg-slate-100 dark:bg-white w-full overflow-hidden transition-colors">
                                 <!-- Loading overlay -->
-                                <div id="browserLoader" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-50 z-30 transition-opacity duration-300 pointer-events-none">
+                                <div id="browserLoader" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-50 dark:bg-[#0f172a] z-30 transition-opacity duration-300 pointer-events-none">
                                     <div class="relative w-12 h-12 flex items-center justify-center mb-3">
-                                        <div class="absolute inset-0 border-4 border-slate-200 rounded-full"></div>
-                                        <div class="absolute inset-0 border-4 border-teal-500 rounded-full border-t-transparent animate-spin"></div>
-                                        <i class="fa-solid fa-flask text-teal-500 text-sm"></i>
+                                        <div class="absolute inset-0 border-4 border-slate-200 dark:border-slate-700 rounded-full transition-colors"></div>
+                                        <div class="absolute inset-0 border-4 border-teal-500 dark:border-blue-500 rounded-full border-t-transparent animate-spin dark:shadow-[0_0_15px_rgba(59,130,246,0.5)] transition-colors"></div>
+                                        <i class="fa-solid fa-flask text-teal-500 dark:text-blue-400 text-sm transition-colors"></i>
                                     </div>
-                                    <span class="text-[11px] text-slate-500 font-bold animate-pulse">Loading Secure Report...</span>
+                                    <span class="text-[11px] text-slate-500 dark:text-blue-300 font-bold animate-pulse dark:drop-shadow-[0_0_5px_rgba(96,165,250,0.5)] transition-colors">Loading Secure Report...</span>
                                 </div>
                                 
-                                <!-- Scrollable Parent Wrapper -->
-                                <div id="iframeWrapper" class="absolute inset-0 z-20 overflow-y-auto custom-scroll w-full h-full">
-                                    <!-- Iframe is given a fixed large height so we can scroll the wrapper instead of the blocked internal window -->
+                                <div id="iframeWrapper" class="absolute inset-0 z-20 overflow-y-auto custom-scroll w-full h-full bg-white">
                                     <iframe id="previewIframe" class="w-full border-none block bg-white" style="height: 1200px;"></iframe>
                                 </div>
                             </div>
@@ -506,8 +605,8 @@
                 <!-- Hidden Textarea -->
                 <textarea id="messagePreview" class="hidden"></textarea>
 
-                <p class="absolute bottom-6 lg:bottom-8 text-[10px] text-slate-400 font-medium">
-                    Secured by <span class="text-teal-600 font-bold">Biotech Systems</span>
+                <p class="absolute bottom-6 lg:bottom-8 text-[10px] text-slate-400 dark:text-slate-500 font-medium transition-colors">
+                    Secured by <span class="text-teal-600 dark:text-blue-500 font-bold dark:drop-shadow-[0_0_5px_rgba(59,130,246,0.3)] transition-colors">Biotech Systems</span>
                 </p>
 
             </div>
@@ -518,6 +617,31 @@
     <!-- JS LIBS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js"></script>
+
+    <!-- THEME TOGGLE LOGIC -->
+    <script>
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.theme = isDark ? 'dark' : 'light';
+            updateThemeIcon(isDark);
+        }
+
+        function updateThemeIcon(isDark) {
+            const icon = document.getElementById('themeToggleIcon');
+            if(isDark) {
+                // Outlined, uncolored sun for dark mode
+                icon.className = 'fa-regular fa-sun text-slate-300 text-lg transition-colors';
+            } else {
+                // Solid moon for light mode
+                icon.className = 'fa-solid fa-moon text-slate-500 text-lg transition-colors';
+            }
+        }
+        
+        // Initial set of icon
+        document.addEventListener("DOMContentLoaded", () => {
+            updateThemeIcon(document.documentElement.classList.contains('dark'));
+        });
+    </script>
 
     <!-- FIREBASE MODULES -->
     <script type="module">
@@ -546,7 +670,6 @@
             appId: "1:1081724102554:web:16b0c1ee763148b4a63c23"
         };
 
-        // Initialize both apps
         const historyApp = initializeApp(historyConfig, "historyApp");
         const voiceApp = initializeApp(voiceConfig, "voiceApp");
 
@@ -569,48 +692,45 @@
             const badge = document.getElementById("countBadge");
             
             if (!data) {
-                listContainer.innerHTML = `<div class="text-center py-8 text-slate-300 text-xs">No records</div>`;
+                listContainer.innerHTML = `<div class="text-center py-8 text-slate-400 dark:text-slate-500 text-xs">No records</div>`;
                 badge.innerText = "0";
                 window.historyData = [];
                 return;
             }
 
-            // Map data to include the Firebase key for updates
             const itemsArray = Object.entries(data).map(([key, value]) => ({...value, key})).reverse();
             window.historyData = itemsArray;
             badge.innerText = itemsArray.length;
             
             const html = itemsArray.slice(0, 50).map((item, index) => {
-                // Color Logic
-                let cardColorClass = "bg-white border-slate-100 hover:border-teal-200 hover:bg-teal-50"; // Default (WhatsApp only or legacy)
-                let iconHtml = '<i class="fa-brands fa-whatsapp text-green-500"></i>';
+                // Responsive Theme Color Logic for History Cards
+                let cardColorClass = "bg-white dark:bg-[#1e293b] border-slate-100 dark:border-slate-700 hover:border-teal-200 dark:hover:border-blue-500/50 hover:bg-teal-50 dark:hover:bg-[#0f172a] text-slate-700 dark:text-slate-200"; 
+                let iconHtml = '<i class="fa-brands fa-whatsapp text-green-500 dark:text-emerald-400"></i>';
 
                 if (item.smsSent && item.whatsappSent) {
-                    // Both Sent: Orange
-                    cardColorClass = "bg-orange-50 border-orange-200 hover:bg-orange-100 hover:border-orange-300";
-                    iconHtml = '<div class="flex gap-1"><i class="fa-solid fa-comment-dots text-purple-500"></i><i class="fa-brands fa-whatsapp text-green-500"></i></div>';
+                    cardColorClass = "bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-700/50 hover:bg-orange-100 dark:hover:bg-orange-900/40 text-slate-800 dark:text-orange-200";
+                    iconHtml = '<div class="flex gap-1"><i class="fa-solid fa-comment-dots text-purple-500 dark:text-purple-400"></i><i class="fa-brands fa-whatsapp text-green-500 dark:text-emerald-400"></i></div>';
                 } else if (item.smsSent) {
-                    // SMS Only: Light Purple
-                    cardColorClass = "bg-purple-50 border-purple-200 hover:bg-purple-100 hover:border-purple-300";
-                    iconHtml = '<i class="fa-solid fa-comment-dots text-purple-500"></i>';
+                    cardColorClass = "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-700/50 hover:bg-purple-100 dark:hover:bg-purple-900/40 text-slate-800 dark:text-purple-200";
+                    iconHtml = '<i class="fa-solid fa-comment-dots text-purple-500 dark:text-purple-400"></i>';
                 }
 
                 return `
                 <div onclick="loadHistoryItem(${index})" style="animation: fadeIn 0.3s ease forwards; animation-delay: ${index * 0.05}s; opacity: 0;" 
-                     class="history-item ${cardColorClass} p-3 rounded-2xl border relative overflow-hidden group">
+                     class="history-item ${cardColorClass} p-3 rounded-2xl border relative overflow-hidden group transition-colors">
                     <div class="flex justify-between items-start mb-1">
-                        <span class="font-bold text-slate-700 text-xs transition-colors tracking-wide">${item.id}</span>
+                        <span class="font-bold text-sm tracking-wide">${item.id}</span>
                         <div class="flex items-center gap-2">
-                             <button onclick="recallHistoryItem(${index}, event)" class="w-5 h-5 flex items-center justify-center rounded-full bg-white/50 hover:bg-white text-slate-400 hover:text-teal-600 border border-transparent hover:border-slate-200 transition-all shadow-sm" title="Recall Record">
+                             <button onclick="recallHistoryItem(${index}, event)" class="w-5 h-5 flex items-center justify-center rounded-full bg-white/50 dark:bg-slate-800 hover:bg-white dark:hover:bg-slate-700 text-slate-400 dark:text-slate-400 hover:text-teal-600 dark:hover:text-blue-400 border border-transparent hover:border-slate-200 dark:hover:border-slate-600 transition-all shadow-sm" title="Recall Record">
                                 <i class="fa-solid fa-reply-all text-[9px]"></i>
                              </button>
-                             <span class="text-[9px] text-slate-400 bg-white/60 px-2 py-1 rounded-md border border-slate-100/50 font-medium">${item.sendTime}</span>
+                             <span class="text-[9px] text-slate-400 dark:text-slate-300 bg-white/60 dark:bg-slate-800/80 px-2 py-1 rounded-md border border-slate-100/50 dark:border-slate-700 font-medium transition-colors">${item.sendTime}</span>
                         </div>
                     </div>
                     <div class="flex justify-between items-center text-[10px] text-slate-400 mt-2">
                          <div class="flex items-center gap-1.5">
-                            <i class="fa-solid fa-phone text-teal-500/50"></i>
-                            <span class="font-mono text-slate-500">${item.phoneNumber || 'No Number'}</span>
+                            <i class="fa-solid fa-phone text-teal-500/50 dark:text-blue-500/50"></i>
+                            <span class="font-mono text-slate-500 dark:text-slate-300 transition-colors">${item.phoneNumber || 'No Number'}</span>
                         </div>
                         <div class="flex items-center gap-1.5 opacity-80">
                             ${iconHtml}
@@ -632,36 +752,32 @@
         document.getElementById('clearHistoryBtn').addEventListener('click', window.clearSentItemsFirebase);
 
         // --- PRESENCE SYSTEM (ONLINE STATUS) ---
-        // Monitor all branches
         onValue(ref(voiceDb, 'biotech_presence'), (snapshot) => {
             const presences = snapshot.val() || {};
             const branches = ['BANDARANAYAKE', 'VEYANGODA', 'BANDURAGODA', 'Naiwala', 'HEAD OFFICE', 'ADMIN'];
             
             branches.forEach(branch => {
-                const safeId = branch.replace(' ', '_'); // Handle "HEAD OFFICE" -> "HEAD_OFFICE"
+                const safeId = branch.replace(' ', '_'); 
                 const el = document.getElementById('dot-' + safeId);
                 if(el) {
                     const isOnline = presences[branch]?.online === true;
                     if(isOnline) {
-                        el.className = "absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)] border border-white transition-all";
+                        el.className = "absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-green-500 dark:bg-emerald-500 shadow-[0_0_8px_rgba(34,197,94,0.8)] dark:shadow-[0_0_8px_rgba(16,185,129,0.8)] border border-white dark:border-[#1e293b] transition-all";
                     } else {
-                        el.className = "absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-400 border border-white transition-all";
+                        el.className = "absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-400 dark:bg-rose-500 border border-white dark:border-[#1e293b] transition-all";
                     }
                 }
             });
         });
 
-        // --- IMPROVED PRESENCE LOGIC (FIX FOR OFFLINE ISSUE) ---
         const connectedRef = ref(voiceDb, ".info/connected");
         
         onValue(connectedRef, (snap) => {
             if (snap.val() === true) {
-                // We are connected to the internet/Firebase
-                document.getElementById('connectionStatusDot').classList.remove('bg-red-500', 'bg-slate-300');
-                document.getElementById('connectionStatusDot').classList.add('bg-emerald-500', 'animate-pulse');
+                document.getElementById('connectionStatusDot').classList.remove('bg-red-500', 'bg-slate-300', 'dark:bg-rose-500', 'dark:bg-slate-500');
+                document.getElementById('connectionStatusDot').classList.add('bg-emerald-500', 'animate-pulse', 'dark:shadow-[0_0_10px_rgba(16,185,129,0.8)]');
                 document.getElementById('connectionStatusText').innerText = "Online";
                 
-                // CRITICAL FIX: Re-assert presence when connection comes back
                 const currentIdentity = localStorage.getItem('myBranchIdentity');
                 if(currentIdentity) {
                     const presenceRef = ref(voiceDb, `biotech_presence/${currentIdentity}`);
@@ -669,22 +785,17 @@
                     set(presenceRef, { online: true, last_seen: serverTimestamp() });
                 }
             } else {
-                // We lost connection
-                document.getElementById('connectionStatusDot').classList.remove('bg-emerald-500', 'animate-pulse');
-                document.getElementById('connectionStatusDot').classList.add('bg-red-500');
+                document.getElementById('connectionStatusDot').classList.remove('bg-emerald-500', 'animate-pulse', 'dark:shadow-[0_0_10px_rgba(16,185,129,0.8)]');
+                document.getElementById('connectionStatusDot').classList.add('bg-red-500', 'dark:bg-rose-500');
                 document.getElementById('connectionStatusText').innerText = "Offline";
             }
         });
 
-        // Set Myself Online
         window.setPresence = (branchId) => {
-            // Just trigger the logic; the onValue(.info/connected) above will handle the actual writing
-            // But we do a manual write here just in case we are already connected
             const presenceRef = ref(voiceDb, `biotech_presence/${branchId}`);
             set(presenceRef, { online: true, last_seen: serverTimestamp() });
             onDisconnect(presenceRef).remove();
         };
-
 
         // --- VOICE LOGIC (WebRTC) ---
         let localStream;
@@ -693,9 +804,8 @@
         let currentCallRef = null;
         let myBranchName = "";
         let candidateQueue = [];
-        window.disconnectTimer = null; // Store timer globally
+        window.disconnectTimer = null;
 
-        // 1. INITIATE CALL
         window.initiateCall = async function(targetBranch) {
             myBranchName = localStorage.getItem('myBranchIdentity');
             if(!myBranchName) { alert("Please set your location first."); return; }
@@ -713,7 +823,6 @@
                 audioEl.play().catch(e => console.log("Autoplay blocked:", e));
             };
             
-            // Connection Monitoring with Auto-Disconnect
             peerConnection.oniceconnectionstatechange = () => {
                 const state = peerConnection.iceConnectionState;
                 const statusEl = document.getElementById('callStatusText');
@@ -721,8 +830,8 @@
                 if (state === 'disconnected' || state === 'failed') {
                     if(statusEl) {
                         statusEl.innerText = "Reconnecting...";
-                        statusEl.classList.remove('text-green-600');
-                        statusEl.classList.add('text-red-500', 'animate-pulse');
+                        statusEl.classList.remove('text-teal-600', 'dark:text-blue-400', 'text-green-600', 'dark:text-emerald-400');
+                        statusEl.classList.add('text-red-500', 'dark:text-rose-400', 'animate-pulse');
                     }
                     
                     if(window.disconnectTimer) clearTimeout(window.disconnectTimer);
@@ -732,8 +841,8 @@
                 } else if (state === 'connected') {
                     if(statusEl) {
                         statusEl.innerText = "Voice Connected";
-                        statusEl.classList.remove('text-red-500', 'animate-pulse');
-                        statusEl.classList.add('text-green-600');
+                        statusEl.classList.remove('text-red-500', 'dark:text-rose-400', 'animate-pulse');
+                        statusEl.classList.add('text-green-600', 'dark:text-emerald-400');
                         window.startTimer();
                         document.getElementById('ringtone').pause();
                     }
@@ -763,8 +872,7 @@
                 timestamp: serverTimestamp()
             });
 
-            // Update UI for Caller
-            document.getElementById('callPhase').classList.add('hidden'); // Hide buttons while calling
+            document.getElementById('callPhase').classList.add('hidden'); 
             document.getElementById('voiceActiveState').classList.remove('hidden');
             document.getElementById('callStatusText').innerText = "Calling " + targetBranch + "...";
             document.getElementById('ringtone').play();
@@ -790,15 +898,12 @@
             });
         };
 
-        // 2. LISTEN FOR CALLS (Auto-runs on Identity Change)
         window.listenForCalls = function() {
             myBranchName = localStorage.getItem('myBranchIdentity');
             if(!myBranchName) return;
 
-            // Mark user online
             window.setPresence(myBranchName);
 
-            // Update UI State based on stored identity
             document.getElementById('setupPhase').classList.add('hidden');
             document.getElementById('callPhase').classList.remove('hidden');
 
@@ -818,7 +923,6 @@
             });
         };
 
-        // 3. ANSWER CALL
         window.answerCall = async function() {
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -837,7 +941,6 @@
                 audioEl.play().catch(e => console.log("Autoplay blocked:", e));
             };
             
-            // Connection Monitoring with Auto-Disconnect
             peerConnection.oniceconnectionstatechange = () => {
                 const state = peerConnection.iceConnectionState;
                 const statusEl = document.getElementById('callStatusText');
@@ -845,8 +948,8 @@
                 if (state === 'disconnected' || state === 'failed') {
                     if(statusEl) {
                         statusEl.innerText = "Reconnecting...";
-                        statusEl.classList.remove('text-green-600');
-                        statusEl.classList.add('text-red-500', 'animate-pulse');
+                        statusEl.classList.remove('text-teal-600', 'dark:text-blue-400', 'text-green-600', 'dark:text-emerald-400');
+                        statusEl.classList.add('text-red-500', 'dark:text-rose-400', 'animate-pulse');
                     }
                     
                     if(window.disconnectTimer) clearTimeout(window.disconnectTimer);
@@ -856,8 +959,8 @@
                 } else if (state === 'connected') {
                     if(statusEl) {
                         statusEl.innerText = "Voice Connected";
-                        statusEl.classList.remove('text-red-500', 'animate-pulse');
-                        statusEl.classList.add('text-green-600');
+                        statusEl.classList.remove('text-red-500', 'dark:text-rose-400', 'animate-pulse');
+                        statusEl.classList.add('text-green-600', 'dark:text-emerald-400');
                         window.startTimer();
                     }
                     if(window.disconnectTimer) clearTimeout(window.disconnectTimer);
@@ -895,9 +998,8 @@
                         timestamp: serverTimestamp()
                     });
 
-                    // Update UI for Receiver
                     document.getElementById('incomingCallModal').classList.add('hidden');
-                    document.getElementById('callPhase').classList.add('hidden'); // Hide buttons
+                    document.getElementById('callPhase').classList.add('hidden');
                     document.getElementById('voiceActiveState').classList.remove('hidden');
                     document.getElementById('callStatusText').innerText = "Connected to " + data.caller;
                 }
@@ -917,7 +1019,6 @@
             });
         };
 
-        // 4. REJECT CALL
         window.rejectCall = function() {
             document.getElementById('ringtone').pause();
             myBranchName = localStorage.getItem('myBranchIdentity');
@@ -925,9 +1026,7 @@
             document.getElementById('incomingCallModal').classList.add('hidden');
         };
 
-        // 5. END CALL (CLEANUP)
         window.endCall = function() {
-            // Clear failsafe timer
             if(window.disconnectTimer) clearTimeout(window.disconnectTimer);
 
             document.getElementById('ringtone').pause();
@@ -937,23 +1036,19 @@
             if (localStream) localStream.getTracks().forEach(track => track.stop());
             if (currentCallRef) remove(currentCallRef);
             
-            // UI Reset
             document.getElementById('voiceActiveState').classList.add('hidden');
             document.getElementById('incomingCallModal').classList.add('hidden');
             document.getElementById('callTimer').innerText = "00:00";
             
-            // Re-show buttons
             document.getElementById('callPhase').classList.remove('hidden');
             
             window.isMuted = false;
             window.updateMuteBtn();
             
-            window.listenForCalls(); // Re-attach listener
+            window.listenForCalls();
         };
         
-        // Expose to global scope for HTML onclicks
         window.voiceDb = voiceDb;
-        // window.ref, push, set, remove are already set above
     </script>
 
     <!-- CORE LOGIC & VOICE CONTROLLER -->
@@ -962,9 +1057,8 @@
         let finalRawNumber = "";
         let isPreviewMode = false;
         let browserTransitionTimeout = null;
-        window.lastScrolledPatient = ""; // Prevents dashboard spasmodic scroll
+        window.lastScrolledPatient = ""; 
 
-        // --- VOICE VARIABLES ---
         let callTimerInterval;
         let isMuted = false;
         
@@ -988,7 +1082,6 @@
             });
 
             phoneInput.addEventListener('input', function(e) {
-                // If user types, exit preview mode
                 isPreviewMode = false;
                 document.getElementById('historyIndicator').classList.add('hidden');
                 handlePhoneInput(e.target.value);
@@ -996,26 +1089,51 @@
 
             ['vgSelection', 'vgNum', 'date'].forEach(id => {
                 document.getElementById(id).addEventListener('input', () => {
-                    // If user types, exit preview mode
                     isPreviewMode = false;
                     document.getElementById('historyIndicator').classList.add('hidden');
                     updatePreviewFromInputs();
                 });
             });
             
-            // Load saved identity if exists
             const savedId = localStorage.getItem('myBranchIdentity');
             if(savedId) {
-                // Wait for module to load then listen
                 setTimeout(() => { if(window.listenForCalls) window.listenForCalls(); }, 1500);
             } else {
-                 // Ensure setup is shown
                  document.getElementById('setupPhase').classList.remove('hidden');
                  document.getElementById('callPhase').classList.add('hidden');
             }
 
             updatePreviewFromInputs();
         });
+
+        // --- GEMINI SAVE TOAST LOGIC ---
+        function showSaveToast(message = "Record successfully saved to cloud") {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = 'save-toast';
+            toast.innerHTML = `
+                <i class="fa-solid fa-cloud-arrow-up toast-icon"></i>
+                <div class="flex flex-col z-10">
+                    <span class="text-sm font-bold toast-text tracking-wide">${message}</span>
+                    <span class="text-[10px] text-teal-600 dark:text-blue-300 font-medium tracking-wider uppercase drop-shadow-none dark:drop-shadow-[0_0_2px_rgba(59,130,246,0.5)]">Cloud Sync</span>
+                </div>
+            `;
+
+            container.appendChild(toast);
+
+            requestAnimationFrame(() => {
+                toast.classList.add('show');
+            });
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    toast.remove();
+                }, 500); 
+            }, 3000);
+        }
 
         // --- VOICE UI WRAPPERS ---
         function updateIdentity() {
@@ -1029,7 +1147,6 @@
             if(window.initiateCall) window.initiateCall(target);
         }
         
-        // Timer Logic
         window.startTimer = function() {
             let seconds = 0;
             const timerEl = document.getElementById('callTimer');
@@ -1050,11 +1167,11 @@
         window.updateMuteBtn = function() {
             const btn = document.getElementById('muteBtn');
             if(isMuted) {
-                btn.innerHTML = `<i class="fa-solid fa-microphone-slash text-red-500"></i>`;
-                btn.classList.add('bg-red-50', 'border-red-200');
+                btn.innerHTML = `<i class="fa-solid fa-microphone-slash text-rose-500"></i>`;
+                btn.classList.add('bg-rose-50', 'dark:bg-rose-900/30', 'border-rose-200', 'dark:border-rose-800/50');
             } else {
                 btn.innerHTML = `<i class="fa-solid fa-microphone"></i>`;
-                btn.classList.remove('bg-red-50', 'border-red-200');
+                btn.classList.remove('bg-rose-50', 'dark:bg-rose-900/30', 'border-rose-200', 'dark:border-rose-800/50');
             }
         }
 
@@ -1080,9 +1197,8 @@
             updatePreviewFromInputs();
         }
 
-        // Wrapper to update preview from actual DOM inputs
         function updatePreviewFromInputs() {
-            if(isPreviewMode) return; // Don't auto-update if viewing history
+            if(isPreviewMode) return; 
             
             const vgSelection = document.getElementById('vgSelection').value;
             const vgNum = document.getElementById('vgNum').value.trim();
@@ -1091,7 +1207,6 @@
             renderPreview(vgSelection, vgNum, date, finalRawNumber);
         }
 
-        // Core Render Function - Decoupled from Inputs
         function renderPreview(prefix, num, dateStr, rawPhone) {
             const sendBtn = document.getElementById('sendBtn');
             const sendWebBtn = document.getElementById('sendWebBtn');
@@ -1100,16 +1215,14 @@
             const hiddenArea = document.getElementById('messagePreview');
             const headerName = document.getElementById('headerContactName');
 
-            // Dynamic Header Name
             if(rawPhone && rawPhone.length > 3) {
                 const formattedNum = "0" + rawPhone.replace(/(\d{2})(\d{3})(\d{4})/, '$1 $2 $3').trim();
-                headerName.innerHTML = `${formattedNum} <i class="fa-solid fa-certificate text-teal-500 text-[10px] ml-1"></i>`;
+                headerName.innerHTML = `${formattedNum} <i class="fa-solid fa-certificate text-teal-500 dark:text-[#00a884] text-[10px] ml-1 transition-colors"></i>`;
             } else {
-                headerName.innerHTML = `Biotech Lab <i class="fa-solid fa-certificate text-teal-500 text-[10px] ml-1"></i>`;
+                headerName.innerHTML = `Biotech Lab <i class="fa-solid fa-certificate text-teal-500 dark:text-[#00a884] text-[10px] ml-1 transition-colors"></i>`;
             }
 
             if (num && dateStr && rawPhone && rawPhone.length === 9) {
-                // Enable Send Button ONLY if NOT in preview mode (prevents sending old history by accident)
                 if(!isPreviewMode) {
                     sendBtn.classList.remove('opacity-50', 'cursor-not-allowed');
                     sendBtn.disabled = false;
@@ -1130,16 +1243,14 @@
                 const encodedData = btoa(originalData);
                 const link = `https://biotechveyangoda.lk/report-preview.html?data=${encodedData}`;
                 
-                // Store in hidden input for clicking Link Card
                 document.getElementById('currentLinkStorage').value = link;
 
-                // Made the link a real anchor <a> tag so it can be clicked
                 const displayMsg = `<strong>Biotech Medical Laboratory Online Report</strong>\n\n` + 
                               `👤 <strong>Patient ID:</strong> ${patientId}\n` +
                               `📅 <strong>Date:</strong> ${dateStr}\n` +
                               `⏳ <strong>Expires in:</strong> 2 Weeks\n\n` + 
                               `● Click the link below to view/download.\n\n` +
-                              `<a href="${link}" target="_blank" style="pointer-events: auto; position: relative; z-index: 50;" class="text-blue-600 hover:underline break-all">${link}</a>\n\n` +
+                              `<a href="${link}" target="_blank" style="pointer-events: auto; position: relative; z-index: 50;" class="text-blue-600 dark:text-[#53bdeb] hover:underline break-all transition-colors">${link}</a>\n\n` +
                               `<em>From - BIOTECH LABORATORY</em>`;
                 
                 const rawMsg = `*Biotech Medical Laboratory Online Report*\n\n` + 
@@ -1155,18 +1266,15 @@
                 hiddenArea.value = rawMsg;
                 linkCard.classList.remove('hidden'); 
 
-                // NEW: Pop Animation for the WhatsApp bubble to simulate receiving it
                 const bubble = document.getElementById('waBubble');
                 bubble.classList.remove('fade-in', 'shake');
-                void bubble.offsetWidth; // trigger reflow
+                void bubble.offsetWidth; 
                 bubble.style.animation = 'fadeIn 0.4s ease-out forwards';
                 
-                // --- ZERO DELAY AND SMART AUTO-SCROLL LOGIC ---
                 clearTimeout(browserTransitionTimeout);
                 browserTransitionTimeout = setTimeout(() => {
                     openBrowserView(link);
                     
-                    // Immediately scroll into view on mobile (Only done once per patient so it doesn't jump on every key typed)
                     const currentPatientId = `${prefix}${num}`;
                     if(window.innerWidth < 1024 && window.lastScrolledPatient !== currentPatientId) {
                         window.lastScrolledPatient = currentPatientId;
@@ -1175,7 +1283,7 @@
                             previewSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
                         }
                     }
-                }, 100); // 100ms for "immediate" opening
+                }, 100); 
 
                 return link;
 
@@ -1189,16 +1297,14 @@
                 let warning = "Waiting for input...";
                 if(isPreviewMode) warning = "Incomplete History Data";
 
-                previewText.innerHTML = `<span class="text-slate-400 italic">${warning}</span>`;
+                previewText.innerHTML = `<span class="text-slate-400 dark:text-white/60 italic transition-colors">${warning}</span>`;
                 hiddenArea.value = "";
                 
-                // NEW: Close Browser view if inputs become invalid
                 closeBrowserView();
                 return null;
             }
         }
 
-        // NEW: Auto-open Browser Logic with ROBUST CORS Bypass Scrolling & Auto-Clicking
         window.openBrowserView = function(url) {
             const browserView = document.getElementById('browserView');
             const iframe = document.getElementById('previewIframe');
@@ -1207,15 +1313,12 @@
 
             document.getElementById('browserUrl').innerText = "biotechveyangoda.lk";
             
-            // Appended parameters: if the external site is updated by your web admin to read these,
-            // it can natively trigger the click & scroll.
             const autoClickUrl = url + "&autoClick=true&autoView=true";
             
             if(iframe.src !== autoClickUrl) {
                 loader.style.display = 'flex';
                 loader.style.opacity = '1';
                 
-                // Reset wrapper scroll to top before loading new link
                 if(wrapper) wrapper.scrollTop = 0;
                 
                 iframe.src = autoClickUrl;
@@ -1224,25 +1327,19 @@
                     loader.style.opacity = '0';
                     setTimeout(() => loader.style.display = 'none', 300);
                     
-                    // 1. CORS BYPASS SCROLL (Visual wrapper scroll)
                     setTimeout(() => {
                         if(wrapper) wrapper.scrollTo({ top: 320, behavior: 'smooth' });
                     }, 400);
 
-                    // 2. AGGRESSIVE INTERNAL AUTO-CLICK & SCROLL
-                    // We run this over 10 seconds to catch both the first page "View Report" button
-                    // AND to scroll down the "Next page" when the actual report/name loads.
                     let attempts = 0;
                     let actionInterval = setInterval(() => {
                         try {
                             if (iframe.contentWindow && iframe.contentWindow.document) {
                                 const doc = iframe.contentWindow.document;
                                 
-                                // Internal Scroll (Next Page)
                                 iframe.contentWindow.scrollTo({ top: 350, behavior: 'smooth' });
                                 if(doc.documentElement) doc.documentElement.scrollTop = 350;
                                 
-                                // Auto Click "View Report"
                                 const btns = doc.querySelectorAll('a, button, [role="button"], input[type="button"]');
                                 for(let btn of btns) {
                                     const text = (btn.innerText || btn.value || '').toLowerCase();
@@ -1256,12 +1353,11 @@
                         }
                         
                         attempts++;
-                        if (attempts >= 20) clearInterval(actionInterval); // Run for 10 seconds (20 * 500ms)
+                        if (attempts >= 20) clearInterval(actionInterval);
                     }, 500);
                 }
             }
 
-            // Slide UP
             browserView.classList.remove('translate-y-full');
             browserView.classList.add('translate-y-0');
         }
@@ -1269,23 +1365,20 @@
         window.closeBrowserView = function() {
             const browserView = document.getElementById('browserView');
             if(browserView) {
-                // Slide DOWN
                 browserView.classList.remove('translate-y-0');
                 browserView.classList.add('translate-y-full');
             }
             if(browserTransitionTimeout) clearTimeout(browserTransitionTimeout);
         }
 
-        // Updated History Loader - PREVIEW ONLY
         window.loadHistoryItem = (index) => {
             const item = window.historyData[index];
             if(!item) return;
             
-            isPreviewMode = true; // Flag to stop input listeners from overwriting
-            document.getElementById('historyIndicator').classList.remove('hidden'); // Show indicator
-            window.lastScrolledPatient = ""; // Reset to allow auto-scroll down
+            isPreviewMode = true; 
+            document.getElementById('historyIndicator').classList.remove('hidden'); 
+            window.lastScrolledPatient = ""; 
 
-            // Parse ID (e.g. BN1005)
             let prefix = "BN";
             let num = "";
             const match = item.id.match(/([a-zA-Z]+)(\d+)/);
@@ -1296,23 +1389,18 @@
                 num = item.id;
             }
 
-            // Call render directly without touching DOM inputs
             renderPreview(prefix, num, item.date, item.phoneNumber);
             
-            // Visual feedback on mobile sidebar
             if(window.innerWidth < 768) {
                 document.getElementById('sidebar').classList.add('-translate-x-full');
             }
         };
 
-        // NEW RECALL FUNCTIONALITY
         window.recallHistoryItem = (index, event) => {
-            event.stopPropagation(); // Don't trigger the preview only mode
+            event.stopPropagation(); 
             const item = window.historyData[index];
             if(!item) return;
 
-            // 1. Populate Inputs
-            // Parse ID
             let prefix = "BN";
             let num = "";
             const match = item.id.match(/([a-zA-Z]+)(\d+)/);
@@ -1327,29 +1415,21 @@
             document.getElementById('vgNum').value = num;
             document.getElementById('date').value = item.date;
             
-            // Phone
-            iti.setNumber("94" + item.phoneNumber); // Assuming local numbers stored without 94, adding it helps ITI format it
-            // Update the global var used by the renderer
+            iti.setNumber("94" + item.phoneNumber); 
             finalRawNumber = item.phoneNumber; 
             
-            // 2. Reset Modes
             isPreviewMode = false;
             document.getElementById('historyIndicator').classList.add('hidden');
-            window.lastScrolledPatient = ""; // Reset to allow auto-scroll down
+            window.lastScrolledPatient = ""; 
             
-            // 3. Render
             updatePreviewFromInputs();
             
-            // 4. Visual Feedback (Optional - scroll to form)
             if(window.innerWidth < 1024) {
-                 // On mobile/tablet, form is on top or separate, maybe scroll to it
                  document.getElementById('vgNum').scrollIntoView({behavior: 'smooth'});
             }
         };
 
-        // --- NEW: History Helper ---
         async function addToHistory(type) {
-            // type = 'sms' or 'whatsapp'
             if(!window.firebasePush || !window.historyPath) return;
 
             const id = `${document.getElementById("vgSelection").value}${document.getElementById("vgNum").value}`;
@@ -1358,39 +1438,40 @@
             const now = new Date();
             const timeString = now.toLocaleTimeString("en-US", {hour: '2-digit', minute:'2-digit'});
 
-            // Check if record exists (Merged Logic)
-            // We search the local window.historyData to find a matching ID + Date
             const existing = window.historyData.find(item => item.id === id && item.date === date);
 
-            if (existing && existing.key) {
-                // UPDATE existing record
-                const updatePath = window.ref(window.historyDb, `history/${existing.key}`);
-                const updates = {};
-                if(type === 'sms') updates.smsSent = true;
-                if(type === 'whatsapp') updates.whatsappSent = true;
-                // We keep the original timestamp to prevent jumping, or update lastActionTime if needed
+            try {
+                if (existing && existing.key) {
+                    const updatePath = window.ref(window.historyDb, `history/${existing.key}`);
+                    const updates = {};
+                    if(type === 'sms') updates.smsSent = true;
+                    if(type === 'whatsapp') updates.whatsappSent = true;
+                    
+                    await window.firebaseUpdate(updatePath, updates);
+                } else {
+                    const newItem = {
+                        id: id,
+                        date: date,
+                        phoneNumber: phone,
+                        sendTime: timeString,
+                        timestamp: now.getTime(),
+                        smsSent: (type === 'sms'),
+                        whatsappSent: (type === 'whatsapp')
+                    };
+                    await window.firebasePush(window.historyPath, newItem);
+                }
                 
-                await window.firebaseUpdate(updatePath, updates).catch(console.error);
-            } else {
-                // CREATE new record
-                const newItem = {
-                    id: id,
-                    date: date,
-                    phoneNumber: phone,
-                    sendTime: timeString,
-                    timestamp: now.getTime(),
-                    smsSent: (type === 'sms'),
-                    whatsappSent: (type === 'whatsapp')
-                };
-                await window.firebasePush(window.historyPath, newItem).catch(console.error);
+                // Trigger Gemini Glow Toast Notification
+                showSaveToast(`Record ID ${id} saved!`);
+
+            } catch (error) {
+                console.error(error);
             }
         }
 
-        // --- TWILIO WHATSAPP INTEGRATION ---
         async function sendWhatsApp() {
             if (finalRawNumber.length !== 9 || isPreviewMode) return;
 
-            // --- RE-CALCULATE DATA FOR TEMPLATE ---
             const vgSelection = document.getElementById('vgSelection').value;
             const vgNum = document.getElementById('vgNum').value.trim();
             const dateStr = document.getElementById('date').value;
@@ -1402,18 +1483,15 @@
             const encodedData = btoa(originalData);
             const link = `https://biotechveyangoda.lk/report-preview.html?data=${encodedData}`;
 
-            console.log("Preparing WhatsApp...");
-
             const contentVariables = JSON.stringify({
                 "1": patientId,
                 "2": dateStr,
                 "3": link
             });
 
-            // UI Loading
             const btn = document.getElementById('sendBtn');
             const originalBtnContent = btn.innerHTML;
-            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-slate-500"></i> Sending...`;
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-slate-400"></i> Sending...`;
             btn.disabled = true;
 
             const sid = "AC8573797da12b063892096aaece06456b";
@@ -1423,8 +1501,6 @@
             const contentSid = "HX52de3da4a12d4fa2de0a4a753a94951f";
 
             const url = `https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`;
-            
-            // USE API KEY + SECRET FOR AUTHENTICATION
             const auth = btoa(`${apiKey}:${apiSecret}`);
             
             const formData = new URLSearchParams();
@@ -1445,16 +1521,15 @@
                 
                 if (response.ok) {
                     const json = await response.json();
-                    addToHistory('whatsapp');
-                    alert(`Message Successfully Queued!\n\nSID: ${json.sid}`);
-
-                    btn.innerHTML = `<i class="fa-solid fa-check text-white"></i> Sent!`;
-                    btn.classList.remove('bg-white', 'text-slate-600', 'border-slate-100', 'border-2', 'hover:border-teal-100', 'hover:text-teal-600');
-                    btn.classList.add('bg-green-500', 'text-white', 'border-transparent');
+                    
+                    // Trigger history save (which triggers the toast)
+                    await addToHistory('whatsapp');
+                    
+                    btn.innerHTML = `<i class="fa-solid fa-check text-white dark:drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]"></i> Sent!`;
+                    btn.classList.remove('bg-white', 'dark:bg-[#1e293b]', 'text-slate-600', 'dark:text-slate-300', 'border-slate-100', 'dark:border-slate-700', 'border-2', 'hover:border-teal-100', 'dark:hover:border-blue-500', 'hover:text-teal-600', 'dark:hover:text-blue-400');
+                    btn.classList.add('bg-green-500', 'dark:bg-emerald-600', 'text-white', 'border-transparent', 'dark:shadow-[0_0_15px_rgba(5,150,105,0.5)]');
                 } else {
                     const err = await response.json();
-                    console.error("Twilio Error Response:", err);
-                    
                     const fallback = confirm(`Twilio API Error: ${err.message}\n\nDo you want to send via WhatsApp Web instead?`);
                     if(fallback) {
                           const fullNumber = "94" + finalRawNumber;
@@ -1464,11 +1539,10 @@
                     }
 
                     btn.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-white"></i> Failed`;
-                    btn.classList.remove('bg-white', 'text-slate-600', 'border-slate-100', 'border-2', 'hover:border-teal-100', 'hover:text-teal-600');
-                    btn.classList.add('bg-red-500', 'text-white', 'border-transparent');
+                    btn.classList.remove('bg-white', 'dark:bg-[#1e293b]', 'text-slate-600', 'dark:text-slate-300', 'border-slate-100', 'dark:border-slate-700', 'border-2', 'hover:border-teal-100', 'dark:hover:border-blue-500', 'hover:text-teal-600', 'dark:hover:text-blue-400');
+                    btn.classList.add('bg-red-500', 'dark:bg-rose-600', 'text-white', 'border-transparent');
                 }
             } catch (error) {
-                console.error("Fetch/Network Error:", error);
                 const fallback = confirm("Network/CORS Error: The browser blocked the API call.\n\nDo you want to send via WhatsApp Web instead?");
                 if(fallback) {
                         const fullNumber = "94" + finalRawNumber;
@@ -1477,27 +1551,25 @@
                         window.open(`https://web.whatsapp.com/send?phone=${fullNumber}&text=${encodedMessage}`, "_blank");
                 }
                 btn.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-white"></i> Error`;
-                btn.classList.remove('bg-white', 'text-slate-600', 'border-slate-100', 'border-2', 'hover:border-teal-100', 'hover:text-teal-600');
-                btn.classList.add('bg-red-500', 'text-white', 'border-transparent');
+                btn.classList.remove('bg-white', 'dark:bg-[#1e293b]', 'text-slate-600', 'dark:text-slate-300', 'border-slate-100', 'dark:border-slate-700', 'border-2', 'hover:border-teal-100', 'dark:hover:border-blue-500', 'hover:text-teal-600', 'dark:hover:text-blue-400');
+                btn.classList.add('bg-red-500', 'dark:bg-rose-600', 'text-white', 'border-transparent');
             } finally {
                 setTimeout(() => {
                     btn.innerHTML = originalBtnContent;
-                    btn.classList.add('bg-white', 'text-slate-600', 'border-slate-100', 'border-2', 'hover:border-teal-100', 'hover:text-teal-600');
-                    btn.classList.remove('bg-green-500', 'bg-red-500', 'text-white', 'border-transparent');
+                    btn.classList.add('bg-white', 'dark:bg-[#1e293b]', 'text-slate-600', 'dark:text-slate-300', 'border-slate-100', 'dark:border-slate-700', 'border-2', 'hover:border-teal-100', 'dark:hover:border-blue-500', 'hover:text-teal-600', 'dark:hover:text-blue-400');
+                    btn.classList.remove('bg-green-500', 'dark:bg-emerald-600', 'bg-red-500', 'dark:bg-rose-600', 'text-white', 'border-transparent', 'dark:shadow-[0_0_15px_rgba(5,150,105,0.5)]');
                     btn.disabled = false;
                 }, 3000);
             }
         }
 
-        // --- WHATSAPP WEB MANUAL SEND ---
-        function sendWhatsAppWeb() {
+        async function sendWhatsAppWeb() {
             if (finalRawNumber.length !== 9 || isPreviewMode) return;
 
             const message = document.getElementById("messagePreview").value;
             if (!message) return;
 
-            // Log to Firebase History as a WhatsApp send action
-            addToHistory('whatsapp');
+            await addToHistory('whatsapp');
 
             const fullNumber = "94" + finalRawNumber;
             const encodedMessage = encodeURIComponent(message);
