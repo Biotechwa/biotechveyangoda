@@ -36,19 +36,28 @@
         @keyframes pulse-ring { 0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(255, 255, 255, 0); } 100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); } }
         @keyframes blob { 0% { transform: translate(0px, 0px) scale(1); } 33% { transform: translate(30px, -50px) scale(1.1); } 66% { transform: translate(-20px, 20px) scale(0.9); } 100% { transform: translate(0px, 0px) scale(1); } }
         @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
         @keyframes scan { 0% { top: -10%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+        @keyframes target-pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
 
         .animate-float { animation: float 3s ease-in-out infinite; }
         .animate-pulse-slow { animation: pulse-ring 2s infinite; }
         .animate-blob { animation: blob 7s infinite alternate; }
-        .animate-shake { animation: shake 0.2s ease-in-out 0s 2; }
 
         .scan-container { position: relative; overflow: hidden; border-radius: 8px; }
         .scan-line {
             position: absolute; width: 100%; height: 4px; background: #0ea5e9;
             box-shadow: 0 0 12px #0ea5e9, 0 0 20px #0ea5e9;
             animation: scan 1.5s linear infinite; z-index: 20;
+        }
+        
+        /* The Visual Targeting Rings for Date and Sample No */
+        .target-ring {
+            position: absolute;
+            border: 2px solid #ef4444; /* Red border */
+            border-radius: 12px; /* Rounded corners */
+            animation: target-pulse 1.5s infinite;
+            z-index: 15;
+            background: rgba(239, 68, 68, 0.1);
         }
 
         .glass-effect {
@@ -95,6 +104,7 @@
             line-height: 1.6;
             animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             position: relative;
+            word-wrap: break-word;
         }
 
         .msg-bot {
@@ -161,7 +171,6 @@
             border-color: #0d9488;
             box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.1);
         }
-        .input-error { border-color: #ef4444 !important; background: #fef2f2 !important; }
     </style>
 </head>
 <body>
@@ -172,13 +181,11 @@
 
     <div class="chat-container glass-effect">
         <!-- Header -->
-        <div class="bg-gradient-to-r from-teal-600 to-blue-600 p-6 text-center relative overflow-hidden">
+        <div class="bg-gradient-to-r from-teal-600 to-blue-600 p-6 text-center relative overflow-hidden shrink-0">
             <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 15px 15px;"></div>
             
             <div class="relative inline-block mb-3">
-                <!-- Outer Pulse Ring -->
                 <div class="absolute inset-0 bg-white rounded-full opacity-20 animate-pulse-slow"></div>
-                <!-- Main Icon Circle -->
                 <div class="relative bg-white text-teal-600 w-14 h-14 rounded-full flex items-center justify-center shadow-lg mx-auto animate-float">
                     <i class="fa-solid fa-microscope text-2xl"></i>
                 </div>
@@ -196,9 +203,9 @@
         <div class="chat-body" id="chatBody"></div>
 
         <!-- Security Footer -->
-        <div class="p-4 bg-white/50 border-t border-teal-100/50 text-center">
+        <div class="p-4 bg-white/50 border-t border-teal-100/50 text-center shrink-0">
             <div class="flex items-center justify-center gap-2 text-teal-600/60 font-bold text-[9px] tracking-widest uppercase">
-                <i class="fa-solid fa-lock"></i> Real-Time AI Bill Verification
+                <i class="fa-solid fa-shield-halved"></i> Secured by Biotech Systems
             </div>
         </div>
 
@@ -220,13 +227,12 @@
 
     <script>
         const chatBody = document.getElementById('chatBody');
-        // Script URL used ONLY to log the attempt, no longer causes network error on verification
         const scriptURL = 'https://script.google.com/macros/s/AKfycbzWPVGayDSH6uWrBROFQjaFi1U6Il-d2x-LMExuW5ejWn-1ZJYLuCkBLHPG7n93ONDN/exec';
         
         let currentLang = 'en';
-        let formData = { type: '', num: '', date: '' };
+        let formData = { type: '', num: '', date: '', phone: '' };
 
-        // Security validation messages
+        // Updated Translations with Fallback
         const i18n = {
             en: {
                 welcome: "Hello! 👋 I'm your Biotech Assistant. I'll help you access your lab reports.",
@@ -235,8 +241,11 @@
                 askDate: "When was this collected?",
                 askBill: "Please upload or capture your <b>Bill Photo</b> to verify your identity:",
                 saving: "AI is scanning your bill...",
-                ready: "Scan Successful! Redirecting to report...",
-                errorNoMatch: "⚠️ Security Alert: The Date or Sample Number on this bill is incorrect. Access denied.<br><br>Please collect your report by contacting: <b class='text-lg'>0773524143</b>",
+                ready: "Verification Successful! Redirecting to report...",
+                errorNoMatch: "⚠️ I couldn't verify the Date and Sample Number from this image.",
+                errorNotBiotechBill: "⚠️ This does not appear to be a Biotech Laboratory receipt. Please upload the correct bill.",
+                fallbackMsg: "Click below to request your report directly via WhatsApp:",
+                btnWhatsApp: "Request via WhatsApp",
                 btnScan: "Open Camera / Gallery"
             },
             si: {
@@ -247,7 +256,10 @@
                 askBill: "කරුණාකර ඔබගේ <b>බිල්පතෙහි ඡායාරූපයක්</b> (Scan) ඇතුළත් කරන්න:",
                 saving: "AI මගින් බිල්පත පරීක්ෂා කරමින් පවතී...",
                 ready: "සාර්ථකයි! වාර්තාව විවෘත වෙමින් පවතී...",
-                errorNoMatch: "⚠️ දෝෂයකි: මෙම බිල්පතෙහි දිනය හෝ සාම්පල අංකය වැරදියි.<br><br>කරුණාකර ඔබගේ වාර්තාව ලබා ගැනීමට <b class='text-lg'>0773524143</b> අමතන්න.",
+                errorNoMatch: "⚠️ ඡායාරූපයේ දිනය සහ සාම්පල අංකය තහවුරු කිරීමට නොහැකි විය.",
+                errorNotBiotechBill: "⚠️ මෙය Biotech රසායනාගාරයේ බිල්පතක් බව නොපෙනේ. කරුණාකර නිවැරදි බිල්පතක් ඇතුළත් කරන්න.",
+                fallbackMsg: "කරුණාකර පහත බොත්තම ඔබා WhatsApp හරහා ඔබගේ වාර්තාව ලබා ගන්න:",
+                btnWhatsApp: "WhatsApp හරහා ලබා ගන්න",
                 btnScan: "කැමරාව / ගැලරිය විවෘත කරන්න"
             },
             ta: {
@@ -258,7 +270,10 @@
                 askBill: "உங்கள் <b>பில் புகைப்படத்தை</b> பதிவேற்றவும் அல்லது ஸ்கேன் செய்யவும்:",
                 saving: "AI பில்லை ஸ்கேன் செய்கிறது...",
                 ready: "வெற்றி! அறிக்கை திறக்கப்படுகிறது...",
-                errorNoMatch: "⚠️ பிழை: பில்லில் உள்ள தேதி அல்லது மாதிரி எண் தவறானது.<br><br>உங்கள் அறிக்கையை பெற <b class='text-lg'>0773524143</b> ஐ தொடர்பு கொள்ளவும்.",
+                errorNoMatch: "⚠️ இந்த படத்திலிருந்து தேதியையும் மாதிரி எண்ணையும் சரிபார்க்க முடியவில்லை.",
+                errorNotBiotechBill: "⚠️ இது Biotech ஆய்வக ரசீது போல் தெரியவில்லை. சரியான பில்லை பதிவேற்றவும்.",
+                fallbackMsg: "உங்கள் அறிக்கையை நேரடியாக WhatsApp மூலம் பெற கீழே கிளிக் செய்யவும்:",
+                btnWhatsApp: "WhatsApp மூலம் கோரவும்",
                 btnScan: "புகைப்படம் எடுக்கவும்"
             }
         };
@@ -313,11 +328,11 @@
                     ${i18n[currentLang].askNum}
                     <div class="mt-3 flex gap-2">
                         <input type="number" id="${id}" class="custom-input" placeholder="0000">
-                        <button onclick="submitNum('${id}')" class="bg-teal-600 text-white w-12 rounded-2xl flex items-center justify-center"><i class="fa-solid fa-chevron-right"></i></button>
+                        <button onclick="submitNum('${id}')" class="bg-teal-600 text-white w-12 rounded-2xl flex items-center justify-center hover:bg-teal-700"><i class="fa-solid fa-chevron-right"></i></button>
                     </div>
                 </div>
             `, 'bot');
-            document.getElementById(id).focus();
+            setTimeout(() => document.getElementById(id).focus(), 100);
         }
 
         function submitNum(id) {
@@ -337,7 +352,7 @@
                     ${i18n[currentLang].askDate}
                     <div class="mt-3 flex gap-2">
                         <input type="date" id="${id}" value="${today}" class="custom-input">
-                        <button onclick="submitDate('${id}')" class="bg-teal-600 text-white w-12 rounded-2xl flex items-center justify-center"><i class="fa-solid fa-chevron-right"></i></button>
+                        <button onclick="submitDate('${id}')" class="bg-teal-600 text-white w-12 rounded-2xl flex items-center justify-center hover:bg-teal-700"><i class="fa-solid fa-chevron-right"></i></button>
                     </div>
                 </div>
             `, 'bot');
@@ -367,39 +382,77 @@
             `, 'bot');
         }
 
+        // --- UPDATED: Image Cropper & Resizer ---
+        // This function now automatically CROPS the bottom 65% of the bill out.
+        // Tesseract will ONLY scan the top section containing Date and BN No, making it lightning fast and super accurate.
+        function resizeImageForOCR(file, callback) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    // TARGET ZONE: We only want the top 35% of the receipt where Date and BN1 live.
+                    const cropHeight = img.height * 0.35; 
+                    
+                    const MAX_WIDTH = 800;
+                    let width = img.width;
+                    let height = cropHeight; // Set height to our cropped target
+                    
+                    if (width > MAX_WIDTH) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    }
+                    
+                    canvas.width = width;
+                    canvas.height = height;
+                    
+                    // Draw ONLY the top cropped portion to the canvas
+                    ctx.drawImage(img, 0, 0, img.width, cropHeight, 0, 0, width, height);
+                    
+                    // Return Cropped Image for OCR, and Full Image for UI Preview
+                    callback(canvas.toDataURL('image/jpeg', 0.9), e.target.result);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
         function handleBillUpload(input, id) {
             if (!input.files || !input.files[0]) return;
-            
             const file = input.files[0];
-            const reader = new FileReader();
-            
             input.disabled = true;
             
-            reader.onload = function(e) {
-                // Show user message with scanned image and laser line
+            resizeImageForOCR(file, (croppedDataUrl, originalDataUrl) => {
+                // Show UI element with Original Image and "Rounded" Highlight Zones
                 addMessage(`
                     <div class="scan-container max-w-[200px] rounded-lg border-2 border-teal-400 bg-black">
                         <div class="scan-line"></div>
-                        <img src="${e.target.result}" class="w-full h-auto opacity-70 filter contrast-125">
+                        <img src="${originalDataUrl}" class="w-full h-auto opacity-70 filter contrast-125">
+                        
+                        <!-- Visual Rounding for Date -->
+                        <div class="target-ring" style="top: 18%; left: 15%; width: 35%; height: 6%;"></div>
+                        
+                        <!-- Visual Rounding for Sample NO -->
+                        <div class="target-ring" style="top: 18%; right: 5%; width: 25%; height: 12%;"></div>
                     </div>
                 `, 'user');
                 
-                // Start real processing
-                processData(e.target.result);
-            }
-            reader.readAsDataURL(file);
+                // Process OCR using the CROPPED data url (Super fast!)
+                processData(croppedDataUrl);
+            });
         }
 
         async function processData(imageData) {
             const loading = addMessage('<div class="typing-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>', 'bot');
-            loading.innerHTML = `<i class="fa-solid fa-shield-halved mr-2 text-teal-500"></i> ${i18n[currentLang].saving} <span id="scanProgress" class="ml-1 text-[11px]">0%</span>`;
+            loading.innerHTML = `<i class="fa-solid fa-microscope mr-2 text-teal-500 fa-spin"></i> ${i18n[currentLang].saving} <span id="scanProgress" class="ml-1 text-[11px] font-bold text-teal-600">0%</span>`;
             
-            // Fire and forget log to Google Sheets (Will not cause network errors for user)
+            // Silent analytic log
             const params = new URLSearchParams({ type: formData.type, sampleNumber: formData.num, date: formData.date, language: currentLang });
-            fetch(`${scriptURL}?${params.toString()}`, { method: 'GET', mode: 'no-cors' }).catch(e => console.log("Silent log failed"));
+            fetch(`${scriptURL}?${params.toString()}`, { method: 'GET', mode: 'no-cors' }).catch(e => {});
 
             try {
-                // ACTUAL AI OCR SCANNING
                 const result = await Tesseract.recognize(imageData, 'eng', {
                     logger: m => {
                         if(m.status === 'recognizing text') {
@@ -409,38 +462,99 @@
                     }
                 });
 
-                const text = result.data.text;
+                const text = result.data.text.toUpperCase();
                 
-                // CLEAN UP TEXT: Remove all spaces and non-alphanumeric chars to make it highly angle/camera resistant
-                const cleanOCR = text.replace(/[^A-Z0-9]/gi, '').toUpperCase();
+                // --- STRICT MATCHING: Both ID and Date must be found ---
+                const cleanOCR = text.replace(/[^A-Z0-9]/gi, '');
+                const cleanOCRDigits = text.replace(/[^0-9]/g, '');
                 
-                // Create exactly what we are searching for
-                const searchSample = (formData.type + formData.num).toUpperCase().replace(/[^A-Z0-9]/gi, ''); // e.g. "VG6"
-                const searchDate = formData.date.replace(/[^A-Z0-9]/gi, ''); // e.g. "2026-05-25" -> "20260525"
+                // --- VERIFY IT IS ACTUALLY A BIOTECH BILL ---
+                // Look for common keywords in your bill header to reject random photos
+                const isBiotechBill = cleanOCR.includes('BIOTE') || 
+                                      cleanOCR.includes('LABORA') || 
+                                      cleanOCR.includes('RECEIPT') || 
+                                      cleanOCR.includes('PATIENT');
 
-                console.log("Found Text:", cleanOCR);
-                console.log("Looking for:", searchSample, "and", searchDate);
+                if (!isBiotechBill) {
+                    // Reject random photos and ask them to try uploading again
+                    loading.innerHTML = `<span class="text-rose-500 font-medium">${i18n[currentLang].errorNotBiotechBill}</span>`;
+                    setTimeout(step4_Bill, 2500); 
+                    return;
+                }
+                
+                // 1. Sample Number Check (with fuzzy letters)
+                const exactId = formData.type + formData.num; // e.g. "BN1"
+                const altId1 = exactId.replace(/0/g, 'O'); // Zero read as Letter O
+                const altId2 = exactId.replace(/1/g, 'I'); // One read as Letter I
+                const altId3 = exactId.replace(/1/g, 'L'); // One read as Letter L
+                const altId4 = exactId.replace(/5/g, 'S'); // Five read as Letter S
 
-                if (cleanOCR.includes(searchSample) && cleanOCR.includes(searchDate)) {
-                    // Match found securely via actual physical bill!
-                    loading.innerHTML = `<i class="fa-solid fa-check-circle text-green-500 mr-2"></i> ${i18n[currentLang].ready}`;
-                    
-                    const id = formData.type + formData.num;
-                    const expiry = new Date().getTime() + (14 * 24 * 60 * 60 * 1000);
-                    const encoded = btoa(`${id}|${formData.date}|${expiry}`);
-                    
-                    setTimeout(() => {
-                        window.location.href = `https://biotechveyangoda.lk/report-preview.html?data=${encoded}`;
-                    }, 1500);
+                const isIdFound = cleanOCR.includes(exactId) || 
+                                  cleanOCR.includes(altId1) || 
+                                  cleanOCR.includes(altId2) || 
+                                  cleanOCR.includes(altId3) || 
+                                  cleanOCR.includes(altId4);
+
+                // 2. Date Check (Strict formatting or digits only)
+                const exactDate = formData.date; // e.g. "2026-06-23"
+                const dateDigits = exactDate.replace(/[^0-9]/g, ''); // "20260623"
+                
+                const isDateFound = text.includes(exactDate) || cleanOCRDigits.includes(dateDigits);
+
+                if (isIdFound && isDateFound) {
+                    // Match found!
+                    loading.innerHTML = `<i class="fa-solid fa-check-circle text-green-500 mr-2 text-lg"></i> <span class="font-bold text-green-600">${i18n[currentLang].ready}</span>`;
+                    generateAndRedirect();
                 } else {
-                    // Mismatch! Do not generate a link. Show strict error.
-                    loading.innerHTML = `<span class="text-red-500 font-semibold">${i18n[currentLang].errorNoMatch}</span>`;
+                    // AI Failed to read it. Trigger Fallback UI.
+                    loading.innerHTML = `<span class="text-orange-500 font-medium">${i18n[currentLang].errorNoMatch}</span>`;
+                    setTimeout(showWhatsAppFallback, 800);
                 }
 
             } catch (error) {
-                console.error("AI Scan failed", error);
-                loading.innerHTML = `<span class="text-red-500">Scan error. Please ensure the image is clear and try again.</span>`;
+                console.error(error);
+                loading.innerHTML = `<span class="text-orange-500 font-medium">${i18n[currentLang].errorNoMatch}</span>`;
+                setTimeout(showWhatsAppFallback, 800);
             }
+        }
+
+        // --- WhatsApp Request Fallback Step ---
+        function showWhatsAppFallback() {
+            addMessage(`
+                <div>
+                    ${i18n[currentLang].fallbackMsg}
+                    <div class="mt-3">
+                        <button onclick="requestViaWhatsApp()" class="w-full bg-[#25D366] text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 hover:bg-[#128C7E] transition shadow-md">
+                            <i class="fa-brands fa-whatsapp text-xl"></i> ${i18n[currentLang].btnWhatsApp}
+                        </button>
+                    </div>
+                </div>
+            `, 'bot');
+            
+            // Scroll down completely to show the button
+            setTimeout(() => {
+                chatBody.scrollTo({ top: chatBody.scrollHeight, behavior: 'smooth' });
+            }, 100);
+        }
+
+        function requestViaWhatsApp() {
+            const phone = "94773524143";
+            const messageText = `${formData.type}${formData.num}\n${formData.date}\n*Please send me a report* !`;
+            const encodedMessage = encodeURIComponent(messageText);
+            
+            window.open(`https://wa.me/${phone}?text=${encodedMessage}`, '_blank');
+        }
+
+        function generateAndRedirect() {
+            const id = formData.type + formData.num;
+            const expiry = new Date().getTime() + (14 * 24 * 60 * 60 * 1000);
+            
+            // Generate standard secure URL format
+            const encoded = btoa(`${id}|${formData.date}|${expiry}`);
+            
+            setTimeout(() => {
+                window.location.href = `https://biotechveyangoda.lk/report-preview.html?data=${encoded}`;
+            }, 1000);
         }
 
         function addMessage(html, sender) {
@@ -448,7 +562,11 @@
             d.className = `msg msg-${sender}`;
             d.innerHTML = html;
             chatBody.appendChild(d);
-            chatBody.scrollTop = chatBody.scrollHeight;
+            
+            // Smooth scroll to bottom
+            setTimeout(() => {
+                chatBody.scrollTo({ top: chatBody.scrollHeight, behavior: 'smooth' });
+            }, 50);
             return d;
         }
     </script>
