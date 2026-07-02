@@ -393,8 +393,8 @@
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
                     
-                    // TARGET ZONE: We only want the top 35% of the receipt where Date and BN1 live.
-                    const cropHeight = img.height * 0.35; 
+                    // TARGET ZONE: Increased to 55% to ensure Date and Sample No are not cut off
+                    const cropHeight = img.height * 0.55; 
                     
                     const MAX_WIDTH = 800;
                     let width = img.width;
@@ -451,17 +451,25 @@
                 const base64Data = imageData.split(',')[1];
                 const exactId = formData.type + formData.num;
                 
-                // Construct the Gemini API request
+                // Construct the Gemini API request using the correct stable model
                 const apiKey = "AQ.Ab8RN6LnStFB4uRMDOrj0kEDQrxS9lnz3CFz1kdZfP1ZmCDgPg";
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
                 
+                // More lenient prompt to handle spaces, dashes, and varied date formats
                 const prompt = `Analyze this cropped top section of a medical laboratory receipt.
-                1. Does this appear to be a Biotech Laboratory receipt or document?
-                2. Can you find the sample number "${exactId}" anywhere in the text? (Allow for minor typo variations like O instead of 0 or I instead of 1).
-                3. Can you find the collection date "${formData.date}"? (It might be written in other formats like DD/MM/YYYY, DD/MM/YY, etc).
+                1. Does this appear to be a medical or laboratory receipt?
+                2. Can you find the sample number? User entered "${exactId}". It might appear with spaces/dashes (e.g., "${formData.type} ${formData.num}" or "${formData.type}-${formData.num}") or minor typos (like O instead of 0).
+                3. Can you find the collection date? User entered "${formData.date}". It is likely written in other formats (like DD/MM/YYYY, DD.MM.YY, etc).
                 
-                If you find the sample number and/or the date, provide their bounding box coordinates.
-                The bounding boxes should be in the format [ymin, xmin, ymax, xmax] scaled proportionally between 0 and 1000.`;
+                Respond strictly in JSON format matching this schema:
+                {
+                  "isBiotechBill": true/false,
+                  "hasSampleNumber": true/false,
+                  "hasDate": true/false,
+                  "sampleNumberBox": [ymin, xmin, ymax, xmax],
+                  "dateBox": [ymin, xmin, ymax, xmax]
+                }
+                For the boxes, provide bounding box coordinates scaled proportionally between 0 and 1000.`;
 
                 const payload = {
                     contents: [{
@@ -472,25 +480,7 @@
                         ]
                     }],
                     generationConfig: {
-                        responseMimeType: "application/json",
-                        responseSchema: {
-                            type: "OBJECT",
-                            properties: {
-                                isBiotechBill: { type: "BOOLEAN" },
-                                hasSampleNumber: { type: "BOOLEAN" },
-                                hasDate: { type: "BOOLEAN" },
-                                sampleNumberBox: { 
-                                    type: "ARRAY", 
-                                    items: { type: "INTEGER" },
-                                    description: "[ymin, xmin, ymax, xmax] scaled 0-1000"
-                                },
-                                dateBox: { 
-                                    type: "ARRAY", 
-                                    items: { type: "INTEGER" },
-                                    description: "[ymin, xmin, ymax, xmax] scaled 0-1000"
-                                }
-                            }
-                        }
+                        responseMimeType: "application/json"
                     }
                 };
 
@@ -500,10 +490,20 @@
                     body: JSON.stringify(payload)
                 });
 
+                if (!response.ok) {
+                    console.error("Gemini API Error:", await response.text());
+                    throw new Error("API Connection Failed");
+                }
+
                 const result = await response.json();
                 
                 if (result.candidates && result.candidates.length > 0) {
-                    const aiData = JSON.parse(result.candidates[0].content.parts[0].text);
+                    // Sanitize JSON output to remove markdown blocks (```json ... ```) which cause JSON.parse to crash
+                    let textOutput = result.candidates[0].content.parts[0].text;
+                    textOutput = textOutput.replace(/```json/g, '').replace(/```/g, '').trim();
+                    
+                    const aiData = JSON.parse(textOutput);
+                    console.log("Gemini Output:", aiData);
                     
                     // If Gemini fails ANY of these checks, pass to OpenAI fallback
                     if (!aiData.isBiotechBill || !aiData.hasSampleNumber || !aiData.hasDate) {
@@ -521,9 +521,10 @@
                     if (container) {
                         const drawRing = (box) => {
                             if (!box || box.length !== 4) return;
-                            const top = (box[0] / 1000) * 35; 
+                            // Multiplier updated to 55 to match the new 55% crop height
+                            const top = (box[0] / 1000) * 55; 
                             const left = (box[1] / 1000) * 100;
-                            const height = ((box[2] - box[0]) / 1000) * 35;
+                            const height = ((box[2] - box[0]) / 1000) * 55;
                             const width = ((box[3] - box[1]) / 1000) * 100;
                             
                             container.innerHTML += `<div class="target-ring" style="top: ${Math.max(0, top-1)}%; left: ${Math.max(0, left-2)}%; width: ${width+4}%; height: ${height+2}%;"></div>`;
@@ -541,7 +542,7 @@
                 }
 
             } catch (error) {
-                console.error("Gemini AI Error:", error);
+                console.error("Gemini AI Error Block:", error);
                 processWithOpenAI(imageData, scanId, loading);
             }
         }
@@ -555,9 +556,9 @@
                 const openAiKey = "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";
                 
                 const prompt = `Analyze this cropped top section of a medical laboratory receipt.
-                1. Does this appear to be a Biotech Laboratory receipt or document?
-                2. Can you find the sample number "${exactId}" anywhere in the text? (Allow for minor typo variations like O instead of 0).
-                3. Can you find the collection date "${formData.date}"? (It might be written in other formats like DD/MM/YYYY, DD/MM/YY, etc).
+                1. Does this appear to be a laboratory receipt?
+                2. Can you find the sample number? User entered "${exactId}". Look for "${formData.type} ${formData.num}" or "${formData.type}-${formData.num}" or minor typos.
+                3. Can you find the collection date? User entered "${formData.date}". It might be formatted as DD/MM/YYYY.
                 
                 Respond ONLY with a JSON object exactly matching this format:
                 {
@@ -592,10 +593,20 @@
                     body: JSON.stringify(payload)
                 });
 
+                if (!response.ok) {
+                    console.error("OpenAI API Error:", await response.text());
+                    throw new Error("API Connection Failed");
+                }
+
                 const result = await response.json();
                 
                 if (result.choices && result.choices.length > 0) {
-                    const aiData = JSON.parse(result.choices[0].message.content);
+                    // Sanitize JSON output to remove markdown blocks
+                    let textOutput = result.choices[0].message.content;
+                    textOutput = textOutput.replace(/```json/g, '').replace(/```/g, '').trim();
+                    
+                    const aiData = JSON.parse(textOutput);
+                    console.log("OpenAI Output:", aiData);
                     
                     if (!aiData.isBiotechBill) {
                         loadingElement.innerHTML = `<span class="text-rose-500 font-medium">${i18n[currentLang].errorNotBiotechBill}</span>`;
@@ -614,9 +625,10 @@
                             const drawRing = (box) => {
                                 // Ignore empty or fallback arrays from OpenAI [0,0,0,0]
                                 if (!box || box.length !== 4 || (box[0] === 0 && box[2] === 0)) return;
-                                const top = (box[0] / 1000) * 35; 
+                                // Multiplier updated to 55 to match the new 55% crop height
+                                const top = (box[0] / 1000) * 55; 
                                 const left = (box[1] / 1000) * 100;
-                                const height = ((box[2] - box[0]) / 1000) * 35;
+                                const height = ((box[2] - box[0]) / 1000) * 55;
                                 const width = ((box[3] - box[1]) / 1000) * 100;
                                 
                                 container.innerHTML += `<div class="target-ring" style="top: ${Math.max(0, top-1)}%; left: ${Math.max(0, left-2)}%; width: ${width+4}%; height: ${height+2}%;"></div>`;
@@ -638,7 +650,7 @@
                 }
 
             } catch (error) {
-                console.error("OpenAI Error:", error);
+                console.error("OpenAI Error Block:", error);
                 loadingElement.innerHTML = `<span class="text-orange-500 font-medium">${i18n[currentLang].errorNoMatch}</span>`;
                 setTimeout(showWhatsAppFallback, 800);
             }
