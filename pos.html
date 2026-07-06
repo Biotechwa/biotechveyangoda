@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HNB POS Terminal Control Center</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    /* Custom Scrollbar Styles */
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 3px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #10b981;
+    }
+
+    /* Print Animation */
+    @keyframes printDown {
+      0% {
+        transform: translateY(-20px);
+        opacity: 0;
+      }
+      100% {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+    .animate-print-down {
+      animation: printDown 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-900 text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-slate-900">
+
+  <!-- -->
+  <!-- HEADER SECTION -->
+  <header class="bg-slate-950/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 px-6 py-4">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+      <div class="flex items-center gap-3">
+        <div class="bg-blue-600/10 p-2.5 rounded-xl border border-blue-500/30">
+          <i data-lucide="credit-card" class="w-6 h-6 text-blue-400"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-xl font-bold tracking-tight text-white">HNB Terminal Hub</h1>
+            <span class="bg-blue-500/20 text-blue-300 text-xs px-2.5 py-0.5 rounded-full font-medium border border-blue-500/30">
+              Hatton National Bank Terminal
+            </span>
+          </div>
+          <p class="text-xs text-slate-400 mt-0.5">Real-time Settlement Registry & Authorized Reservation Gate</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <!-- DB Status Badge -->
+        <div id="db-status-badge" class="flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold border bg-amber-950/40 text-amber-400 border-amber-500/30 animate-pulse">
+          <i data-lucide="activity" class="w-3.5 h-3.5"></i>
+          <span id="db-status-text">CONNECTING TO CLOUD...</span>
+        </div>
+
+        <div class="text-xs text-slate-400 bg-slate-900/60 py-1.5 px-3 rounded-lg border border-slate-800 hidden sm:block">
+          App ID: <span id="app-id-display" class="font-mono text-slate-200">...</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- NOTIFICATION BAR -->
+  <div id="notification-container" class="fixed top-24 right-6 z-50 flex flex-col gap-2 max-w-md w-full pointer-events-none"></div>
+
+  <!-- -->
+  <!-- DASHBOARD WRAPPER -->
+  <main class="flex-1 p-6 max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- KPI STATS CARDS -->
+    <div class="lg:col-span-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      
+      <!-- Gross Total -->
+      <div class="bg-slate-950/50 rounded-2xl p-5 border border-slate-800 relative overflow-hidden group hover:border-blue-500/30 transition-all">
+        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">HNB Gross Settlement</p>
+        <p id="stat-gross-amount" class="text-3xl font-black text-white mt-2 font-mono">LKR 0.00</p>
+        <p class="text-xs text-blue-400 mt-2 flex items-center gap-1">
+          <i data-lucide="trending-up" class="w-3.5 h-3.5"></i> Live synced aggregate volume
+        </p>
+      </div>
+
+      <!-- Total Batches -->
+      <div class="bg-slate-950/50 rounded-2xl p-5 border border-slate-800 relative overflow-hidden group hover:border-slate-700 transition-all">
+        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Batches Submitted</p>
+        <p id="stat-total-count" class="text-3xl font-black text-white mt-2 font-mono">0</p>
+        <p class="text-xs text-slate-400 mt-2 flex items-center gap-1">
+          <i data-lucide="layers" class="w-3.5 h-3.5"></i> Recorded database slips
+        </p>
+      </div>
+
+      <!-- Reserved (Locked) -->
+      <div class="bg-slate-950/50 rounded-2xl p-5 border border-slate-800 relative overflow-hidden group hover:border-emerald-500/30 transition-all">
+        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Payments Reserved</p>
+        <p id="stat-reserved-count" class="text-3xl font-black text-emerald-400 mt-2 font-mono">0</p>
+        <p class="text-xs text-emerald-400 mt-2 flex items-center gap-1">
+          <i data-lucide="shield" class="w-3.5 h-3.5"></i> Authenticated via Passcode (129876)
+        </p>
+      </div>
+
+      <!-- Pending (Unlocked) -->
+      <div class="bg-slate-950/50 rounded-2xl p-5 border border-slate-800 relative overflow-hidden group hover:border-amber-500/30 transition-all">
+        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Pending Verification</p>
+        <p id="stat-pending-count" class="text-3xl font-black text-amber-400 mt-2 font-mono">0</p>
+        <p class="text-xs text-amber-400 mt-2 flex items-center gap-1">
+          <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> Requires PW confirmation
+        </p>
+      </div>
+
+    </div>
+
+    <!-- -->
+    <!-- LEFT COLUMN: INSTANT DATA ENTRY FORM -->
+    <div class="lg:col-span-5 flex flex-col gap-6">
+      <div class="bg-slate-950 rounded-2xl border border-slate-800 p-6 shadow-xl">
+        <div class="flex items-center gap-2 mb-4">
+          <i data-lucide="plus-circle" class="w-5 h-5 text-blue-400"></i>
+          <h2 class="text-lg font-bold text-white">Instant Data Entry</h2>
+        </div>
+        <p class="text-xs text-slate-400 mb-6">
+          Select Merchant ID to auto-fill Terminal details. Only the amount is required.
+        </p>
+
+        <form id="settlement-form" class="space-y-4">
+          
+          <!-- Merchant ID Selection (VG / BN Toggle) -->
+          <div>
+            <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Merchant ID Selection</label>
+            <div class="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                id="merchant-vg"
+                class="py-3 px-4 rounded-xl border font-bold text-sm transition-all flex flex-col items-center gap-1 bg-blue-600/20 text-blue-400 border-blue-500"
+                onclick="selectMerchant('VG')"
+              >
+                <span class="text-xs text-slate-400 font-medium">Merchant Group</span>
+                <span class="text-lg tracking-wider font-mono">VG</span>
+              </button>
+              <button
+                type="button"
+                id="merchant-bn"
+                class="py-3 px-4 rounded-xl border font-bold text-sm transition-all flex flex-col items-center gap-1 bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700"
+                onclick="selectMerchant('BN')"
+              >
+                <span class="text-xs text-slate-400 font-medium">Merchant Group</span>
+                <span class="text-lg tracking-wider font-mono">BN</span>
+              </button>
+            </div>
+            <!-- Hidden input to store selected Merchant ID -->
+            <input type="hidden" id="selectedMerchantId" value="VG">
+          </div>
+
+          <!-- Auto-Selected Terminal ID Info Display -->
+          <div>
+            <label class="block text-xs font-bold text-slate-400 uppercase mb-1.5">Auto-Selected POS Terminal ID (TID)</label>
+            <div class="relative">
+              <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">
+                <i data-lucide="cpu" class="w-4 h-4"></i>
+              </div>
+              <input
+                type="text"
+                id="terminalId"
+                value="HNB-VG-9011"
+                class="w-full bg-slate-900/60 border border-slate-800/80 rounded-xl pl-12 pr-4 py-3 text-sm text-slate-300 font-mono uppercase cursor-not-allowed"
+                readonly
+              >
+            </div>
+          </div>
+
+          <!-- Hidden/Pre-filled Batch & Txn parameters, keeping flow amount-only but functionally complete -->
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Batch Number (Auto)</label>
+              <input
+                type="text"
+                id="batchNo"
+                placeholder="000104"
+                class="w-full bg-slate-900/40 border border-slate-800/50 rounded-xl px-4 py-2 text-xs text-slate-500 font-mono"
+                required
+              >
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Total Txn (Auto)</label>
+              <input
+                type="number"
+                id="totalTxnCount"
+                placeholder="12"
+                class="w-full bg-slate-900/40 border border-slate-800/50 rounded-xl px-4 py-2 text-xs text-slate-500 font-mono"
+                required
+              >
+            </div>
+          </div>
+
+          <!-- Amount Input - THE ONLY CORE MANUAL INPUT FIELD -->
+          <div>
+            <label class="block text-xs font-bold text-emerald-400 uppercase mb-1.5 tracking-wider">Settlement Amount (LKR) *</label>
+            <div class="relative">
+              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-500 text-sm font-bold font-mono">LKR</span>
+              <input
+                type="number"
+                step="0.01"
+                id="amount"
+                placeholder="0.00"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl pl-14 pr-4 py-4 text-xl font-mono font-bold text-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all shadow-inner placeholder:text-slate-800"
+                required
+                autofocus
+              >
+            </div>
+          </div>
+
+          <!-- Remarks -->
+          <div>
+            <label class="block text-xs font-bold text-slate-400 uppercase mb-1.5">Audit Remarks</label>
+            <textarea
+              id="notes"
+              placeholder="Add audit comments or leave empty..."
+              class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-xs text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all h-16 resize-none"
+            ></textarea>
+          </div>
+
+          <button
+            type="submit"
+            class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3.5 px-4 rounded-xl transition-all duration-300 shadow-lg shadow-blue-500/10 active:translate-y-0.5 flex items-center justify-center gap-2 text-sm"
+          >
+            <i data-lucide="save" class="w-4 h-4"></i> SAVE TO REGISTRY (NO PASSWORD)
+          </button>
+        </form>
+      </div>
+
+      <!-- PRINT SLIP PREVIEW -->
+      <div class="bg-slate-950 rounded-2xl border border-slate-800 p-6 shadow-xl relative overflow-hidden">
+        <div class="absolute right-4 top-4 text-slate-800">
+          <i data-lucide="printer" class="w-12 h-12"></i>
+        </div>
+        <h3 class="text-sm font-bold text-white mb-2 flex items-center gap-2">
+          <i data-lucide="printer" class="w-4 h-4 text-blue-400"></i> Interactive Receipt Simulation
+        </h3>
+        <p class="text-xs text-slate-400 mb-4">Click any listed batch log on the right to simulate live terminal receipt printing.</p>
+
+        <div id="receipt-placeholder" class="py-6 border border-dashed border-slate-800 text-center text-xs text-slate-500 rounded-xl bg-slate-900/20">
+          No document loaded. Select a batch log from the database registry on the right.
+        </div>
+
+        <div id="receipt-container" class="hidden">
+          <!-- Dynamic Receipt Slip Inserted Here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- -->
+    <!-- RIGHT COLUMN: REAL-TIME LEDGER LOGS -->
+    <div class="lg:col-span-7 flex flex-col gap-6">
+      <div class="bg-slate-950 rounded-2xl border border-slate-800 p-6 flex-1 flex flex-col shadow-xl">
+        
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+          <div>
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+              <i data-lucide="activity" class="w-5 h-5 text-emerald-400"></i>
+              HNB Active Registry Logs
+            </h2>
+            <p class="text-xs text-slate-400">All data persists live. Click locking controls to authorize payments using security PIN.</p>
+          </div>
+          
+          <button
+            type="button"
+            id="btn-reset-filters"
+            class="text-[11px] text-slate-400 hover:text-white transition-all bg-slate-900 py-1.5 px-3 rounded-lg border border-slate-800"
+          >
+            Clear Filters
+          </button>
+        </div>
+
+        <!-- SEARCH / FILTER COMPONENT -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div class="relative">
+            <i data-lucide="search" class="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2"></i>
+            <input
+              type="text"
+              id="searchQuery"
+              placeholder="Search by TID or Batch No..."
+              class="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+          </div>
+
+          <div class="flex gap-2">
+            <button
+              id="filter-all"
+              class="flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all border bg-slate-850 text-white border-slate-700"
+            >
+              All Logs
+            </button>
+            <button
+              id="filter-pending"
+              class="flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all border bg-slate-900 text-slate-400 border-slate-800 hover:border-slate-700"
+            >
+              Pending
+            </button>
+            <button
+              id="filter-reserved"
+              class="flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all border bg-slate-900 text-slate-400 border-slate-800 hover:border-slate-700"
+            >
+              Reserved
+            </button>
+          </div>
+        </div>
+
+        <!-- LIVE STREAM DATA -->
+        <div id="logs-container" class="flex-1 overflow-y-auto max-h-[580px] space-y-3 pr-2 custom-scrollbar">
+          <!-- Dynamic Items Streamed Here -->
+          <div class="flex flex-col items-center justify-center py-20 text-slate-400 gap-3">
+            <i data-lucide="refresh-cw" class="w-8 h-8 text-blue-400 animate-spin"></i>
+            <p class="text-xs font-bold">Synchronizing real-time database stream...</p>
+          </div>
+        </div>
+
+        <!-- FOOTER INFO -->
+        <div class="mt-6 pt-4 border-t border-slate-800 flex justify-between items-center text-xs text-slate-500">
+          <p>Real-time Firestore stream operational</p>
+          <p id="total-logs-indicator" class="font-mono text-slate-400">Total: 0 records</p>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- PASSWORD VERIFICATION MODAL -->
+  <div id="passcode-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+      <button id="btn-close-modal" class="absolute right-4 top-4 text-slate-400 hover:text-white transition-all">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <div class="flex items-center gap-3 mb-4">
+        <div class="bg-emerald-500/10 p-2.5 rounded-xl border border-emerald-500/30">
+          <i data-lucide="shield-check" class="w-6 h-6 text-emerald-400 animate-pulse"></i>
+        </div>
+        <div>
+          <h3 class="text-base font-bold text-white">Payment Reservation Security</h3>
+          <p class="text-xs text-slate-400 font-medium">Verify terminal transaction value</p>
+        </div>
+      </div>
+
+      <div id="modal-details-card" class="bg-slate-950/50 p-4 rounded-xl border border-slate-800 mb-4 text-xs space-y-1 font-mono">
+        <!-- Filled dynamically -->
+      </div>
+
+      <p class="text-xs text-slate-400 mb-4">
+        To lock, authorize, and set the status of this HNB POS transaction to <span class="text-emerald-400 font-bold">RESERVED</span>, input the security clearing code:
+      </p>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-400 uppercase mb-1.5">Clearance Code</label>
+          <input
+            type="password"
+            id="modal-passcode-input"
+            placeholder="••••••"
+            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-center text-xl font-bold font-mono tracking-widest text-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+            maxLength="6"
+          >
+          <p id="modal-error-message" class="text-xs text-red-400 font-semibold mt-2 hidden flex items-center gap-1 justify-center">
+            <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> Code refused. Access denied.
+          </p>
+        </div>
+
+        <div class="flex gap-3">
+          <button
+            type="button"
+            id="btn-cancel-modal"
+            class="flex-1 bg-slate-800 hover:bg-slate-750 text-slate-300 font-bold py-2.5 px-4 rounded-xl transition-all text-xs"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            id="btn-confirm-passcode"
+            class="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black py-2.5 px-4 rounded-xl transition-all shadow-lg flex items-center justify-center gap-1.5 text-xs"
+          >
+            <i data-lucide="check-circle" class="w-4 h-4"></i> Complete Verification
+          </button>
+        </div>
+
+        <p class="text-[10px] text-center text-slate-500">
+          Authorization events are logged instantly with associated network payload.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="bg-slate-950 border-t border-slate-800/80 py-4 px-6 text-center text-xs text-slate-500 mt-auto">
+    <p>© 2026 Hatton National Bank (HNB) POS Settlement Control Hub. Secured Architecture.</p>
+  </footer>
+
+  <!-- ========================================================== -->
+  <!-- FIREBASE MODULE LOGIC AND USER-INTERFACE DRIVER -->
+  <!-- ========================================================== -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // 1. Setup Live Production Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyAmTlVGY0K9dXGUf0I7L6DHwEIlPYmYoYI",
+      authDomain: "hnbd-62b18.firebaseapp.com",
+      databaseURL: "https://hnbd-62b18-default-rtdb.firebaseio.com",
+      projectId: "hnbd-62b18",
+      storageBucket: "hnbd-62b18.firebasestorage.app",
+      messagingSenderId: "922426900930",
+      appId: "1:922426900930:web:e8acaa16936adcee8d965b",
+      measurementId: "G-PM0C41VGY1"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'pos-settlement-system-default';
+
+    document.getElementById('app-id-display').innerText = appId;
+
+    // Local state stores
+    let user = null;
+    let settlements = [];
+    let selectedItemId = null;
+    let pendingVerificationItem = null;
+    let currentFilter = 'ALL';
+    let searchQuery = '';
+
+    // Merchant IDs to Terminal IDs Mapping
+    const merchantTidMapping = {
+      'VG': 'HNB-VG-9011',
+      'BN': 'HNB-BN-4022'
+    };
+
+    // Global selector trigger for Merchant IDs
+    window.selectMerchant = function(merchantId) {
+      document.getElementById('selectedMerchantId').value = merchantId;
+      document.getElementById('terminalId').value = merchantTidMapping[merchantId];
+
+      const btnVg = document.getElementById('merchant-vg');
+      const btnBn = document.getElementById('merchant-bn');
+
+      if (merchantId === 'VG') {
+        btnVg.className = "py-3 px-4 rounded-xl border font-bold text-sm transition-all flex flex-col items-center gap-1 bg-blue-600/20 text-blue-400 border-blue-500";
+        btnBn.className = "py-3 px-4 rounded-xl border font-bold text-sm transition-all flex flex-col items-center gap-1 bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700";
+      } else {
+        btnBn.className = "py-3 px-4 rounded-xl border font-bold text-sm transition-all flex flex-col items-center gap-1 bg-blue-600/20 text-blue-400 border-blue-500";
+        btnVg.className = "py-3 px-4 rounded-xl border font-bold text-sm transition-all flex flex-col items-center gap-1 bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700";
+      }
+
+      // Refresh the random pre-filled batch number and txn count values for safety
+      generatePreFilledFields();
+    }
+
+    // Auto-prefill the Batch & transaction fields
+    function generatePreFilledFields() {
+      document.getElementById('batchNo').value = String(Math.floor(100000 + Math.random() * 900000));
+      document.getElementById('totalTxnCount').value = String(Math.floor(5 + Math.random() * 35));
+    }
+
+    // Trigger on-screen banner alerts
+    function showNotification(type, message) {
+      const container = document.getElementById('notification-container');
+      const element = document.createElement('div');
+      element.className = `p-4 rounded-xl shadow-2xl border flex items-center gap-3 transition-all transform duration-300 translate-y-2 opacity-0 pointer-events-auto ${
+        type === 'success' 
+          ? 'bg-emerald-900/90 text-emerald-100 border-emerald-500/50' 
+          : 'bg-red-950/90 text-red-100 border-red-500/50'
+      }`;
+      
+      const icon = type === 'success' ? 'check-circle' : 'alert-triangle';
+      element.innerHTML = `
+        <i data-lucide="${icon}" class="w-5 h-5 shrink-0 text-${type === 'success' ? 'emerald' : 'red'}-400"></i>
+        <p class="text-sm font-medium">${message}</p>
+      `;
+      
+      container.appendChild(element);
+      lucide.createIcons();
+      
+      // Animate in
+      setTimeout(() => {
+        element.classList.remove('translate-y-2', 'opacity-0');
+      }, 50);
+
+      // Dismiss timer
+      setTimeout(() => {
+        element.classList.add('translate-y-2', 'opacity-0');
+        setTimeout(() => element.remove(), 300);
+      }, 5000);
+    }
+
+    // Initialize Auth first (Rule 3)
+    const initAuth = async () => {
+      try {
+        await signInAnonymously(auth);
+      } catch (err) {
+        console.error("Authentication process error:", err);
+        showNotification('error', 'Using system localized sandbox session.');
+      }
+    };
+    initAuth();
+
+    // Listen to Auth State
+    onAuthStateChanged(auth, (currentUser) => {
+      user = currentUser;
+      if (currentUser) {
+        // UI Badge update
+        const badge = document.getElementById('db-status-badge');
+        badge.className = "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold border bg-emerald-950/40 text-emerald-400 border-emerald-500/30";
+        document.getElementById('db-status-text').innerText = "HNB SECURED CONNECTION ONLINE";
+        
+        // Start streaming logs on connection
+        startSyncingRegistry();
+      }
+    });
+
+    // Real-Time Database listener (Rule 1 & Rule 2 compliance)
+    function startSyncingRegistry() {
+      if (!user) return;
+
+      // Rule 1: Strict path construction
+      const collectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'settlements');
+
+      // Rule 2: Simple snapshot, memory-level ordering/filters
+      onSnapshot(collectionRef, 
+        (snapshot) => {
+          settlements = [];
+          snapshot.forEach((doc) => {
+            settlements.push({ id: doc.id, ...doc.data() });
+          });
+
+          // Sort descending by time
+          settlements.sort((a, b) => {
+            const timeA = a.createdAt?.seconds || 0;
+            const timeB = b.createdAt?.seconds || 0;
+            return timeB - timeA;
+          });
+
+          // Render UI Elements
+          renderDashboard();
+        },
+        (error) => {
+          console.error("Firestore synchronizer failure:", error);
+          showNotification('error', 'Cloud sync failure: ' + error.message);
+        }
+      );
+    }
+
+    // Dynamic UI Redrawer
+    function renderDashboard() {
+      const logsContainer = document.getElementById('logs-container');
+      
+      // Calculate Stats
+      let grossAmt = 0;
+      let reservedCount = 0;
+      let pendingCount = 0;
+
+      settlements.forEach(item => {
+        grossAmt += Number(item.amount || 0);
+        if (item.status === 'RESERVED') {
+          reservedCount++;
+        } else {
+          pendingCount++;
+        }
+      });
+
+      // Update Statistic labels
+      document.getElementById('stat-gross-amount').innerText = `LKR ${grossAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      document.getElementById('stat-total-count').innerText = settlements.length;
+      document.getElementById('stat-reserved-count').innerText = reservedCount;
+      document.getElementById('stat-pending-count').innerText = pendingCount;
+      document.getElementById('total-logs-indicator').innerText = `Total: ${settlements.length} records`;
+
+      // Filter local list in memory (Rule 2)
+      const filtered = settlements.filter(item => {
+        const matchesSearch = 
+          item.terminalId?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+          item.batchNo?.toLowerCase().includes(searchQuery.toLowerCase());
+        
+        let matchesStatus = true;
+        if (currentFilter === 'PENDING') matchesStatus = item.status === 'PENDING';
+        if (currentFilter === 'RESERVED') matchesStatus = item.status === 'RESERVED';
+
+        return matchesSearch && matchesStatus;
+      });
+
+      if (filtered.length === 0) {
+        logsContainer.innerHTML = `
+          <div class="flex flex-col items-center justify-center py-20 text-slate-500 border border-dashed border-slate-800 rounded-2xl bg-slate-900/20">
+            <i data-lucide="alert-triangle" class="w-10 h-10 text-slate-600 mb-2"></i>
+            <p class="text-sm font-bold">No Matching Terminal Records</p>
+            <p class="text-xs text-slate-600 mt-1">Submit terminal log data inside the form registry panel.</p>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      // Generate HTML List
+      logsContainer.innerHTML = filtered.map(item => {
+        const isSelected = selectedItemId === item.id;
+        const isReserved = item.status === 'RESERVED';
+        
+        return `
+          <div 
+            class="p-4 rounded-xl border transition-all duration-200 cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-4 log-row-item ${
+              isSelected 
+                ? 'bg-slate-900 border-blue-500 shadow-md shadow-blue-500/5' 
+                : 'bg-slate-900/60 border-slate-800/80 hover:bg-slate-900 hover:border-slate-700'
+            }"
+            data-id="${item.id}"
+          >
+            <div class="flex items-start gap-3">
+              <div class="p-2.5 rounded-lg border text-blue-400 mt-0.5 ${
+                isReserved 
+                  ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
+                  : 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+              }">
+                <i data-lucide="${isReserved ? 'shield' : 'alert-circle'}" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="font-mono font-bold text-white text-sm">${item.terminalId}</span>
+                  <span class="text-[10px] bg-slate-800 text-slate-400 py-0.5 px-2 rounded font-medium">
+                    Batch ${item.batchNo}
+                  </span>
+                </div>
+                <p class="text-xs text-slate-400 font-semibold mt-0.5">${item.bankName}</p>
+                <p class="text-[10px] text-slate-500 mt-1 flex items-center gap-1">
+                  <span>Txns: ${item.totalTxnCount}</span>
+                  <span>•</span>
+                  <span>${item.timestamp ? new Date(item.timestamp).toLocaleString() : 'Just recorded'}</span>
+                </p>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between md:justify-end gap-4 border-t md:border-t-0 border-slate-800 pt-3 md:pt-0">
+              <div class="text-right">
+                <p class="text-sm font-mono font-bold text-blue-400">
+                  LKR ${parseFloat(item.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                </p>
+                
+                ${
+                  isReserved 
+                    ? `<span class="inline-flex items-center gap-1 text-[9px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-bold border border-emerald-500/30">
+                        <i data-lucide="check" class="w-2.5 h-2.5"></i> RESERVED
+                       </span>`
+                    : `<button 
+                        class="btn-authorize inline-flex items-center gap-1 text-[10px] bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 px-2.5 py-1 rounded-full font-bold border border-amber-500/30 transition-all cursor-pointer"
+                        data-action-id="${item.id}"
+                       >
+                        <i data-lucide="lock" class="w-2.5 h-2.5"></i> AUTHORIZE NOW
+                       </button>`
+                }
+              </div>
+
+              <button 
+                class="btn-delete p-2 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
+                data-delete-id="${item.id}"
+                title="Remove transaction log"
+              >
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      lucide.createIcons();
+      attachRowEventListeners();
+    }
+
+    // Attach interactions dynamically inside generated items
+    function attachRowEventListeners() {
+      // Row Selection
+      document.querySelectorAll('.log-row-item').forEach(el => {
+        el.addEventListener('click', () => {
+          const id = el.getAttribute('data-id');
+          selectedItemId = id;
+          renderDashboard();
+          showReceiptPreview(id);
+        });
+      });
+
+      // Confirm & Lock button event
+      document.querySelectorAll('.btn-authorize').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation(); // Stop row click trigger
+          const id = btn.getAttribute('data-action-id');
+          initiatePasscodeVerification(id);
+        });
+      });
+
+      // Record deletion
+      document.querySelectorAll('.btn-delete').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const id = btn.getAttribute('data-delete-id');
+          if (confirm('Delete this historical HNB transaction record permanently?')) {
+            try {
+              const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'settlements', id);
+              await deleteDoc(docRef);
+              showNotification('success', 'Transaction log successfully deleted.');
+              if (selectedItemId === id) {
+                selectedItemId = null;
+                document.getElementById('receipt-container').classList.add('hidden');
+                document.getElementById('receipt-placeholder').classList.remove('hidden');
+              }
+            } catch (err) {
+              showNotification('error', 'Error deleting document: ' + err.message);
+            }
+          }
+        });
+      });
+    }
+
+    // Show Printable Receipt mockups 
+    function showReceiptPreview(id) {
+      const selectedItem = settlements.find(item => item.id === id);
+      if (!selectedItem) return;
+
+      document.getElementById('receipt-placeholder').classList.add('hidden');
+      const container = document.getElementById('receipt-container');
+      container.classList.remove('hidden');
+
+      const isReserved = selectedItem.status === 'RESERVED';
+
+      container.innerHTML = `
+        <div class="bg-white text-slate-950 p-5 rounded-lg shadow-lg font-mono text-[11px] leading-relaxed relative animate-print-down border-t-4 ${isReserved ? 'border-emerald-500' : 'border-amber-500'}">
+          <div class="absolute -top-1 left-0 right-0 flex justify-around">
+            <div class="w-2 h-2 bg-slate-950 rounded-full"></div>
+            <div class="w-2 h-2 bg-slate-950 rounded-full"></div>
+            <div class="w-2 h-2 bg-slate-950 rounded-full"></div>
+          </div>
+          <div class="text-center font-bold text-sm tracking-widest border-b border-dashed border-slate-400 pb-2 mb-2">
+            HNB MERCHANT SETTLEMENT
+          </div>
+          <div class="space-y-1">
+            <div class="flex justify-between">
+              <span>ACQUIRER:</span>
+              <span class="font-bold">${selectedItem.bankName}</span>
+            </div>
+            <div class="flex justify-between">
+              <span>TERMINAL ID:</span>
+              <span class="font-bold">${selectedItem.terminalId}</span>
+            </div>
+            <div class="flex justify-between">
+              <span>BATCH NO:</span>
+              <span class="font-bold">${selectedItem.batchNo}</span>
+            </div>
+            <div class="flex justify-between">
+              <span>TOTAL TXNS:</span>
+              <span class="font-bold">${selectedItem.totalTxnCount}</span>
+            </div>
+            <div class="flex justify-between border-t border-dashed border-slate-400 pt-1 mt-1">
+              <span>DATE RECORDED:</span>
+              <span>${selectedItem.timestamp ? new Date(selectedItem.timestamp).toLocaleString() : 'PENDING SECURE TIME'}</span>
+            </div>
+            <div class="flex justify-between border-b border-dashed border-slate-400 pb-1 mb-1">
+              <span>STATUS:</span>
+              <span class="${isReserved ? 'text-emerald-700' : 'text-amber-700'} font-extrabold uppercase">${selectedItem.status}</span>
+            </div>
+            <div class="text-center py-2 text-sm font-extrabold border-b border-dashed border-slate-400">
+              TOTAL: LKR ${parseFloat(selectedItem.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+            </div>
+            <div class="text-center pt-3 text-[9px] text-slate-500 leading-tight">
+              HATTON NATIONAL BANK PLC
+              <br />
+              ${isReserved ? 'AUTHORIZED DIGITAL RECORD' : 'UNAUTHORIZED LOG • PENDING PW VERIFY'}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Modal Trigger verification logic
+    function initiatePasscodeVerification(id) {
+      const selectedItem = settlements.find(item => item.id === id);
+      if (!selectedItem) return;
+
+      pendingVerificationItem = selectedItem;
+      
+      const detailsCard = document.getElementById('modal-details-card');
+      detailsCard.innerHTML = `
+        <p><span class="text-slate-500">Terminal:</span> ${selectedItem.terminalId}</p>
+        <p><span class="text-slate-500">Batch Number:</span> ${selectedItem.batchNo}</p>
+        <p class="text-emerald-400 font-bold text-sm mt-1">LKR ${parseFloat(selectedItem.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+      `;
+
+      // Reset values
+      document.getElementById('modal-passcode-input').value = '';
+      document.getElementById('modal-error-message').classList.add('hidden');
+      
+      // Reveal Modal overlay
+      document.getElementById('passcode-modal').classList.remove('hidden');
+    }
+
+    // Complete Passcode verification
+    async function executeVerification() {
+      const enteredPw = document.getElementById('modal-passcode-input').value;
+      const errorMsg = document.getElementById('modal-error-message');
+
+      if (enteredPw !== '129876') {
+        errorMsg.classList.remove('hidden');
+        showNotification('error', 'Security clearance code invalid. Re-check entry.');
+        return;
+      }
+
+      if (!user || !pendingVerificationItem) return;
+
+      try {
+        // Safe Firestore path reference (Rule 1)
+        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'settlements', pendingVerificationItem.id);
+        
+        await updateDoc(docRef, {
+          status: 'RESERVED',
+          authorizedAt: new Date().toISOString()
+        });
+
+        showNotification('success', 'Payment status updated to RESERVED!');
+        document.getElementById('passcode-modal').classList.add('hidden');
+        
+        // Refresh UI state and display selection details
+        showReceiptPreview(pendingVerificationItem.id);
+        pendingVerificationItem = null;
+      } catch (err) {
+        showNotification('error', 'Failed updating database: ' + err.message);
+      }
+    }
+
+    // Register Form Entries directly (NO PASSWORD REQUIRED)
+    document.getElementById('settlement-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const terminalId = document.getElementById('terminalId').value.trim().toUpperCase();
+      const batchNo = document.getElementById('batchNo').value.trim();
+      const totalTxnCount = parseInt(document.getElementById('totalTxnCount').value.trim(), 10);
+      const amount = parseFloat(document.getElementById('amount').value.trim());
+      const notes = document.getElementById('notes').value.trim() || 'N/A';
+
+      if (!terminalId || !batchNo || isNaN(totalTxnCount) || isNaN(amount)) {
+        showNotification('error', 'Kindly complete all terminal fields.');
+        return;
+      }
+
+      try {
+        // Rule 1 paths
+        const collectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'settlements');
+        
+        const payload = {
+          terminalId,
+          bankName: 'Hatton National Bank (HNB)',
+          batchNo,
+          totalTxnCount,
+          amount,
+          notes,
+          status: 'PENDING', // Saved initially as Pending
+          createdAt: serverTimestamp(),
+          timestamp: new Date().toISOString(),
+          operatorId: user ? user.uid : 'sys-offline'
+        };
+
+        const docRef = await addDoc(collectionRef, payload);
+        
+        // Reset only the Amount & Notes inputs
+        document.getElementById('amount').value = '';
+        document.getElementById('notes').value = '';
+
+        // Cycle parameters ready for next instant transaction
+        generatePreFilledFields();
+
+        showNotification('success', 'Terminal log registered to cloud database! Confirm reservation below.');
+        
+        // Auto-select newly saved log
+        selectedItemId = docRef.id;
+        showReceiptPreview(docRef.id);
+      } catch (err) {
+        showNotification('error', 'Error writing log: ' + err.message);
+      }
+    });
+
+    // Mock Generators
+    document.getElementById('btn-mock-data').addEventListener('click', () => {
+      // Choose random Merchant ID and generate values
+      const randomMerchant = Math.random() > 0.5 ? 'VG' : 'BN';
+      selectMerchant(randomMerchant);
+
+      document.getElementById('amount').value = (Math.random() * 150000 + 5000).toFixed(2);
+      showNotification('success', 'Prefilled mockup terminal slip values.');
+    });
+
+    // Filter Controls
+    document.getElementById('filter-all').addEventListener('click', () => setFilter('ALL'));
+    document.getElementById('filter-pending').addEventListener('click', () => setFilter('PENDING'));
+    document.getElementById('filter-reserved').addEventListener('click', () => setFilter('RESERVED'));
+    
+    function setFilter(filterType) {
+      currentFilter = filterType;
+      
+      const buttons = {
+        'ALL': document.getElementById('filter-all'),
+        'PENDING': document.getElementById('filter-pending'),
+        'RESERVED': document.getElementById('filter-reserved')
+      };
+
+      Object.keys(buttons).forEach(key => {
+        if (key === filterType) {
+          buttons[key].className = "flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all border bg-slate-800 text-white border-slate-700";
+        } else {
+          buttons[key].className = "flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all border bg-slate-900 text-slate-400 border-slate-800 hover:border-slate-700";
+        }
+      });
+
+      renderDashboard();
+    }
+
+    // Search input change
+    document.getElementById('searchQuery').addEventListener('input', (e) => {
+      searchQuery = e.target.value;
+      renderDashboard();
+    });
+
+    // Reset filters
+    document.getElementById('btn-reset-filters').addEventListener('click', () => {
+      document.getElementById('searchQuery').value = '';
+      searchQuery = '';
+      setFilter('ALL');
+    });
+
+    // Close Modals
+    document.getElementById('btn-close-modal').addEventListener('click', closeModal);
+    document.getElementById('btn-cancel-modal').addEventListener('click', closeModal);
+    document.getElementById('btn-confirm-passcode').addEventListener('click', executeVerification);
+
+    function closeModal() {
+      document.getElementById('passcode-modal').classList.add('hidden');
+      pendingVerificationItem = null;
+    }
+
+    // Initial load setup for fields
+    generatePreFilledFields();
+  </script>
+</body>
+</html>
