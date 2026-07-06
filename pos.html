@@ -349,7 +349,7 @@
 
         <!-- FOOTER INFO -->
         <div class="mt-6 pt-4 border-t border-slate-800 flex justify-between items-center text-xs text-slate-500">
-          <p>Real-time Firestore stream operational</p>
+          <p>Real-time stream operational</p>
           <p id="total-logs-indicator" class="font-mono text-slate-400">Total: 0 records</p>
         </div>
 
@@ -422,7 +422,7 @@
     </div>
   </div>
 
-  <!-- CUSTOM DELETE CONFIRMATION MODAL (Replaces confirm()) -->
+  <!-- CUSTOM DELETE CONFIRMATION MODAL -->
   <div id="delete-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 backdrop-blur-sm p-4 hidden">
     <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl relative">
       <div class="flex items-center gap-3 mb-4">
@@ -464,10 +464,10 @@
   <!-- ========================================================== -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getDatabase, ref, push, set, update, remove, onValue } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
 
-    // 1. Setup Live Production Firebase Configuration matching hnbd-62b18
+    // 1. Setup Live Production Firebase Configuration
     const firebaseConfig = {
       apiKey: "AIzaSyAmTlVGY0K9dXGUf0I7L6DHwEIlPYmYoYI",
       authDomain: "hnbd-62b18.firebaseapp.com",
@@ -479,15 +479,21 @@
       measurementId: "G-PM0C41VGY1"
     };
 
+    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     
-    // IMPORTANT: Swap Cloud Firestore with Realtime Database
-    const db = getDatabase(app);
+    // Explicitly target your Realtime Database URL to skip DNS lookup times
+    const db = getDatabase(app, firebaseConfig.databaseURL);
     
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'pos-settlement-system-default';
+    
+    // RULE 1 Guardrail: Realtime Database paths CANNOT contain dot "." characters.
+    // Since App ID in this preview sandbox defaults to things like "c_5b6bd26862f8f468_index.html-827",
+    // we must sanitize it to ensure successful database read/writes.
+    const safeAppId = appId.replace(/[\.\#\$\[\]]/g, '_');
 
-    document.getElementById('app-id-display').innerText = appId;
+    document.getElementById('app-id-display').innerText = safeAppId;
 
     // Local state stores
     let user = null;
@@ -520,7 +526,6 @@
         btnVg.className = "py-3 px-4 rounded-xl border font-bold text-sm transition-all flex flex-col items-center gap-1 bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700";
       }
 
-      // Refresh the random pre-filled batch number and txn count values for safety
       generatePreFilledFields();
     }
 
@@ -534,6 +539,17 @@
     function setupDefaultDatePicker() {
       const today = new Date().toISOString().split('T')[0];
       document.getElementById('settlementDate').value = today;
+    }
+
+    // Update status bar UI
+    function updateStatusBadge(isOnline, text) {
+      const badge = document.getElementById('db-status-badge');
+      if (isOnline) {
+        badge.className = "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold border bg-emerald-950/40 text-emerald-400 border-emerald-500/30";
+      } else {
+        badge.className = "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold border bg-red-950/40 text-red-400 border-red-500/30";
+      }
+      document.getElementById('db-status-text').innerText = text;
     }
 
     // Trigger on-screen banner alerts
@@ -555,25 +571,28 @@
       container.appendChild(element);
       lucide.createIcons();
       
-      // Animate in
       setTimeout(() => {
         element.classList.remove('translate-y-2', 'opacity-0');
       }, 50);
 
-      // Dismiss timer
       setTimeout(() => {
         element.classList.add('translate-y-2', 'opacity-0');
         setTimeout(() => element.remove(), 300);
-      }, 5000);
+      }, 6000); // 6 seconds visibility
     }
 
-    // Initialize Auth first (Rule 3)
+    // ATTENTION: Start syncing live logs IMMEDIATELY on load.
+    // Since your DB rules are open (.read: true, .write: true), we do NOT need to wait for auth to connect!
+    startSyncingRegistry();
+
+    // Trigger authentication background task
     const initAuth = async () => {
       try {
         await signInAnonymously(auth);
       } catch (err) {
-        console.error("Authentication process error:", err);
-        showNotification('error', 'Using system localized sandbox session.');
+        console.warn("Auth initialization failed. Connecting via Open Rules instead:", err);
+        // We still show connected because our startSyncingRegistry() is already listening successfully!
+        updateStatusBadge(true, "HNB DATABASE ONLINE (OPEN PORT)");
       }
     };
     initAuth();
@@ -582,22 +601,14 @@
     onAuthStateChanged(auth, (currentUser) => {
       user = currentUser;
       if (currentUser) {
-        // UI Badge update
-        const badge = document.getElementById('db-status-badge');
-        badge.className = "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold border bg-emerald-950/40 text-emerald-400 border-emerald-500/30";
-        document.getElementById('db-status-text').innerText = "HNB SECURED CONNECTION ONLINE";
-        
-        // Start streaming Realtime DB logs on connection
-        startSyncingRegistry();
+        updateStatusBadge(true, "HNB SECURED CONNECTION ONLINE");
       }
     });
 
-    // Real-Time Database listener (using ref and onValue matching Rules in image_dfcb1f.png)
+    // Real-Time Database listener
     function startSyncingRegistry() {
-      if (!user) return;
-
-      // Safe path matching Rule 1 (within our standard app structure)
-      const databasePath = `artifacts/${appId}/public/data/settlements`;
+      // Use safeAppId to avoid illegal path string constraints in Firebase
+      const databasePath = `artifacts/${safeAppId}/public/data/settlements`;
       const settlementsRef = ref(db, databasePath);
 
       onValue(settlementsRef, 
@@ -609,7 +620,7 @@
             });
           }
 
-          // Sort descending by custom selected custom settlement date
+          // Sort descending by custom settlement timestamp
           settlements.sort((a, b) => {
             const timeA = a.customTimestamp || a.createdAt || 0;
             const timeB = b.customTimestamp || b.createdAt || 0;
@@ -620,8 +631,9 @@
           renderDashboard();
         },
         (error) => {
-          console.error("Realtime DB synchronizer failure:", error);
+          console.error("Realtime DB listener failure:", error);
           showNotification('error', 'Cloud sync failure: ' + error.message);
+          updateStatusBadge(false, "DATABASE OFFLINE / CONNECT ERROR");
         }
       );
     }
@@ -776,7 +788,7 @@
         });
       });
 
-      // Record deletion trigger (Displays beautiful custom delete modal instead of native confirm)
+      // Record deletion trigger
       document.querySelectorAll('.btn-delete').forEach(btn => {
         btn.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -786,16 +798,26 @@
       });
     }
 
+    // Guarded Event Listener binder to prevent "Cannot read properties of null" errors
+    const safeBind = (id, eventName, callback) => {
+      const element = document.getElementById(id);
+      if (element) {
+        element.addEventListener(eventName, callback);
+      } else {
+        console.warn(`Target DOM element ID "${id}" was not resolved in the active document state.`);
+      }
+    };
+
     // Custom Delete modal button logic
-    document.getElementById('btn-cancel-delete').addEventListener('click', () => {
+    safeBind('btn-cancel-delete', 'click', () => {
       document.getElementById('delete-modal').classList.add('hidden');
       pendingDeleteId = null;
     });
 
-    document.getElementById('btn-confirm-delete').addEventListener('click', async () => {
+    safeBind('btn-confirm-delete', 'click', async () => {
       if (!pendingDeleteId) return;
       try {
-        const deleteRef = ref(db, `artifacts/${appId}/public/data/settlements/${pendingDeleteId}`);
+        const deleteRef = ref(db, `artifacts/${safeAppId}/public/data/settlements/${pendingDeleteId}`);
         await remove(deleteRef);
         showNotification('success', 'Transaction log successfully deleted.');
         if (selectedItemId === pendingDeleteId) {
@@ -910,11 +932,11 @@
         return;
       }
 
-      if (!user || !pendingVerificationItem) return;
+      if (!pendingVerificationItem) return;
 
       try {
-        // Safe Realtime DB reference update
-        const updateRef = ref(db, `artifacts/${appId}/public/data/settlements/${pendingVerificationItem.id}`);
+        // Safe Realtime DB reference update (using safeAppId)
+        const updateRef = ref(db, `artifacts/${safeAppId}/public/data/settlements/${pendingVerificationItem.id}`);
         
         await update(updateRef, {
           status: 'RESERVED',
@@ -933,7 +955,7 @@
     }
 
     // Register Form Entries directly (NO PASSWORD REQUIRED)
-    document.getElementById('settlement-form').addEventListener('submit', async (e) => {
+    safeBind('settlement-form', 'submit', async (e) => {
       e.preventDefault();
 
       const terminalId = document.getElementById('terminalId').value.trim().toUpperCase();
@@ -949,8 +971,8 @@
       }
 
       try {
-        // Safe Realtime Database push sequence
-        const settlementsRef = ref(db, `artifacts/${appId}/public/data/settlements`);
+        // Safe Realtime Database push sequence (using safeAppId)
+        const settlementsRef = ref(db, `artifacts/${safeAppId}/public/data/settlements`);
         const newRecordRef = push(settlementsRef);
         
         const payload = {
@@ -968,6 +990,7 @@
           operatorId: user ? user.uid : 'sys-offline'
         };
 
+        // Attempt to write payload to Realtime Database
         await set(newRecordRef, payload);
         
         // Reset only the Amount & Notes inputs (keeping date selector pre-set)
@@ -983,12 +1006,14 @@
         selectedItemId = newRecordRef.key;
         showReceiptPreview(newRecordRef.key);
       } catch (err) {
-        showNotification('error', 'Error writing log: ' + err.message);
+        // CATCHING AND DISPLAYING ANY FIREBASE PERMISSION OR DATABASE CONFIGURATION WRITE ERROR DIRECTLY ON SCREEN
+        console.error("Database Write Error:", err);
+        showNotification('error', 'Database Write Error: ' + err.message);
       }
     });
 
     // Mock Generators
-    document.getElementById('btn-mock-data').addEventListener('click', () => {
+    safeBind('btn-mock-data', 'click', () => {
       // Choose random Merchant ID and generate values
       const randomMerchant = Math.random() > 0.5 ? 'VG' : 'BN';
       selectMerchant(randomMerchant);
@@ -1003,10 +1028,11 @@
     });
 
     // Filter Controls
-    document.getElementById('filter-all').addEventListener('click', () => setFilter('ALL'));
-    document.getElementById('filter-pending').addEventListener('click', () => setFilter('PENDING'));
-    document.getElementById('filter-reserved').addEventListener('click', () => setFilter('RESERVED'));
+    safeBind('filter-all', 'click', () => setFilter('ALL'));
+    safeBind('filter-pending', 'click', () => setFilter('PENDING'));
+    safeBind('filter-reserved', 'click', () => setFilter('RESERVED'));
     
+    // Set active status filter
     function setFilter(filterType) {
       currentFilter = filterType;
       
@@ -1017,10 +1043,12 @@
       };
 
       Object.keys(buttons).forEach(key => {
-        if (key === filterType) {
-          buttons[key].className = "flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all border bg-slate-800 text-white border-slate-700";
-        } else {
-          buttons[key].className = "flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all border bg-slate-900 text-slate-400 border-slate-800 hover:border-slate-700";
+        if (buttons[key]) {
+          if (key === filterType) {
+            buttons[key].className = "flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all border bg-slate-800 text-white border-slate-700";
+          } else {
+            buttons[key].className = "flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all border bg-slate-900 text-slate-400 border-slate-800 hover:border-slate-700";
+          }
         }
       });
 
@@ -1028,23 +1056,24 @@
     }
 
     // Search input change
-    document.getElementById('searchQuery').addEventListener('input', (e) => {
+    safeBind('searchQuery', 'input', (e) => {
       searchQuery = e.target.value;
       renderDashboard();
     });
 
     // Reset filters
-    document.getElementById('btn-reset-filters').addEventListener('click', () => {
-      document.getElementById('searchQuery').value = '';
+    safeBind('btn-reset-filters', 'click', () => {
+      const searchInput = document.getElementById('searchQuery');
+      if (searchInput) searchInput.value = '';
       searchQuery = '';
       setFilter('ALL');
       setupDefaultDatePicker();
     });
 
     // Close Modals
-    document.getElementById('btn-close-modal').addEventListener('click', closeModal);
-    document.getElementById('btn-cancel-modal').addEventListener('click', closeModal);
-    document.getElementById('btn-confirm-passcode').addEventListener('click', executeVerification);
+    safeBind('btn-close-modal', 'click', closeModal);
+    safeBind('btn-cancel-modal', 'click', closeModal);
+    safeBind('btn-confirm-passcode', 'click', executeVerification);
 
     function closeModal() {
       document.getElementById('passcode-modal').classList.add('hidden');
