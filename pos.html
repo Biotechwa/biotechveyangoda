@@ -40,6 +40,12 @@
     .animate-print-down {
       animation: printDown 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
+
+    /* Custom Calendar Icon Color Adjustment for Webkit */
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(1) sepia(1) saturate(5) hue-rotate(175deg);
+      cursor: pointer;
+    }
   </style>
 </head>
 <body class="min-h-screen bg-slate-900 text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-slate-900">
@@ -108,7 +114,7 @@
         <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Payments Reserved</p>
         <p id="stat-reserved-count" class="text-3xl font-black text-emerald-400 mt-2 font-mono">0</p>
         <p class="text-xs text-emerald-400 mt-2 flex items-center gap-1">
-          <i data-lucide="shield" class="w-3.5 h-3.5"></i> Authenticated via Admin
+          <i data-lucide="shield" class="w-3.5 h-3.5"></i> Authenticated via Passcode (129876)
         </p>
       </div>
 
@@ -131,7 +137,7 @@
           <h2 class="text-lg font-bold text-white">Instant Data Entry</h2>
         </div>
         <p class="text-xs text-slate-400 mb-6">
-          Select Merchant ID to auto-fill Terminal details. Only the amount is required.
+          Select Merchant ID to auto-fill Terminal details. Select date and only the amount is required.
         </p>
 
         <form id="settlement-form" class="space-y-4">
@@ -176,6 +182,22 @@
                 value="HNB-VG-9011"
                 class="w-full bg-slate-900/60 border border-slate-800/80 rounded-xl pl-12 pr-4 py-3 text-sm text-slate-300 font-mono uppercase cursor-not-allowed"
                 readonly
+              >
+            </div>
+          </div>
+
+          <!-- Date Selector (Default: Today) -->
+          <div>
+            <label class="block text-xs font-bold text-slate-400 uppercase mb-1.5">Settlement Date</label>
+            <div class="relative">
+              <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-450">
+                <i data-lucide="calendar" class="w-4 h-4 text-blue-400"></i>
+              </div>
+              <input
+                type="date"
+                id="settlementDate"
+                class="w-full bg-slate-900 border border-slate-800 rounded-xl pl-12 pr-4 py-3 text-sm text-white font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                required
               >
             </div>
           </div>
@@ -508,6 +530,12 @@
       document.getElementById('totalTxnCount').value = String(Math.floor(5 + Math.random() * 35));
     }
 
+    // Setup Default Date Picker value to Today
+    function setupDefaultDatePicker() {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('settlementDate').value = today;
+    }
+
     // Trigger on-screen banner alerts
     function showNotification(type, message) {
       const container = document.getElementById('notification-container');
@@ -581,10 +609,10 @@
             });
           }
 
-          // Sort descending by time
+          // Sort descending by custom selected custom settlement date
           settlements.sort((a, b) => {
-            const timeA = a.createdAt || 0;
-            const timeB = b.createdAt || 0;
+            const timeA = a.customTimestamp || a.createdAt || 0;
+            const timeB = b.customTimestamp || b.createdAt || 0;
             return timeB - timeA;
           });
 
@@ -652,6 +680,9 @@
       logsContainer.innerHTML = filtered.map(item => {
         const isSelected = selectedItemId === item.id;
         const isReserved = item.status === 'RESERVED';
+        const displayDateString = item.customDate 
+          ? new Date(item.customDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+          : (item.timestamp ? new Date(item.timestamp).toLocaleDateString() : 'Just recorded');
         
         return `
           <div 
@@ -681,7 +712,9 @@
                 <p class="text-[10px] text-slate-500 mt-1 flex items-center gap-1">
                   <span>Txns: ${item.totalTxnCount}</span>
                   <span>•</span>
-                  <span>${item.timestamp ? new Date(item.timestamp).toLocaleString() : 'Just recorded'}</span>
+                  <span class="text-blue-400 font-semibold flex items-center gap-1">
+                    <i data-lucide="calendar" class="w-3 h-3 inline"></i> ${displayDateString}
+                  </span>
                 </p>
               </div>
             </div>
@@ -788,6 +821,9 @@
       container.classList.remove('hidden');
 
       const isReserved = selectedItem.status === 'RESERVED';
+      const displayDateString = selectedItem.customDate 
+        ? new Date(selectedItem.customDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+        : (selectedItem.timestamp ? new Date(selectedItem.timestamp).toLocaleDateString() : 'PENDING SECURE TIME');
 
       container.innerHTML = `
         <div class="bg-white text-slate-950 p-5 rounded-lg shadow-lg font-mono text-[11px] leading-relaxed relative animate-print-down border-t-4 ${isReserved ? 'border-emerald-500' : 'border-amber-500'}">
@@ -817,8 +853,8 @@
               <span class="font-bold">${selectedItem.totalTxnCount}</span>
             </div>
             <div class="flex justify-between border-t border-dashed border-slate-400 pt-1 mt-1">
-              <span>DATE RECORDED:</span>
-              <span>${selectedItem.timestamp ? new Date(selectedItem.timestamp).toLocaleString() : 'PENDING SECURE TIME'}</span>
+              <span>SETTLEMENT DATE:</span>
+              <span class="font-bold text-blue-600">${displayDateString}</span>
             </div>
             <div class="flex justify-between border-b border-dashed border-slate-400 pb-1 mb-1">
               <span>STATUS:</span>
@@ -843,11 +879,15 @@
       if (!selectedItem) return;
 
       pendingVerificationItem = selectedItem;
+      const displayDateString = selectedItem.customDate 
+        ? new Date(selectedItem.customDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+        : 'N/A';
       
       const detailsCard = document.getElementById('modal-details-card');
       detailsCard.innerHTML = `
         <p><span class="text-slate-500">Terminal:</span> ${selectedItem.terminalId}</p>
         <p><span class="text-slate-500">Batch Number:</span> ${selectedItem.batchNo}</p>
+        <p><span class="text-slate-500">Date Selected:</span> ${displayDateString}</p>
         <p class="text-emerald-400 font-bold text-sm mt-1">LKR ${parseFloat(selectedItem.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
       `;
 
@@ -900,9 +940,10 @@
       const batchNo = document.getElementById('batchNo').value.trim();
       const totalTxnCount = parseInt(document.getElementById('totalTxnCount').value.trim(), 10);
       const amount = parseFloat(document.getElementById('amount').value.trim());
+      const selectedDate = document.getElementById('settlementDate').value;
       const notes = document.getElementById('notes').value.trim() || 'N/A';
 
-      if (!terminalId || !batchNo || isNaN(totalTxnCount) || isNaN(amount)) {
+      if (!terminalId || !batchNo || isNaN(totalTxnCount) || isNaN(amount) || !selectedDate) {
         showNotification('error', 'Kindly complete all terminal fields.');
         return;
       }
@@ -920,14 +961,16 @@
           amount,
           notes,
           status: 'PENDING', // Saved initially as Pending
-          createdAt: Date.now(), // High speed timestamping
+          customDate: selectedDate, // Store user-selected custom date string (YYYY-MM-DD)
+          customTimestamp: new Date(selectedDate).getTime(), // Used to organize order correctly
+          createdAt: Date.now(), // Realtime log insertion timestamp
           timestamp: new Date().toISOString(),
           operatorId: user ? user.uid : 'sys-offline'
         };
 
         await set(newRecordRef, payload);
         
-        // Reset only the Amount & Notes inputs
+        // Reset only the Amount & Notes inputs (keeping date selector pre-set)
         document.getElementById('amount').value = '';
         document.getElementById('notes').value = '';
 
@@ -949,6 +992,11 @@
       // Choose random Merchant ID and generate values
       const randomMerchant = Math.random() > 0.5 ? 'VG' : 'BN';
       selectMerchant(randomMerchant);
+
+      // Random date generation within current/previous week
+      const d = new Date();
+      d.setDate(d.getDate() - Math.floor(Math.random() * 7));
+      document.getElementById('settlementDate').value = d.toISOString().split('T')[0];
 
       document.getElementById('amount').value = (Math.random() * 150000 + 5000).toFixed(2);
       showNotification('success', 'Prefilled mockup terminal slip values.');
@@ -990,6 +1038,7 @@
       document.getElementById('searchQuery').value = '';
       searchQuery = '';
       setFilter('ALL');
+      setupDefaultDatePicker();
     });
 
     // Close Modals
@@ -1004,6 +1053,7 @@
 
     // Initial load setup for fields
     generatePreFilledFields();
+    setupDefaultDatePicker();
   </script>
 </body>
 </html>
