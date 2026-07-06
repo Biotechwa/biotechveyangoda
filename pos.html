@@ -102,7 +102,7 @@
 
       <!-- Total Batches -->
       <div class="bg-slate-950/50 rounded-2xl p-5 border border-slate-800 relative overflow-hidden group hover:border-slate-700 transition-all">
-        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Batches Submitted</p>
+        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Entries</p>
         <p id="stat-total-count" class="text-3xl font-black text-white mt-2 font-mono">0</p>
         <p class="text-xs text-slate-400 mt-2 flex items-center gap-1">
           <i data-lucide="layers" class="w-3.5 h-3.5"></i> Recorded database slips
@@ -137,7 +137,7 @@
           <h2 class="text-lg font-bold text-white">Instant Data Entry</h2>
         </div>
         <p class="text-xs text-slate-400 mb-6">
-          Select Merchant ID to auto-fill Terminal details. Select date and only the amount is required.
+          Choose Merchant ID, select settlement date, and input amount to save instantly.
         </p>
 
         <form id="settlement-form" class="space-y-4">
@@ -169,23 +169,6 @@
             <input type="hidden" id="selectedMerchantId" value="VG">
           </div>
 
-          <!-- Auto-Selected Terminal ID Info Display -->
-          <div>
-            <label class="block text-xs font-bold text-slate-400 uppercase mb-1.5">Auto-Selected POS Terminal ID (TID)</label>
-            <div class="relative">
-              <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">
-                <i data-lucide="cpu" class="w-4 h-4"></i>
-              </div>
-              <input
-                type="text"
-                id="terminalId"
-                value="HNB-VG-9011"
-                class="w-full bg-slate-900/60 border border-slate-800/80 rounded-xl pl-12 pr-4 py-3 text-sm text-slate-300 font-mono uppercase cursor-not-allowed"
-                readonly
-              >
-            </div>
-          </div>
-
           <!-- Date Selector (Default: Today) -->
           <div>
             <label class="block text-xs font-bold text-slate-400 uppercase mb-1.5">Settlement Date</label>
@@ -202,31 +185,7 @@
             </div>
           </div>
 
-          <!-- Hidden/Pre-filled Batch & Txn parameters, keeping flow amount-only but functionally complete -->
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Batch Number (Auto)</label>
-              <input
-                type="text"
-                id="batchNo"
-                placeholder="000104"
-                class="w-full bg-slate-900/40 border border-slate-800/50 rounded-xl px-4 py-2 text-xs text-slate-500 font-mono"
-                required
-              >
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Total Txn (Auto)</label>
-              <input
-                type="number"
-                id="totalTxnCount"
-                placeholder="12"
-                class="w-full bg-slate-900/40 border border-slate-800/50 rounded-xl px-4 py-2 text-xs text-slate-500 font-mono"
-                required
-              >
-            </div>
-          </div>
-
-          <!-- Amount Input - THE ONLY CORE MANUAL INPUT FIELD -->
+          <!-- Amount Input - THE CORE MANUAL INPUT FIELD -->
           <div>
             <label class="block text-xs font-bold text-emerald-400 uppercase mb-1.5 tracking-wider">Settlement Amount (LKR) *</label>
             <div class="relative">
@@ -243,14 +202,15 @@
             </div>
           </div>
 
-          <!-- Remarks -->
-          <div>
-            <label class="block text-xs font-bold text-slate-400 uppercase mb-1.5">Audit Remarks</label>
-            <textarea
-              id="notes"
-              placeholder="Add audit comments or leave empty..."
-              class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-xs text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all h-16 resize-none"
-            ></textarea>
+          <!-- Random Amount quick-filler -->
+          <div class="flex justify-end">
+            <button
+              type="button"
+              id="btn-mock-data"
+              class="text-xs text-blue-400 hover:text-blue-300 font-semibold flex items-center gap-1 py-1 px-2 hover:bg-blue-500/10 rounded transition-all"
+            >
+              <i data-lucide="refresh-cw" class="w-3 h-3"></i> Fill Random Amount
+            </button>
           </div>
 
           <button
@@ -273,7 +233,7 @@
         <p class="text-xs text-slate-400 mb-4">Click any listed batch log on the right to simulate live terminal receipt printing.</p>
 
         <div id="receipt-placeholder" class="py-6 border border-dashed border-slate-800 text-center text-xs text-slate-500 rounded-xl bg-slate-900/20">
-          No document loaded. Select a batch log from the database registry on the right.
+          No document loaded. Select a logged transaction from the database registry on the right.
         </div>
 
         <div id="receipt-container" class="hidden">
@@ -293,48 +253,6 @@
               HNB Active Registry Logs
             </h2>
             <p class="text-xs text-slate-400">All data persists live. Click locking controls to authorize payments using security PIN.</p>
-          </div>
-          
-          <button
-            type="button"
-            id="btn-reset-filters"
-            class="text-[11px] text-slate-400 hover:text-white transition-all bg-slate-900 py-1.5 px-3 rounded-lg border border-slate-800"
-          >
-            Clear Filters
-          </button>
-        </div>
-
-        <!-- SEARCH / FILTER COMPONENT -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div class="relative">
-            <i data-lucide="search" class="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2"></i>
-            <input
-              type="text"
-              id="searchQuery"
-              placeholder="Search by TID or Batch No..."
-              class="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-          </div>
-
-          <div class="flex gap-2">
-            <button
-              id="filter-all"
-              class="flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all border bg-slate-850 text-white border-slate-700"
-            >
-              All Logs
-            </button>
-            <button
-              id="filter-pending"
-              class="flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all border bg-slate-900 text-slate-400 border-slate-800 hover:border-slate-700"
-            >
-              Pending
-            </button>
-            <button
-              id="filter-reserved"
-              class="flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all border bg-slate-900 text-slate-400 border-slate-800 hover:border-slate-700"
-            >
-              Reserved
-            </button>
           </div>
         </div>
 
@@ -489,8 +407,6 @@
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'pos-settlement-system-default';
     
     // RULE 1 Guardrail: Realtime Database paths CANNOT contain dot "." characters.
-    // Since App ID in this preview sandbox defaults to things like "c_5b6bd26862f8f468_index.html-827",
-    // we must sanitize it to ensure successful database read/writes.
     const safeAppId = appId.replace(/[\.\#\$\[\]]/g, '_');
 
     document.getElementById('app-id-display').innerText = safeAppId;
@@ -501,19 +417,10 @@
     let selectedItemId = null;
     let pendingVerificationItem = null;
     let pendingDeleteId = null;
-    let currentFilter = 'ALL';
-    let searchQuery = '';
-
-    // Merchant IDs to Terminal IDs Mapping
-    const merchantTidMapping = {
-      'VG': 'HNB-VG-9011',
-      'BN': 'HNB-BN-4022'
-    };
 
     // Global selector trigger for Merchant IDs
     window.selectMerchant = function(merchantId) {
       document.getElementById('selectedMerchantId').value = merchantId;
-      document.getElementById('terminalId').value = merchantTidMapping[merchantId];
 
       const btnVg = document.getElementById('merchant-vg');
       const btnBn = document.getElementById('merchant-bn');
@@ -525,36 +432,33 @@
         btnBn.className = "py-3 px-4 rounded-xl border font-bold text-sm transition-all flex flex-col items-center gap-1 bg-blue-600/20 text-blue-400 border-blue-500";
         btnVg.className = "py-3 px-4 rounded-xl border font-bold text-sm transition-all flex flex-col items-center gap-1 bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700";
       }
-
-      generatePreFilledFields();
-    }
-
-    // Auto-prefill the Batch & transaction fields
-    function generatePreFilledFields() {
-      document.getElementById('batchNo').value = String(Math.floor(100000 + Math.random() * 900000));
-      document.getElementById('totalTxnCount').value = String(Math.floor(5 + Math.random() * 35));
     }
 
     // Setup Default Date Picker value to Today
     function setupDefaultDatePicker() {
       const today = new Date().toISOString().split('T')[0];
-      document.getElementById('settlementDate').value = today;
+      const el = document.getElementById('settlementDate');
+      if (el) el.value = today;
     }
 
     // Update status bar UI
     function updateStatusBadge(isOnline, text) {
       const badge = document.getElementById('db-status-badge');
-      if (isOnline) {
-        badge.className = "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold border bg-emerald-950/40 text-emerald-400 border-emerald-500/30";
-      } else {
-        badge.className = "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold border bg-red-950/40 text-red-400 border-red-500/30";
+      if (badge) {
+        if (isOnline) {
+          badge.className = "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold border bg-emerald-950/40 text-emerald-400 border-emerald-500/30";
+        } else {
+          badge.className = "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold border bg-red-950/40 text-red-400 border-red-500/30";
+        }
       }
-      document.getElementById('db-status-text').innerText = text;
+      const textEl = document.getElementById('db-status-text');
+      if (textEl) textEl.innerText = text;
     }
 
     // Trigger on-screen banner alerts
     function showNotification(type, message) {
       const container = document.getElementById('notification-container');
+      if (!container) return;
       const element = document.createElement('div');
       element.className = `p-4 rounded-xl shadow-2xl border flex items-center gap-3 transition-all transform duration-300 translate-y-2 opacity-0 pointer-events-auto ${
         type === 'success' 
@@ -578,11 +482,10 @@
       setTimeout(() => {
         element.classList.add('translate-y-2', 'opacity-0');
         setTimeout(() => element.remove(), 300);
-      }, 6000); // 6 seconds visibility
+      }, 6000);
     }
 
     // ATTENTION: Start syncing live logs IMMEDIATELY on load.
-    // Since your DB rules are open (.read: true, .write: true), we do NOT need to wait for auth to connect!
     startSyncingRegistry();
 
     // Trigger authentication background task
@@ -591,7 +494,6 @@
         await signInAnonymously(auth);
       } catch (err) {
         console.warn("Auth initialization failed. Connecting via Open Rules instead:", err);
-        // We still show connected because our startSyncingRegistry() is already listening successfully!
         updateStatusBadge(true, "HNB DATABASE ONLINE (OPEN PORT)");
       }
     };
@@ -607,7 +509,6 @@
 
     // Real-Time Database listener
     function startSyncingRegistry() {
-      // Use safeAppId to avoid illegal path string constraints in Firebase
       const databasePath = `artifacts/${safeAppId}/public/data/settlements`;
       const settlementsRef = ref(db, databasePath);
 
@@ -641,6 +542,7 @@
     // Dynamic UI Redrawer
     function renderDashboard() {
       const logsContainer = document.getElementById('logs-container');
+      if (!logsContainer) return;
       
       // Calculate Stats
       let grossAmt = 0;
@@ -663,25 +565,12 @@
       document.getElementById('stat-pending-count').innerText = pendingCount;
       document.getElementById('total-logs-indicator').innerText = `Total: ${settlements.length} records`;
 
-      // Filter local list in memory (Rule 2)
-      const filtered = settlements.filter(item => {
-        const matchesSearch = 
-          item.terminalId?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-          item.batchNo?.toLowerCase().includes(searchQuery.toLowerCase());
-        
-        let matchesStatus = true;
-        if (currentFilter === 'PENDING') matchesStatus = item.status === 'PENDING';
-        if (currentFilter === 'RESERVED') matchesStatus = item.status === 'RESERVED';
-
-        return matchesSearch && matchesStatus;
-      });
-
-      if (filtered.length === 0) {
+      if (settlements.length === 0) {
         logsContainer.innerHTML = `
           <div class="flex flex-col items-center justify-center py-20 text-slate-500 border border-dashed border-slate-800 rounded-2xl bg-slate-900/20">
             <i data-lucide="alert-triangle" class="w-10 h-10 text-slate-600 mb-2"></i>
-            <p class="text-sm font-bold">No Matching Terminal Records</p>
-            <p class="text-xs text-slate-600 mt-1">Submit terminal log data inside the form registry panel.</p>
+            <p class="text-sm font-bold">No Terminal Records Logged</p>
+            <p class="text-xs text-slate-600 mt-1">Submit Merchant ID, Date and Amount to add the first log.</p>
           </div>
         `;
         lucide.createIcons();
@@ -689,7 +578,7 @@
       }
 
       // Generate HTML List
-      logsContainer.innerHTML = filtered.map(item => {
+      logsContainer.innerHTML = settlements.map(item => {
         const isSelected = selectedItemId === item.id;
         const isReserved = item.status === 'RESERVED';
         const displayDateString = item.customDate 
@@ -715,15 +604,10 @@
               </div>
               <div>
                 <div class="flex items-center gap-2">
-                  <span class="font-mono font-bold text-white text-sm">${item.terminalId}</span>
-                  <span class="text-[10px] bg-slate-800 text-slate-400 py-0.5 px-2 rounded font-medium">
-                    Batch ${item.batchNo}
-                  </span>
+                  <span class="font-mono font-bold text-white text-base">HNB Merchant: ${item.merchantId}</span>
                 </div>
                 <p class="text-xs text-slate-400 font-semibold mt-0.5">${item.bankName}</p>
                 <p class="text-[10px] text-slate-500 mt-1 flex items-center gap-1">
-                  <span>Txns: ${item.totalTxnCount}</span>
-                  <span>•</span>
                   <span class="text-blue-400 font-semibold flex items-center gap-1">
                     <i data-lucide="calendar" class="w-3 h-3 inline"></i> ${displayDateString}
                   </span>
@@ -733,7 +617,7 @@
 
             <div class="flex items-center justify-between md:justify-end gap-4 border-t md:border-t-0 border-slate-800 pt-3 md:pt-0">
               <div class="text-right">
-                <p class="text-sm font-mono font-bold text-blue-400">
+                <p class="text-base font-mono font-bold text-blue-400">
                   LKR ${parseFloat(item.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </p>
                 
@@ -769,7 +653,6 @@
 
     // Attach interactions dynamically inside generated items
     function attachRowEventListeners() {
-      // Row Selection
       document.querySelectorAll('.log-row-item').forEach(el => {
         el.addEventListener('click', () => {
           const id = el.getAttribute('data-id');
@@ -779,16 +662,14 @@
         });
       });
 
-      // Confirm & Lock button event
       document.querySelectorAll('.btn-authorize').forEach(btn => {
         btn.addEventListener('click', (e) => {
-          e.stopPropagation(); // Stop row click trigger
+          e.stopPropagation();
           const id = btn.getAttribute('data-action-id');
           initiatePasscodeVerification(id);
         });
       });
 
-      // Record deletion trigger
       document.querySelectorAll('.btn-delete').forEach(btn => {
         btn.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -863,16 +744,8 @@
               <span class="font-bold">${selectedItem.bankName}</span>
             </div>
             <div class="flex justify-between">
-              <span>TERMINAL ID:</span>
-              <span class="font-bold">${selectedItem.terminalId}</span>
-            </div>
-            <div class="flex justify-between">
-              <span>BATCH NO:</span>
-              <span class="font-bold">${selectedItem.batchNo}</span>
-            </div>
-            <div class="flex justify-between">
-              <span>TOTAL TXNS:</span>
-              <span class="font-bold">${selectedItem.totalTxnCount}</span>
+              <span>MERCHANT ID:</span>
+              <span class="font-bold text-blue-600">${selectedItem.merchantId}</span>
             </div>
             <div class="flex justify-between border-t border-dashed border-slate-400 pt-1 mt-1">
               <span>SETTLEMENT DATE:</span>
@@ -907,9 +780,8 @@
       
       const detailsCard = document.getElementById('modal-details-card');
       detailsCard.innerHTML = `
-        <p><span class="text-slate-500">Terminal:</span> ${selectedItem.terminalId}</p>
-        <p><span class="text-slate-500">Batch Number:</span> ${selectedItem.batchNo}</p>
-        <p><span class="text-slate-500">Date Selected:</span> ${displayDateString}</p>
+        <p><span class="text-slate-500">Merchant Group:</span> ${selectedItem.merchantId}</p>
+        <p><span class="text-slate-500">Selected Date:</span> ${displayDateString}</p>
         <p class="text-emerald-400 font-bold text-sm mt-1">LKR ${parseFloat(selectedItem.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
       `;
 
@@ -958,15 +830,12 @@
     safeBind('settlement-form', 'submit', async (e) => {
       e.preventDefault();
 
-      const terminalId = document.getElementById('terminalId').value.trim().toUpperCase();
-      const batchNo = document.getElementById('batchNo').value.trim();
-      const totalTxnCount = parseInt(document.getElementById('totalTxnCount').value.trim(), 10);
+      const merchantId = document.getElementById('selectedMerchantId').value;
       const amount = parseFloat(document.getElementById('amount').value.trim());
       const selectedDate = document.getElementById('settlementDate').value;
-      const notes = document.getElementById('notes').value.trim() || 'N/A';
 
-      if (!terminalId || !batchNo || isNaN(totalTxnCount) || isNaN(amount) || !selectedDate) {
-        showNotification('error', 'Kindly complete all terminal fields.');
+      if (!merchantId || isNaN(amount) || !selectedDate) {
+        showNotification('error', 'Kindly complete all selection fields.');
         return;
       }
 
@@ -976,12 +845,9 @@
         const newRecordRef = push(settlementsRef);
         
         const payload = {
-          terminalId,
+          merchantId,
           bankName: 'Hatton National Bank (HNB)',
-          batchNo,
-          totalTxnCount,
           amount,
-          notes,
           status: 'PENDING', // Saved initially as Pending
           customDate: selectedDate, // Store user-selected custom date string (YYYY-MM-DD)
           customTimestamp: new Date(selectedDate).getTime(), // Used to organize order correctly
@@ -993,12 +859,8 @@
         // Attempt to write payload to Realtime Database
         await set(newRecordRef, payload);
         
-        // Reset only the Amount & Notes inputs (keeping date selector pre-set)
+        // Reset only the Amount input (keeping date selector and merchant selection pre-set)
         document.getElementById('amount').value = '';
-        document.getElementById('notes').value = '';
-
-        // Cycle parameters ready for next instant transaction
-        generatePreFilledFields();
 
         showNotification('success', 'Terminal log registered to cloud database! Confirm reservation below.');
         
@@ -1006,7 +868,6 @@
         selectedItemId = newRecordRef.key;
         showReceiptPreview(newRecordRef.key);
       } catch (err) {
-        // CATCHING AND DISPLAYING ANY FIREBASE PERMISSION OR DATABASE CONFIGURATION WRITE ERROR DIRECTLY ON SCREEN
         console.error("Database Write Error:", err);
         showNotification('error', 'Database Write Error: ' + err.message);
       }
@@ -1027,49 +888,6 @@
       showNotification('success', 'Prefilled mockup terminal slip values.');
     });
 
-    // Filter Controls
-    safeBind('filter-all', 'click', () => setFilter('ALL'));
-    safeBind('filter-pending', 'click', () => setFilter('PENDING'));
-    safeBind('filter-reserved', 'click', () => setFilter('RESERVED'));
-    
-    // Set active status filter
-    function setFilter(filterType) {
-      currentFilter = filterType;
-      
-      const buttons = {
-        'ALL': document.getElementById('filter-all'),
-        'PENDING': document.getElementById('filter-pending'),
-        'RESERVED': document.getElementById('filter-reserved')
-      };
-
-      Object.keys(buttons).forEach(key => {
-        if (buttons[key]) {
-          if (key === filterType) {
-            buttons[key].className = "flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all border bg-slate-800 text-white border-slate-700";
-          } else {
-            buttons[key].className = "flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all border bg-slate-900 text-slate-400 border-slate-800 hover:border-slate-700";
-          }
-        }
-      });
-
-      renderDashboard();
-    }
-
-    // Search input change
-    safeBind('searchQuery', 'input', (e) => {
-      searchQuery = e.target.value;
-      renderDashboard();
-    });
-
-    // Reset filters
-    safeBind('btn-reset-filters', 'click', () => {
-      const searchInput = document.getElementById('searchQuery');
-      if (searchInput) searchInput.value = '';
-      searchQuery = '';
-      setFilter('ALL');
-      setupDefaultDatePicker();
-    });
-
     // Close Modals
     safeBind('btn-close-modal', 'click', closeModal);
     safeBind('btn-cancel-modal', 'click', closeModal);
@@ -1081,7 +899,6 @@
     }
 
     // Initial load setup for fields
-    generatePreFilledFields();
     setupDefaultDatePicker();
   </script>
 </body>
