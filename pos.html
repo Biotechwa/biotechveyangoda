@@ -44,7 +44,6 @@
 </head>
 <body class="min-h-screen bg-slate-900 text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-slate-900">
 
-  <!-- -->
   <!-- HEADER SECTION -->
   <header class="bg-slate-950/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 px-6 py-4">
     <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
@@ -80,7 +79,6 @@
   <!-- NOTIFICATION BAR -->
   <div id="notification-container" class="fixed top-24 right-6 z-50 flex flex-col gap-2 max-w-md w-full pointer-events-none"></div>
 
-  <!-- -->
   <!-- DASHBOARD WRAPPER -->
   <main class="flex-1 p-6 max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
 
@@ -110,7 +108,7 @@
         <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Payments Reserved</p>
         <p id="stat-reserved-count" class="text-3xl font-black text-emerald-400 mt-2 font-mono">0</p>
         <p class="text-xs text-emerald-400 mt-2 flex items-center gap-1">
-          <i data-lucide="shield" class="w-3.5 h-3.5"></i> Authenticated via Passcode (129876)
+          <i data-lucide="shield" class="w-3.5 h-3.5"></i> Authenticated via Admin
         </p>
       </div>
 
@@ -125,7 +123,6 @@
 
     </div>
 
-    <!-- -->
     <!-- LEFT COLUMN: INSTANT DATA ENTRY FORM -->
     <div class="lg:col-span-5 flex flex-col gap-6">
       <div class="bg-slate-950 rounded-2xl border border-slate-800 p-6 shadow-xl">
@@ -263,7 +260,6 @@
       </div>
     </div>
 
-    <!-- -->
     <!-- RIGHT COLUMN: REAL-TIME LEDGER LOGS -->
     <div class="lg:col-span-7 flex flex-col gap-6">
       <div class="bg-slate-950 rounded-2xl border border-slate-800 p-6 flex-1 flex flex-col shadow-xl">
@@ -404,6 +400,38 @@
     </div>
   </div>
 
+  <!-- CUSTOM DELETE CONFIRMATION MODAL (Replaces confirm()) -->
+  <div id="delete-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 backdrop-blur-sm p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl relative">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="bg-red-500/10 p-2.5 rounded-xl border border-red-500/30">
+          <i data-lucide="trash-2" class="w-6 h-6 text-red-400 animate-bounce"></i>
+        </div>
+        <div>
+          <h3 class="text-base font-bold text-white">Delete Transaction?</h3>
+          <p class="text-xs text-slate-400">This action is irreversible</p>
+        </div>
+      </div>
+      <p class="text-xs text-slate-400 mb-6">Are you sure you want to permanently delete this HNB POS transaction log record from the database?</p>
+      <div class="flex gap-3">
+        <button
+          type="button"
+          id="btn-cancel-delete"
+          class="flex-1 bg-slate-800 hover:bg-slate-750 text-slate-300 font-bold py-2 px-4 rounded-xl transition-all text-xs"
+        >
+          No, Cancel
+        </button>
+        <button
+          type="button"
+          id="btn-confirm-delete"
+          class="flex-1 bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-4 rounded-xl transition-all shadow-lg text-xs"
+        >
+          Yes, Delete
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- FOOTER -->
   <footer class="bg-slate-950 border-t border-slate-800/80 py-4 px-6 text-center text-xs text-slate-500 mt-auto">
     <p>© 2026 Hatton National Bank (HNB) POS Settlement Control Hub. Secured Architecture.</p>
@@ -415,9 +443,9 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getDatabase, ref, push, set, update, remove, onValue } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
 
-    // 1. Setup Live Production Firebase Configuration
+    // 1. Setup Live Production Firebase Configuration matching hnbd-62b18
     const firebaseConfig = {
       apiKey: "AIzaSyAmTlVGY0K9dXGUf0I7L6DHwEIlPYmYoYI",
       authDomain: "hnbd-62b18.firebaseapp.com",
@@ -431,7 +459,10 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    const db = getFirestore(app);
+    
+    // IMPORTANT: Swap Cloud Firestore with Realtime Database
+    const db = getDatabase(app);
+    
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'pos-settlement-system-default';
 
     document.getElementById('app-id-display').innerText = appId;
@@ -441,6 +472,7 @@
     let settlements = [];
     let selectedItemId = null;
     let pendingVerificationItem = null;
+    let pendingDeleteId = null;
     let currentFilter = 'ALL';
     let searchQuery = '';
 
@@ -527,30 +559,32 @@
         badge.className = "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold border bg-emerald-950/40 text-emerald-400 border-emerald-500/30";
         document.getElementById('db-status-text').innerText = "HNB SECURED CONNECTION ONLINE";
         
-        // Start streaming logs on connection
+        // Start streaming Realtime DB logs on connection
         startSyncingRegistry();
       }
     });
 
-    // Real-Time Database listener (Rule 1 & Rule 2 compliance)
+    // Real-Time Database listener (using ref and onValue matching Rules in image_dfcb1f.png)
     function startSyncingRegistry() {
       if (!user) return;
 
-      // Rule 1: Strict path construction
-      const collectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'settlements');
+      // Safe path matching Rule 1 (within our standard app structure)
+      const databasePath = `artifacts/${appId}/public/data/settlements`;
+      const settlementsRef = ref(db, databasePath);
 
-      // Rule 2: Simple snapshot, memory-level ordering/filters
-      onSnapshot(collectionRef, 
+      onValue(settlementsRef, 
         (snapshot) => {
           settlements = [];
-          snapshot.forEach((doc) => {
-            settlements.push({ id: doc.id, ...doc.data() });
-          });
+          if (snapshot.exists()) {
+            snapshot.forEach((childSnapshot) => {
+              settlements.push({ id: childSnapshot.key, ...childSnapshot.val() });
+            });
+          }
 
           // Sort descending by time
           settlements.sort((a, b) => {
-            const timeA = a.createdAt?.seconds || 0;
-            const timeB = b.createdAt?.seconds || 0;
+            const timeA = a.createdAt || 0;
+            const timeB = b.createdAt || 0;
             return timeB - timeA;
           });
 
@@ -558,7 +592,7 @@
           renderDashboard();
         },
         (error) => {
-          console.error("Firestore synchronizer failure:", error);
+          console.error("Realtime DB synchronizer failure:", error);
           showNotification('error', 'Cloud sync failure: ' + error.message);
         }
       );
@@ -709,28 +743,40 @@
         });
       });
 
-      // Record deletion
+      // Record deletion trigger (Displays beautiful custom delete modal instead of native confirm)
       document.querySelectorAll('.btn-delete').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
+        btn.addEventListener('click', (e) => {
           e.stopPropagation();
-          const id = btn.getAttribute('data-delete-id');
-          if (confirm('Delete this historical HNB transaction record permanently?')) {
-            try {
-              const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'settlements', id);
-              await deleteDoc(docRef);
-              showNotification('success', 'Transaction log successfully deleted.');
-              if (selectedItemId === id) {
-                selectedItemId = null;
-                document.getElementById('receipt-container').classList.add('hidden');
-                document.getElementById('receipt-placeholder').classList.remove('hidden');
-              }
-            } catch (err) {
-              showNotification('error', 'Error deleting document: ' + err.message);
-            }
-          }
+          pendingDeleteId = btn.getAttribute('data-delete-id');
+          document.getElementById('delete-modal').classList.remove('hidden');
         });
       });
     }
+
+    // Custom Delete modal button logic
+    document.getElementById('btn-cancel-delete').addEventListener('click', () => {
+      document.getElementById('delete-modal').classList.add('hidden');
+      pendingDeleteId = null;
+    });
+
+    document.getElementById('btn-confirm-delete').addEventListener('click', async () => {
+      if (!pendingDeleteId) return;
+      try {
+        const deleteRef = ref(db, `artifacts/${appId}/public/data/settlements/${pendingDeleteId}`);
+        await remove(deleteRef);
+        showNotification('success', 'Transaction log successfully deleted.');
+        if (selectedItemId === pendingDeleteId) {
+          selectedItemId = null;
+          document.getElementById('receipt-container').classList.add('hidden');
+          document.getElementById('receipt-placeholder').classList.remove('hidden');
+        }
+      } catch (err) {
+        showNotification('error', 'Error deleting document: ' + err.message);
+      } finally {
+        document.getElementById('delete-modal').classList.add('hidden');
+        pendingDeleteId = null;
+      }
+    });
 
     // Show Printable Receipt mockups 
     function showReceiptPreview(id) {
@@ -827,10 +873,10 @@
       if (!user || !pendingVerificationItem) return;
 
       try {
-        // Safe Firestore path reference (Rule 1)
-        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'settlements', pendingVerificationItem.id);
+        // Safe Realtime DB reference update
+        const updateRef = ref(db, `artifacts/${appId}/public/data/settlements/${pendingVerificationItem.id}`);
         
-        await updateDoc(docRef, {
+        await update(updateRef, {
           status: 'RESERVED',
           authorizedAt: new Date().toISOString()
         });
@@ -862,8 +908,9 @@
       }
 
       try {
-        // Rule 1 paths
-        const collectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'settlements');
+        // Safe Realtime Database push sequence
+        const settlementsRef = ref(db, `artifacts/${appId}/public/data/settlements`);
+        const newRecordRef = push(settlementsRef);
         
         const payload = {
           terminalId,
@@ -873,12 +920,12 @@
           amount,
           notes,
           status: 'PENDING', // Saved initially as Pending
-          createdAt: serverTimestamp(),
+          createdAt: Date.now(), // High speed timestamping
           timestamp: new Date().toISOString(),
           operatorId: user ? user.uid : 'sys-offline'
         };
 
-        const docRef = await addDoc(collectionRef, payload);
+        await set(newRecordRef, payload);
         
         // Reset only the Amount & Notes inputs
         document.getElementById('amount').value = '';
@@ -890,8 +937,8 @@
         showNotification('success', 'Terminal log registered to cloud database! Confirm reservation below.');
         
         // Auto-select newly saved log
-        selectedItemId = docRef.id;
-        showReceiptPreview(docRef.id);
+        selectedItemId = newRecordRef.key;
+        showReceiptPreview(newRecordRef.key);
       } catch (err) {
         showNotification('error', 'Error writing log: ' + err.message);
       }
