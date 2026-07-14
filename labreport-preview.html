@@ -161,7 +161,10 @@
             setTimeout(() => {
                 try {
                     const params = new URLSearchParams(window.location.search);
-                    const encodedData = params.get('data');
+                    
+                    // If there is no ?data= in the URL, we use a mock Base64 string for the preview.
+                    // Updated preview data to match your requested format: Name | VG12 | 2026-07-14
+                    const encodedData = params.get('data') || btoa("John Doe|VG12|2026-07-14|2500000000000");
 
                     if (!encodedData) throw new Error("No Data");
 
