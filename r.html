@@ -297,6 +297,7 @@
             localStorage.removeItem('biotech_secure_lang');
             localStorage.removeItem('biotech_secure_phone');
             localStorage.removeItem('biotech_secure_name');
+            // Deliberately NOT removing the camera permission flag to preserve user preference
             location.reload();
         }
 
@@ -369,22 +370,35 @@
 
         function step2_QRScan() {
             const id = 'qrbtn' + Date.now();
+            
+            // Check if permission was already granted previously
+            const hasPermission = localStorage.getItem('biotech_camera_granted') === 'true';
+
             addMessage(`
                 <div>
                     ${i18n[currentLang].askQR}
                     <div class="mt-4" id="qr-container">
-                        <button id="${id}" onclick="startQRScanner('${id}')" class="w-full bg-teal-50 border-2 border-dashed border-teal-300 text-teal-700 py-4 rounded-xl flex flex-col items-center justify-center hover:bg-teal-100 transition shadow-sm">
-                            <i class="fa-solid fa-qrcode text-3xl mb-2 animate-pulse-slow"></i>
-                            <span class="font-bold text-sm uppercase tracking-wider">${i18n[currentLang].btnScan}</span>
+                        <button id="${id}" onclick="startQRScanner('${id}')" class="${hasPermission ? 'hidden ' : ''}w-full bg-teal-50 border-2 border-dashed border-teal-300 text-teal-700 py-4 rounded-xl flex flex-col items-center justify-center hover:bg-teal-100 transition shadow-sm">
+                            <i class="fa-solid ${hasPermission ? 'fa-qrcode' : 'fa-camera'} text-3xl mb-2 animate-pulse-slow"></i>
+                            <span class="font-bold text-sm uppercase tracking-wider">${hasPermission ? i18n[currentLang].btnScan : i18n[currentLang].btnForceContinue}</span>
                         </button>
                         <div id="qr-reader" class="hidden mt-2"></div>
                     </div>
                 </div>
             `, 'bot');
+
+            // If permission is known to be granted, automatically trigger the scanner bypassing the button
+            if (hasPermission) {
+                setTimeout(() => {
+                    startQRScanner(id, true);
+                }, 300);
+            }
         }
 
-        function startQRScanner(btnId) {
-            document.getElementById(btnId).classList.add('hidden');
+        function startQRScanner(btnId, isAutoStart = false) {
+            const btnElement = document.getElementById(btnId);
+            if(btnElement) btnElement.classList.add('hidden');
+            
             const qrReaderDiv = document.getElementById('qr-reader');
             qrReaderDiv.classList.remove('hidden');
 
@@ -398,7 +412,6 @@
             // EXTREME PERFORMANCE CONFIGURATION ("Fastly, Longly, Rapidly")
             const config = { 
                 fps: 60, // Maximize frame rate to catch the QR code instantly
-                // Removed 'qrbox' entirely: Scans the FULL camera frame, making it vastly easier to scan from a distance or without perfect aim
                 useBarCodeDetectorIfSupported: true, // Activates Native Hardware Acceleration on supported mobile devices
                 formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ] // Keeps processing focused ONLY on QR codes
             };
@@ -413,10 +426,12 @@
                     // Success callback
                     html5QrCode.stop().then(() => {
                         qrReaderDiv.classList.add('hidden');
-                        document.getElementById(btnId).classList.remove('hidden');
-                        document.getElementById(btnId).className = "w-full bg-green-50 border border-green-200 text-green-700 py-4 rounded-xl flex flex-col items-center justify-center opacity-80";
-                        document.getElementById(btnId).innerHTML = `<i class="fa-solid fa-check-circle text-3xl mb-1"></i><span class="font-bold text-sm uppercase tracking-wider">Scanned</span>`;
-                        document.getElementById(btnId).disabled = true;
+                        if (btnElement) {
+                            btnElement.classList.remove('hidden');
+                            btnElement.className = "w-full bg-green-50 border border-green-200 text-green-700 py-4 rounded-xl flex flex-col items-center justify-center opacity-80";
+                            btnElement.innerHTML = `<i class="fa-solid fa-check-circle text-3xl mb-1"></i><span class="font-bold text-sm uppercase tracking-wider">Scanned</span>`;
+                            btnElement.disabled = true;
+                        }
                         
                         processQRData(decodedText);
                     });
@@ -425,13 +440,29 @@
                     // Ongoing scan errors (ignore)
                 }
             ).then(() => {
+                // Successfully triggered camera. Save permission state to prevent asking again!
+                localStorage.setItem('biotech_camera_granted', 'true');
+                
                 // Auto-scroll again after the camera view is fully rendered and takes up vertical space
                 setTimeout(() => {
                     chatBody.scrollTo({ top: chatBody.scrollHeight, behavior: 'smooth' });
                 }, 400);
             }).catch((err) => {
-                console.error("Camera error:", err);
-                addMessage(`<span class="text-red-500">Camera access denied. Please check your browser permissions.</span>`, 'bot');
+                // If auto-start failed (due to strict iOS/Safari no-gesture policies), fallback to showing the manual click button
+                if (isAutoStart) {
+                    qrReaderDiv.classList.add('hidden');
+                    if (btnElement) {
+                        btnElement.classList.remove('hidden');
+                        btnElement.innerHTML = `<i class="fa-solid fa-qrcode text-3xl mb-2 animate-pulse-slow"></i><span class="font-bold text-sm uppercase tracking-wider">${i18n[currentLang].btnScan}</span>`;
+                    }
+                } else {
+                    // User explicitly denied permission or severe error occurred
+                    localStorage.removeItem('biotech_camera_granted');
+                    console.error("Camera error:", err);
+                    addMessage(`<span class="text-red-500">Camera access denied. Please check your browser permissions.</span>`, 'bot');
+                    qrReaderDiv.classList.add('hidden');
+                    if(btnElement) btnElement.classList.remove('hidden');
+                }
             });
         }
 
