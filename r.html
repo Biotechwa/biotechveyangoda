@@ -246,6 +246,7 @@
         const i18n = {
             en: {
                 welcome: "Hello! 👋 Welcome to the Biotech Secure Portal.",
+                welcomeBack: "Welcome back, <b>{name}</b>! 👋<br><span class='text-xs text-teal-700 font-medium'>Phone: {phone}</span>",
                 askPhone: "For your privacy, please verify your <b>Phone Number</b> first:",
                 askQR: "Perfect. Now, please scan the <b>QR Code</b> located on your patient receipt to securely load your details.",
                 btnScan: "Open Secure Scanner",
@@ -257,6 +258,7 @@
             },
             si: {
                 welcome: "ආයුබෝවන්! 👋 Biotech ආරක්‍ෂිත පද්ධතියට සාදරයෙන් පිළිගනිමු.",
+                welcomeBack: "නැවතත් සාදරයෙන් පිළිගනිමු, <b>{name}</b>! 👋<br><span class='text-xs text-teal-700 font-medium'>දුරකථන: {phone}</span>",
                 askPhone: "ඔබගේ ආරක්ෂාව සඳහා, කරුණාකර පළමුව ඔබගේ <b>දුරකථන අංකය</b> තහවුරු කරන්න:",
                 askQR: "හරි. දැන් කරුණාකර ඔබගේ බිල්පතේ ඇති <b>QR කේතය</b> ස්කෑන් කරන්න.",
                 btnScan: "ස්කෑනරය විවෘත කරන්න",
@@ -268,6 +270,7 @@
             },
             ta: {
                 welcome: "வணக்கம்! 👋 Biotech பாதுகாப்பான போர்ட்டலுக்கு வரவேற்கிறோம்.",
+                welcomeBack: "மீண்டும் வருக, <b>{name}</b>! 👋<br><span class='text-xs text-teal-700 font-medium'>தொலைபேசி: {phone}</span>",
                 askPhone: "உங்கள் பாதுகாப்பிற்காக, முதலில் உங்கள் <b>தொலைபேசி எண்ணை</b> சரிபார்க்கவும்:",
                 askQR: "நன்று. இப்போது, உங்கள் பில்லில் உள்ள <b>QR குறியீட்டை</b> ஸ்கேன் செய்யவும்.",
                 btnScan: "லைவ் ஸ்கேனரைத் திறக்கவும்",
@@ -292,14 +295,34 @@
 
         function resetLanguage() {
             localStorage.removeItem('biotech_secure_lang');
+            localStorage.removeItem('biotech_secure_phone');
+            localStorage.removeItem('biotech_secure_name');
             location.reload();
         }
 
         function initApp(l) {
             currentLang = l;
             document.getElementById('langModal').classList.add('hidden');
-            addMessage(i18n[currentLang].welcome, 'bot');
-            setTimeout(step1_Phone, 800);
+            
+            const savedPhone = localStorage.getItem('biotech_secure_phone');
+            const savedName = localStorage.getItem('biotech_secure_name');
+
+            if (savedPhone && savedName) {
+                // If returning patient, populate data and skip phone entry
+                formData.phone = savedPhone;
+                formData.patientName = savedName;
+                
+                const welcomeMsg = i18n[currentLang].welcomeBack
+                    .replace('{name}', savedName)
+                    .replace('{phone}', savedPhone);
+                    
+                addMessage(welcomeMsg, 'bot');
+                setTimeout(step2_QRScan, 800);
+            } else {
+                // First time user flow
+                addMessage(i18n[currentLang].welcome, 'bot');
+                setTimeout(step1_Phone, 800);
+            }
         }
 
         function step1_Phone() {
@@ -365,10 +388,27 @@
             const qrReaderDiv = document.getElementById('qr-reader');
             qrReaderDiv.classList.remove('hidden');
 
-            html5QrCode = new Html5Qrcode("qr-reader");
-            const config = { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
+            // Scroll immediately to show the loading scanner box
+            setTimeout(() => {
+                chatBody.scrollTo({ top: chatBody.scrollHeight, behavior: 'smooth' });
+            }, 50);
 
-            html5QrCode.start({ facingMode: "environment" }, config, 
+            html5QrCode = new Html5Qrcode("qr-reader");
+            
+            // EXTREME PERFORMANCE CONFIGURATION ("Fastly, Longly, Rapidly")
+            const config = { 
+                fps: 60, // Maximize frame rate to catch the QR code instantly
+                // Removed 'qrbox' entirely: Scans the FULL camera frame, making it vastly easier to scan from a distance or without perfect aim
+                useBarCodeDetectorIfSupported: true, // Activates Native Hardware Acceleration on supported mobile devices
+                formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ] // Keeps processing focused ONLY on QR codes
+            };
+
+            // html5-qrcode strictly requires the camera config object to have exactly one key.
+            const cameraConfig = { 
+                facingMode: "environment"
+            };
+
+            html5QrCode.start(cameraConfig, config, 
                 (decodedText) => {
                     // Success callback
                     html5QrCode.stop().then(() => {
@@ -384,7 +424,12 @@
                 (errorMessage) => {
                     // Ongoing scan errors (ignore)
                 }
-            ).catch((err) => {
+            ).then(() => {
+                // Auto-scroll again after the camera view is fully rendered and takes up vertical space
+                setTimeout(() => {
+                    chatBody.scrollTo({ top: chatBody.scrollHeight, behavior: 'smooth' });
+                }, 400);
+            }).catch((err) => {
                 console.error("Camera error:", err);
                 addMessage(`<span class="text-red-500">Camera access denied. Please check your browser permissions.</span>`, 'bot');
             });
@@ -462,6 +507,10 @@
         }
 
         function generateBase64Link() {
+            // Save credentials to local storage for returning users
+            localStorage.setItem('biotech_secure_phone', formData.phone);
+            localStorage.setItem('biotech_secure_name', formData.patientName);
+
             // TARGET FORMAT: Patient Name | Sample ID | Date
             const rawData = `${formData.patientName}|${formData.sample}|${formData.date}`;
             
