@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Biotech | AI Assistant</title>
+    <title>Biotech Laboratory | Secure Verification</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -11,15 +11,15 @@
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Noto+Sans+Sinhala:wght@400;700&family=Noto+Sans+Tamil:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Google Fonts (Poppins & Multilingual) -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Noto+Sans+Sinhala:wght@400;700&family=Noto+Sans+Tamil:wght@400;700&display=swap" rel="stylesheet">
 
-    <!-- Tesseract.js for Real AI OCR Scanning -->
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <!-- HTML5 QR Code Scanner -->
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
     <style>
         body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-family: 'Poppins', sans-serif;
             background-color: #f1f5f9;
             height: 100dvh; 
             width: 100vw;
@@ -28,41 +28,39 @@
             align-items: center;
             margin: 0;
             overflow: hidden;
-            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            background: linear-gradient(to bottom right, #f0fdf4, #eff6ff);
         }
 
-        /* Keyframe Animations */
-        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
-        @keyframes pulse-ring { 0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(255, 255, 255, 0); } 100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); } }
-        @keyframes blob { 0% { transform: translate(0px, 0px) scale(1); } 33% { transform: translate(30px, -50px) scale(1.1); } 66% { transform: translate(-20px, 20px) scale(0.9); } 100% { transform: translate(0px, 0px) scale(1); } }
-        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes scan { 0% { top: -10%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
-        @keyframes target-pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+        /* Custom Theme Animations */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(13, 148, 136, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 20px rgba(13, 148, 136, 0); }
+            100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(13, 148, 136, 0); }
+        }
+
+        @keyframes blob { 
+            0% { transform: translate(0px, 0px) scale(1); } 
+            33% { transform: translate(30px, -50px) scale(1.1); } 
+            66% { transform: translate(-20px, 20px) scale(0.9); } 
+            100% { transform: translate(0px, 0px) scale(1); } 
+        }
+
+        @keyframes slideIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
         .animate-float { animation: float 3s ease-in-out infinite; }
         .animate-pulse-slow { animation: pulse-ring 2s infinite; }
         .animate-blob { animation: blob 7s infinite alternate; }
 
-        .scan-container { position: relative; overflow: hidden; border-radius: 8px; }
-        .scan-line {
-            position: absolute; width: 100%; height: 4px; background: #0ea5e9;
-            box-shadow: 0 0 12px #0ea5e9, 0 0 20px #0ea5e9;
-            animation: scan 1.5s linear infinite; z-index: 20;
-        }
-        
-        /* The Visual Targeting Rings for Date and Sample No */
-        .target-ring {
-            position: absolute;
-            border: 2px solid #ef4444; /* Red border */
-            border-radius: 12px; /* Rounded corners */
-            animation: target-pulse 1.5s infinite;
-            z-index: 15;
-            background: rgba(239, 68, 68, 0.1);
-        }
-
+        /* Matched Glass Effect */
         .glass-effect {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(12px);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.5);
         }
 
@@ -79,9 +77,9 @@
         @media (min-width: 640px) {
             .chat-container {
                 height: 90vh;
-                border-radius: 32px;
+                border-radius: 24px;
                 overflow: hidden;
-                box-shadow: 0 25px 50px -12px rgba(15, 118, 110, 0.25);
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
             }
         }
 
@@ -100,46 +98,42 @@
             max-width: 85%;
             padding: 14px 18px;
             border-radius: 20px;
-            font-size: 14.5px;
+            font-size: 14px;
             line-height: 1.6;
             animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             position: relative;
             word-wrap: break-word;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
         }
 
         .msg-bot {
             background: white;
-            color: #1e293b;
+            color: #1f2937;
             align-self: flex-start;
             border-bottom-left-radius: 4px;
-            box-shadow: 0 4px 15px -3px rgba(0,0,0,0.05);
+            border: 1px solid #f3f4f6;
         }
 
         .msg-user {
-            background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+            background: linear-gradient(135deg, #0d9488 0%, #0284c7 100%);
             color: white;
             align-self: flex-end;
             border-bottom-right-radius: 4px;
-            box-shadow: 0 10px 15px -3px rgba(13, 148, 136, 0.3);
-        }
-
-        .option-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            margin-top: 15px;
+            font-weight: 500;
         }
 
         .option-btn {
             background: #f8fafc;
-            border: 1.5px solid #e2e8f0;
+            border: 1px solid #e2e8f0;
             padding: 12px;
-            border-radius: 16px;
+            border-radius: 12px;
             text-align: center;
-            font-weight: 700;
+            font-weight: 600;
             color: #0f766e;
             transition: all 0.3s;
             cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
         }
 
         .option-btn:hover {
@@ -149,50 +143,70 @@
             box-shadow: 0 4px 12px rgba(13, 148, 136, 0.1);
         }
 
-        .typing-dots { display: flex; gap: 4px; padding: 4px 0; }
-        .dot { width: 6px; height: 6px; background: #94a3b8; border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; }
-        .dot:nth-child(1) { animation-delay: -0.32s; }
-        .dot:nth-child(2) { animation-delay: -0.16s; }
-        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.0); } }
-
         .custom-input {
-            background: #f1f5f9;
-            border: 2px solid transparent;
-            border-radius: 16px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
             padding: 12px 16px;
             width: 100%;
             outline: none;
             transition: all 0.2s;
-            font-weight: 600;
-            font-size: 16px; /* Prevents auto-zoom on iOS */
+            font-weight: 500;
+            font-size: 16px; 
+            color: #1f2937;
         }
         .custom-input:focus {
             background: white;
             border-color: #0d9488;
-            box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.1);
+            box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
         }
+
+        #qr-reader {
+            width: 100%;
+            border-radius: 16px;
+            overflow: hidden;
+            border: none !important;
+            box-shadow: 0 4px 15px -3px rgba(0,0,0,0.1);
+            background: #000;
+        }
+        #qr-reader img { display: none; }
+        #qr-reader__scan_region { background: #000; }
+        #qr-reader__dashboard { padding: 12px !important; background: white; border-top: 1px solid #f1f5f9; }
+        #qr-reader__dashboard_section_csr button {
+            background: linear-gradient(to right, #0d9488, #0284c7);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            transition: opacity 0.2s;
+        }
+        #qr-reader__dashboard_section_csr button:hover { opacity: 0.9; }
     </style>
 </head>
-<body>
+<body class="bg-gradient-to-br from-teal-50 to-blue-50">
 
-    <!-- BG Elements -->
-    <div class="absolute top-0 left-0 w-80 h-80 bg-teal-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
-    <div class="absolute bottom-0 right-0 w-80 h-80 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob" style="animation-delay: 2s;"></div>
+    <!-- Background Blobs -->
+    <div class="absolute top-0 left-0 w-64 h-64 bg-teal-200 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-blob"></div>
+    <div class="absolute bottom-0 right-0 w-64 h-64 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-blob" style="animation-delay: 2s;"></div>
 
-    <div class="chat-container glass-effect">
+    <div class="chat-container glass-effect shadow-2xl transition-all duration-300 hover:shadow-teal-200/50">
+        
         <!-- Header -->
-        <div class="bg-gradient-to-r from-teal-600 to-blue-600 p-6 text-center relative overflow-hidden shrink-0">
-            <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 15px 15px;"></div>
+        <div class="bg-gradient-to-r from-teal-600 to-blue-600 p-8 text-center relative overflow-hidden shrink-0">
+            <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 20px 20px;"></div>
             
-            <div class="relative inline-block mb-3">
+            <div class="relative inline-block mb-4">
                 <div class="absolute inset-0 bg-white rounded-full opacity-20 animate-pulse-slow"></div>
-                <div class="relative bg-white text-teal-600 w-14 h-14 rounded-full flex items-center justify-center shadow-lg mx-auto animate-float">
-                    <i class="fa-solid fa-microscope text-2xl"></i>
+                <div class="relative bg-white text-teal-600 w-16 h-16 rounded-full flex items-center justify-center shadow-lg mx-auto animate-float">
+                    <i class="fa-solid fa-microscope text-3xl"></i>
                 </div>
             </div>
 
-            <h1 class="text-white font-extrabold text-xl tracking-wide relative z-10">BIOTECH LABORATORY</h1>
-            <p class="text-teal-100 text-[10px] font-medium tracking-widest relative z-10 uppercase">AI Clinical Assistant</p>
+            <h1 class="text-white font-bold text-2xl tracking-wide relative z-10">BIOTECH LABORATORY</h1>
+            <p class="text-teal-100 text-sm font-light tracking-wider relative z-10 uppercase">Identity Verification</p>
             
             <button onclick="resetLanguage()" class="absolute top-4 right-4 text-white/50 hover:text-white transition">
                 <i class="fa-solid fa-globe"></i>
@@ -203,23 +217,23 @@
         <div class="chat-body" id="chatBody"></div>
 
         <!-- Security Footer -->
-        <div class="p-4 bg-white/50 border-t border-teal-100/50 text-center shrink-0">
-            <div class="flex items-center justify-center gap-2 text-teal-600/60 font-bold text-[9px] tracking-widest uppercase">
-                <i class="fa-solid fa-shield-halved"></i> Secured by Biotech Systems
+        <div class="p-4 bg-white/50 border-t border-gray-100 text-center shrink-0">
+            <div class="flex items-center justify-center gap-2 text-gray-400 font-semibold text-[10px] tracking-widest uppercase">
+                <i class="fa-solid fa-lock"></i> End-to-End Encrypted Verification
             </div>
         </div>
 
-        <!-- Language Picker -->
-        <div id="langModal" class="absolute inset-0 bg-white/90 backdrop-blur-md z-50 flex items-center justify-center hidden">
+        <!-- Language Selection Modal -->
+        <div id="langModal" class="absolute inset-0 bg-white/95 backdrop-blur-md z-50 flex items-center justify-center hidden">
             <div class="w-full max-w-[300px] p-6 text-center">
-                <div class="w-16 h-16 bg-teal-600 text-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl rotate-3">
+                <div class="w-16 h-16 bg-gradient-to-r from-teal-600 to-blue-600 text-white rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl rotate-3">
                     <i class="fa-solid fa-language text-2xl"></i>
                 </div>
-                <h3 class="text-xl font-bold text-slate-800 mb-6">Select Language</h3>
+                <h3 class="text-xl font-bold text-gray-800 mb-6 font-['Poppins']">Select Language</h3>
                 <div class="flex flex-col gap-3">
-                    <button onclick="saveAndInit('en')" class="option-btn !bg-white">English</button>
-                    <button onclick="saveAndInit('si')" class="option-btn !bg-white" style="font-family: 'Noto Sans Sinhala'">සිංහල</button>
-                    <button onclick="saveAndInit('ta')" class="option-btn !bg-white" style="font-family: 'Noto Sans Tamil'">தமிழ்</button>
+                    <button onclick="saveAndInit('en')" class="option-btn bg-white">English</button>
+                    <button onclick="saveAndInit('si')" class="option-btn bg-white" style="font-family: 'Noto Sans Sinhala'">සිංහල</button>
+                    <button onclick="saveAndInit('ta')" class="option-btn bg-white" style="font-family: 'Noto Sans Tamil'">தமிழ்</button>
                 </div>
             </div>
         </div>
@@ -227,472 +241,309 @@
 
     <script>
         const chatBody = document.getElementById('chatBody');
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbzWPVGayDSH6uWrBROFQjaFi1U6Il-d2x-LMExuW5ejWn-1ZJYLuCkBLHPG7n93ONDN/exec';
-        
         let currentLang = 'en';
-        let formData = { type: '', num: '', date: '', phone: '' };
+        let formData = { phone: '', sample: '', date: '', patientName: '' };
+        let html5QrCode;
 
-        // Updated Translations with Fallback
+        // Translations tailored to privacy and QR flow
         const i18n = {
             en: {
-                welcome: "Hello! 👋 I'm your Biotech Assistant. I'll help you access your lab reports.",
-                askType: "Select your <b>Sample Type</b>:",
-                askNum: "Enter your <b>Sample Number</b>:",
-                askDate: "When was this collected?",
-                askBill: "Please upload or capture your <b>Bill Photo</b> to verify your identity:",
-                saving: "AI is scanning your bill...",
-                ready: "Verification Successful! Redirecting to report...",
-                errorNoMatch: "⚠️ I couldn't verify the Date and Sample Number from this image.",
-                errorNotBiotechBill: "⚠️ This does not appear to be a Biotech Laboratory receipt.",
-                fallbackMsg: "Click below to request your report directly via WhatsApp:",
-                btnWhatsApp: "Request via WhatsApp",
-                btnScan: "Open Camera / Gallery"
+                welcome: "Hello! 👋 Welcome to the Biotech Secure Portal.",
+                welcomeBack: "Welcome back, <b>{name}</b>! 👋<br><span class='text-xs text-teal-700 font-medium'>Phone: {phone}</span>",
+                askPhone: "For your privacy, please verify your <b>Phone Number</b> first:",
+                askQR: "Perfect. Now, please scan the <b>QR Code</b> located on your patient receipt to securely load your details.",
+                btnScan: "Open Secure Scanner",
+                processing: "Authenticating QR Data...",
+                ready: "Verification Successful! Generating secure link...",
+                errorQR: "⚠️ Invalid QR format. Please scan a valid Biotech Laboratory receipt.",
+                btnForceContinue: "Give Permission & Continue",
+                btnScanAgain: "Scan Again"
             },
             si: {
-                welcome: "ආයුබෝවන්! 👋 මම Biotech සහායකයා. ඔබගේ වාර්තා ලබා ගැනීමට මම උදව් කරන්නම්.",
-                askType: "ඔබේ <b>සාම්පල වර්ගය</b> තෝරන්න:",
-                askNum: "<b>සාම්පල අංකය</b> ඇතුළත් කරන්න:",
-                askDate: "සාම්පලය ලබාගත් <b>දිනය</b>:",
-                askBill: "කරුණාකර ඔබගේ <b>බිල්පතෙහි ඡායාරූපයක්</b> (Scan) ඇතුළත් කරන්න:",
-                saving: "AI මගින් බිල්පත පරීක්ෂා කරමින් පවතී...",
-                ready: "සාර්ථකයි! වාර්තාව විවෘත වෙමින් පවතී...",
-                errorNoMatch: "⚠️ ඡායාරූපයේ දිනය සහ සාම්පල අංකය තහවුරු කිරීමට නොහැකි විය.",
-                errorNotBiotechBill: "⚠️ මෙය Biotech රසායනාගාරයේ බිල්පතක් බව නොපෙනේ.",
-                fallbackMsg: "කරුණාකර පහත බොත්තම ඔබා WhatsApp හරහා ඔබගේ වාර්තාව ලබා ගන්න:",
-                btnWhatsApp: "WhatsApp හරහා ලබා ගන්න",
-                btnScan: "කැමරාව / ගැලරිය විවෘත කරන්න"
+                welcome: "ආයුබෝවන්! 👋 Biotech ආරක්‍ෂිත පද්ධතියට සාදරයෙන් පිළිගනිමු.",
+                welcomeBack: "නැවතත් සාදරයෙන් පිළිගනිමු, <b>{name}</b>! 👋<br><span class='text-xs text-teal-700 font-medium'>දුරකථන: {phone}</span>",
+                askPhone: "ඔබගේ ආරක්ෂාව සඳහා, කරුණාකර පළමුව ඔබගේ <b>දුරකථන අංකය</b> තහවුරු කරන්න:",
+                askQR: "හරි. දැන් කරුණාකර ඔබගේ බිල්පතේ ඇති <b>QR කේතය</b> ස්කෑන් කරන්න.",
+                btnScan: "ස්කෑනරය විවෘත කරන්න",
+                processing: "දත්ත පරීක්ෂා කරමින්...",
+                ready: "සාර්ථකයි! ආරක්‍ෂිත සබැඳිය සකසමින් පවතී...",
+                errorQR: "⚠️ මෙය Biotech රසායනාගාරයේ QR කේතයක් නොවේ. නිවැරදි කේතය ස්කෑන් කරන්න.",
+                btnForceContinue: "අවසර දී ඉදිරියට යන්න",
+                btnScanAgain: "නැවත ස්කෑන් කරන්න"
             },
             ta: {
-                welcome: "வணக்கம்! 👋 நான் உங்கள் Biotech உதவியாளர்.",
-                askType: "உங்கள் <b>மாதிரி வகை</b>யைத் தேர்ந்தெடுக்கவும்:",
-                askNum: "உங்கள் <b>மாதிரி எண்</b>ணை உள்ளிடவும்:",
-                askDate: "மாதிரி எடுக்கப்பட்ட <b>தேதி</b>:",
-                askBill: "உங்கள் <b>பில் புகைப்படத்தை</b> பதிவேற்றவும் அல்லது ஸ்கேன் செய்யவும்:",
-                saving: "AI பில்லை ஸ்கேன் செய்கிறது...",
-                ready: "வெற்றி! அறிக்கை திறக்கப்படுகிறது...",
-                errorNoMatch: "⚠️ இந்த படத்திலிருந்து தேதியையும் மாதிரி எண்ணையும் சரிபார்க்க முடியவில்லை.",
-                errorNotBiotechBill: "⚠️ இது Biotech ஆய்வக ரசீது போல் தெரியவில்லை.",
-                fallbackMsg: "உங்கள் அறிக்கையை நேரடியாக WhatsApp மூலம் பெற கீழே கிளிக் செய்யவும்:",
-                btnWhatsApp: "WhatsApp மூலம் கோரவும்",
-                btnScan: "புகைப்படம் எடுக்கவும்"
+                welcome: "வணக்கம்! 👋 Biotech பாதுகாப்பான போர்ட்டலுக்கு வரவேற்கிறோம்.",
+                welcomeBack: "மீண்டும் வருக, <b>{name}</b>! 👋<br><span class='text-xs text-teal-700 font-medium'>தொலைபேசி: {phone}</span>",
+                askPhone: "உங்கள் பாதுகாப்பிற்காக, முதலில் உங்கள் <b>தொலைபேசி எண்ணை</b> சரிபார்க்கவும்:",
+                askQR: "நன்று. இப்போது, உங்கள் பில்லில் உள்ள <b>QR குறியீட்டை</b> ஸ்கேன் செய்யவும்.",
+                btnScan: "லைவ் ஸ்கேனரைத் திறக்கவும்",
+                processing: "தரவு சரிபார்க்கப்படுகிறது...",
+                ready: "வெற்றி! பாதுகாப்பான இணைப்பு உருவாக்கப்படுகிறது...",
+                errorQR: "⚠️ இது Biotech ஆய்வக QR அல்ல. சரியான ரசீதை ஸ்கேன் செய்யவும்.",
+                btnForceContinue: "அனுமதி அளித்து தொடரவும்",
+                btnScanAgain: "மீண்டும் ஸ்கேன் செய்யவும்"
             }
         };
 
         window.onload = () => {
-            const saved = localStorage.getItem('biotech_assistant_lang');
+            const saved = localStorage.getItem('biotech_secure_lang');
             if (saved) initApp(saved);
             else document.getElementById('langModal').classList.remove('hidden');
         };
 
         function saveAndInit(l) {
-            localStorage.setItem('biotech_assistant_lang', l);
+            localStorage.setItem('biotech_secure_lang', l);
             initApp(l);
         }
 
         function resetLanguage() {
-            localStorage.removeItem('biotech_assistant_lang');
+            localStorage.removeItem('biotech_secure_lang');
+            localStorage.removeItem('biotech_secure_phone');
+            localStorage.removeItem('biotech_secure_name');
+            // Deliberately NOT removing the camera permission flag to preserve user preference
             location.reload();
         }
 
         function initApp(l) {
             currentLang = l;
             document.getElementById('langModal').classList.add('hidden');
-            addMessage(i18n[currentLang].welcome, 'bot');
-            setTimeout(step1_Type, 800);
-        }
-
-        function step1_Type() {
-            addMessage(`
-                <div>
-                    ${i18n[currentLang].askType}
-                    <div class="option-grid">
-                        <div class="option-btn" onclick="selectType('VG')">VG</div>
-                        <div class="option-btn" onclick="selectType('BN')">BN</div>
-                        <div class="option-btn" onclick="selectType('NI')">NI</div>
-                        <div class="option-btn" onclick="selectType('BR')">BR</div>
-                    </div>
-                </div>
-            `, 'bot');
-        }
-
-        function selectType(v) {
-            formData.type = v;
-            addMessage(v, 'user');
-            setTimeout(step2_Num, 600);
-        }
-
-        function step2_Num() {
-            const id = 'n' + Date.now();
-            addMessage(`
-                <div>
-                    ${i18n[currentLang].askNum}
-                    <div class="mt-3 flex gap-2">
-                        <input type="number" id="${id}" class="custom-input" placeholder="0000">
-                        <button onclick="submitNum('${id}')" class="bg-teal-600 text-white w-12 rounded-2xl flex items-center justify-center hover:bg-teal-700"><i class="fa-solid fa-chevron-right"></i></button>
-                    </div>
-                </div>
-            `, 'bot');
-            setTimeout(() => document.getElementById(id).focus(), 100);
-        }
-
-        function submitNum(id) {
-            const val = document.getElementById(id).value;
-            if(!val) return;
-            formData.num = val;
-            document.getElementById(id).disabled = true;
-            addMessage(val, 'user');
-            setTimeout(step3_Date, 600);
-        }
-
-        function step3_Date() {
-            const id = 'd' + Date.now();
-            const today = new Date().toISOString().split('T')[0];
-            addMessage(`
-                <div>
-                    ${i18n[currentLang].askDate}
-                    <div class="mt-3 flex gap-2">
-                        <input type="date" id="${id}" value="${today}" class="custom-input">
-                        <button onclick="submitDate('${id}')" class="bg-teal-600 text-white w-12 rounded-2xl flex items-center justify-center hover:bg-teal-700"><i class="fa-solid fa-chevron-right"></i></button>
-                    </div>
-                </div>
-            `, 'bot');
-        }
-
-        function submitDate(id) {
-            const val = document.getElementById(id).value;
-            formData.date = val;
-            document.getElementById(id).disabled = true;
-            addMessage(val, 'user');
-            setTimeout(step4_Bill, 600);
-        }
-
-        function step4_Bill() {
-            const id = 'file' + Date.now();
-            addMessage(`
-                <div>
-                    ${i18n[currentLang].askBill}
-                    <div class="mt-4">
-                        <input type="file" id="${id}" accept="image/*" capture="environment" class="hidden" onchange="handleBillUpload(this, '${id}')">
-                        <label for="${id}" class="bg-teal-50 border-2 border-dashed border-teal-300 text-teal-700 w-full py-5 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-teal-100 transition shadow-sm">
-                            <i class="fa-solid fa-camera text-3xl mb-2 animate-pulse-slow"></i>
-                            <span class="font-bold text-sm uppercase tracking-wider">${i18n[currentLang].btnScan}</span>
-                        </label>
-                    </div>
-                </div>
-            `, 'bot');
-        }
-
-        // --- UPDATED: Image Cropper & Resizer ---
-        // This function now automatically CROPS the bottom 65% of the bill out.
-        // Tesseract will ONLY scan the top section containing Date and BN No, making it lightning fast and super accurate.
-        function resizeImageForOCR(file, callback) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    
-                    // TARGET ZONE: Increased to 55% to ensure Date and Sample No are not cut off
-                    const cropHeight = img.height * 0.55; 
-                    
-                    const MAX_WIDTH = 800;
-                    let width = img.width;
-                    let height = cropHeight; // Set height to our cropped target
-                    
-                    if (width > MAX_WIDTH) {
-                        height *= MAX_WIDTH / width;
-                        width = MAX_WIDTH;
-                    }
-                    
-                    canvas.width = width;
-                    canvas.height = height;
-                    
-                    // Draw ONLY the top cropped portion to the canvas
-                    ctx.drawImage(img, 0, 0, img.width, cropHeight, 0, 0, width, height);
-                    
-                    // Return Cropped Image for OCR, Full Image for UI Preview, and Cropped Dimensions
-                    callback(canvas.toDataURL('image/jpeg', 0.9), e.target.result, width, height);
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function handleBillUpload(input, id) {
-            if (!input.files || !input.files[0]) return;
-            const file = input.files[0];
-            input.disabled = true;
             
-            resizeImageForOCR(file, (croppedDataUrl, originalDataUrl, cropW, cropH) => {
-                // Show UI element with Original Image, hiding scan rings until found
-                addMessage(`
-                    <div id="scan-container-${id}" class="scan-container max-w-[200px] rounded-lg border-2 border-teal-400 bg-black">
-                        <div id="scan-line-${id}" class="scan-line"></div>
-                        <img src="${originalDataUrl}" class="w-full h-auto opacity-70 filter contrast-125">
-                    </div>
-                `, 'user');
+            const savedPhone = localStorage.getItem('biotech_secure_phone');
+            const savedName = localStorage.getItem('biotech_secure_name');
+
+            if (savedPhone && savedName) {
+                // If returning patient, populate data and skip phone entry
+                formData.phone = savedPhone;
+                formData.patientName = savedName;
                 
-                // Process OCR using Gemini Vision API on the cropped image
-                processData(croppedDataUrl, id);
-            });
-        }
-
-        async function processData(imageData, scanId) {
-            const loading = addMessage('<div class="typing-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>', 'bot');
-            loading.innerHTML = `<i class="fa-solid fa-microscope mr-2 text-teal-500 fa-spin"></i> ${i18n[currentLang].saving} <span class="ml-1 text-[11px] font-bold text-teal-600">Gemini AI</span>`;
-            
-            // Silent analytic log
-            const params = new URLSearchParams({ type: formData.type, sampleNumber: formData.num, date: formData.date, language: currentLang });
-            fetch(`${scriptURL}?${params.toString()}`, { method: 'GET', mode: 'no-cors' }).catch(e => {});
-
-            try {
-                // Strip the base64 prefix so Gemini can read the raw image bytes
-                const base64Data = imageData.split(',')[1];
-                const exactId = formData.type + formData.num;
-                
-                // Construct the Gemini API request using the correct stable model
-                const apiKey = "AQ.Ab8RN6LnStFB4uRMDOrj0kEDQrxS9lnz3CFz1kdZfP1ZmCDgPg";
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-                
-                // More lenient prompt to handle spaces, dashes, and varied date formats
-                const prompt = `Analyze this cropped top section of a medical laboratory receipt.
-                1. Does this appear to be a medical or laboratory receipt?
-                2. Can you find the sample number? User entered "${exactId}". It might appear with spaces/dashes (e.g., "${formData.type} ${formData.num}" or "${formData.type}-${formData.num}") or minor typos (like O instead of 0).
-                3. Can you find the collection date? User entered "${formData.date}". It is likely written in other formats (like DD/MM/YYYY, DD.MM.YY, etc).
-                
-                Respond strictly in JSON format matching this schema:
-                {
-                  "isBiotechBill": true/false,
-                  "hasSampleNumber": true/false,
-                  "hasDate": true/false,
-                  "sampleNumberBox": [ymin, xmin, ymax, xmax],
-                  "dateBox": [ymin, xmin, ymax, xmax]
-                }
-                For the boxes, provide bounding box coordinates scaled proportionally between 0 and 1000.`;
-
-                const payload = {
-                    contents: [{
-                        role: "user",
-                        parts: [
-                            { text: prompt },
-                            { inlineData: { mimeType: "image/jpeg", data: base64Data } }
-                        ]
-                    }],
-                    generationConfig: {
-                        responseMimeType: "application/json"
-                    }
-                };
-
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!response.ok) {
-                    console.error("Gemini API Error:", await response.text());
-                    throw new Error("API Connection Failed");
-                }
-
-                const result = await response.json();
-                
-                if (result.candidates && result.candidates.length > 0) {
-                    // Sanitize JSON output to remove markdown blocks (```json ... ```) which cause JSON.parse to crash
-                    let textOutput = result.candidates[0].content.parts[0].text;
-                    textOutput = textOutput.replace(/```json/g, '').replace(/```/g, '').trim();
+                const welcomeMsg = i18n[currentLang].welcomeBack
+                    .replace('{name}', savedName)
+                    .replace('{phone}', savedPhone);
                     
-                    const aiData = JSON.parse(textOutput);
-                    console.log("Gemini Output:", aiData);
-                    
-                    // If Gemini fails ANY of these checks, pass to OpenAI fallback
-                    if (!aiData.isBiotechBill || !aiData.hasSampleNumber || !aiData.hasDate) {
-                        console.log("Gemini missed details. Falling back to OpenAI.");
-                        processWithOpenAI(imageData, scanId, loading);
-                        return;
-                    }
-                    
-                    // Match found! Stop scan line animation
-                    const scanLine = document.getElementById('scan-line-' + scanId);
-                    if (scanLine) scanLine.style.display = 'none';
-                    
-                    // Draw target rings dynamically using Gemini's spatial coordinates
-                    const container = document.getElementById('scan-container-' + scanId);
-                    if (container) {
-                        const drawRing = (box) => {
-                            if (!box || box.length !== 4) return;
-                            // Multiplier updated to 55 to match the new 55% crop height
-                            const top = (box[0] / 1000) * 55; 
-                            const left = (box[1] / 1000) * 100;
-                            const height = ((box[2] - box[0]) / 1000) * 55;
-                            const width = ((box[3] - box[1]) / 1000) * 100;
-                            
-                            container.innerHTML += `<div class="target-ring" style="top: ${Math.max(0, top-1)}%; left: ${Math.max(0, left-2)}%; width: ${width+4}%; height: ${height+2}%;"></div>`;
-                        };
-                        
-                        drawRing(aiData.sampleNumberBox);
-                        drawRing(aiData.dateBox);
-                    }
-
-                    loading.innerHTML = `<i class="fa-solid fa-check-circle text-green-500 mr-2 text-lg"></i> <span class="font-bold text-green-600">${i18n[currentLang].ready}</span>`;
-                    generateAndRedirect();
-
-                } else {
-                    throw new Error("Invalid API Response");
-                }
-
-            } catch (error) {
-                console.error("Gemini AI Error Block:", error);
-                processWithOpenAI(imageData, scanId, loading);
+                addMessage(welcomeMsg, 'bot');
+                setTimeout(step2_QRScan, 800);
+            } else {
+                // First time user flow
+                addMessage(i18n[currentLang].welcome, 'bot');
+                setTimeout(step1_Phone, 800);
             }
         }
 
-        async function processWithOpenAI(imageData, scanId, loadingElement) {
-            // Update loading text to show secondary scan
-            loadingElement.innerHTML = `<i class="fa-solid fa-microscope mr-2 text-teal-500 fa-spin"></i> Deep scanning... <span class="ml-1 text-[11px] font-bold text-teal-600">OpenAI</span>`;
-            
-            try {
-                const exactId = formData.type + formData.num;
-                const openAiKey = "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";
-                
-                const prompt = `Analyze this cropped top section of a medical laboratory receipt.
-                1. Does this appear to be a laboratory receipt?
-                2. Can you find the sample number? User entered "${exactId}". Look for "${formData.type} ${formData.num}" or "${formData.type}-${formData.num}" or minor typos.
-                3. Can you find the collection date? User entered "${formData.date}". It might be formatted as DD/MM/YYYY.
-                
-                Respond ONLY with a JSON object exactly matching this format:
-                {
-                  "isBiotechBill": true/false,
-                  "hasSampleNumber": true/false,
-                  "hasDate": true/false,
-                  "sampleNumberBox": [ymin, xmin, ymax, xmax],
-                  "dateBox": [ymin, xmin, ymax, xmax]
-                }
-                For the boxes, provide bounding box coordinates scaled proportionally between 0 and 1000. If you cannot confidently determine the coordinates, return [0,0,0,0].`;
-
-                const payload = {
-                    model: "gpt-4o",
-                    response_format: { type: "json_object" },
-                    messages: [
-                        {
-                            role: "user",
-                            content: [
-                                { type: "text", text: prompt },
-                                { type: "image_url", image_url: { url: imageData } } // imageData already includes the base64 prefix
-                            ]
-                        }
-                    ]
-                };
-
-                const response = await fetch('https://api.openai.com/v1/chat/completions', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${openAiKey}`
-                    },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!response.ok) {
-                    console.error("OpenAI API Error:", await response.text());
-                    throw new Error("API Connection Failed");
-                }
-
-                const result = await response.json();
-                
-                if (result.choices && result.choices.length > 0) {
-                    // Sanitize JSON output to remove markdown blocks
-                    let textOutput = result.choices[0].message.content;
-                    textOutput = textOutput.replace(/```json/g, '').replace(/```/g, '').trim();
-                    
-                    const aiData = JSON.parse(textOutput);
-                    console.log("OpenAI Output:", aiData);
-                    
-                    if (!aiData.isBiotechBill) {
-                        loadingElement.innerHTML = `<span class="text-rose-500 font-medium">${i18n[currentLang].errorNotBiotechBill}</span>`;
-                        setTimeout(showWhatsAppFallback, 1500); 
-                        return;
-                    }
-                    
-                    if (aiData.hasSampleNumber && aiData.hasDate) {
-                        // Match found via OpenAI!
-                        const scanLine = document.getElementById('scan-line-' + scanId);
-                        if (scanLine) scanLine.style.display = 'none';
-                        
-                        // Draw target rings dynamically using OpenAI's spatial coordinates (if provided)
-                        const container = document.getElementById('scan-container-' + scanId);
-                        if (container) {
-                            const drawRing = (box) => {
-                                // Ignore empty or fallback arrays from OpenAI [0,0,0,0]
-                                if (!box || box.length !== 4 || (box[0] === 0 && box[2] === 0)) return;
-                                // Multiplier updated to 55 to match the new 55% crop height
-                                const top = (box[0] / 1000) * 55; 
-                                const left = (box[1] / 1000) * 100;
-                                const height = ((box[2] - box[0]) / 1000) * 55;
-                                const width = ((box[3] - box[1]) / 1000) * 100;
-                                
-                                container.innerHTML += `<div class="target-ring" style="top: ${Math.max(0, top-1)}%; left: ${Math.max(0, left-2)}%; width: ${width+4}%; height: ${height+2}%;"></div>`;
-                            };
-                            
-                            drawRing(aiData.sampleNumberBox);
-                            drawRing(aiData.dateBox);
-                        }
-
-                        loadingElement.innerHTML = `<i class="fa-solid fa-check-circle text-green-500 mr-2 text-lg"></i> <span class="font-bold text-green-600">${i18n[currentLang].ready}</span>`;
-                        generateAndRedirect();
-                    } else {
-                        // Both Gemini and OpenAI failed to verify the details.
-                        loadingElement.innerHTML = `<span class="text-orange-500 font-medium">${i18n[currentLang].errorNoMatch}</span>`;
-                        setTimeout(showWhatsAppFallback, 800);
-                    }
-                } else {
-                    throw new Error("Invalid OpenAI Response");
-                }
-
-            } catch (error) {
-                console.error("OpenAI Error Block:", error);
-                loadingElement.innerHTML = `<span class="text-orange-500 font-medium">${i18n[currentLang].errorNoMatch}</span>`;
-                setTimeout(showWhatsAppFallback, 800);
-            }
-        }
-
-        // --- WhatsApp Request Fallback Step ---
-        function showWhatsAppFallback() {
+        function step1_Phone() {
+            const id = 'phone' + Date.now();
             addMessage(`
                 <div>
-                    ${i18n[currentLang].fallbackMsg}
-                    <div class="mt-3">
-                        <button onclick="requestViaWhatsApp()" class="w-full bg-[#25D366] text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 hover:bg-[#128C7E] transition shadow-md">
-                            <i class="fa-brands fa-whatsapp text-xl"></i> ${i18n[currentLang].btnWhatsApp}
-                        </button>
+                    ${i18n[currentLang].askPhone}
+                    <div class="mt-3 flex gap-2">
+                        <input type="tel" id="${id}" class="custom-input" placeholder="07XXXXXXXX">
+                        <button onclick="submitPhone('${id}')" class="bg-gradient-to-r from-teal-600 to-blue-600 text-white w-12 rounded-xl flex items-center justify-center hover:opacity-90 transition shadow-md"><i class="fa-solid fa-chevron-right"></i></button>
                     </div>
                 </div>
             `, 'bot');
             
-            // Scroll down completely to show the button
             setTimeout(() => {
-                chatBody.scrollTo({ top: chatBody.scrollHeight, behavior: 'smooth' });
+                const input = document.getElementById(id);
+                input.focus();
+                
+                // Add support for pressing Enter key
+                input.addEventListener("keypress", function(event) {
+                    if (event.key === "Enter") {
+                        event.preventDefault();
+                        submitPhone(id);
+                    }
+                });
             }, 100);
         }
 
-        function requestViaWhatsApp() {
-            const phone = "94773524143";
-            const messageText = `${formData.type}${formData.num}\n${formData.date}\n*Please send me a report* !`;
-            const encodedMessage = encodeURIComponent(messageText);
+        function submitPhone(id) {
+            const val = document.getElementById(id).value;
+            // Strict regex for Sri Lankan numbers
+            const regex = /^(0\d{9})$/;
+            if(!regex.test(val.replace(/\s/g, ''))) {
+                document.getElementById(id).style.borderColor = 'red';
+                addMessage(`<span class="text-red-500">Please enter a valid 10-digit number.</span>`, 'bot');
+                return;
+            }
             
-            window.open(`https://wa.me/${phone}?text=${encodedMessage}`, '_blank');
+            formData.phone = val.replace(/\s/g, '');
+            document.getElementById(id).disabled = true;
+            addMessage(formData.phone, 'user');
+            setTimeout(step2_QRScan, 600);
         }
 
-        function generateAndRedirect() {
-            const id = formData.type + formData.num;
-            const expiry = new Date().getTime() + (14 * 24 * 60 * 60 * 1000);
+        function step2_QRScan() {
+            const id = 'qrbtn' + Date.now();
             
-            // Generate standard secure URL format
-            const encoded = btoa(`${id}|${formData.date}|${expiry}`);
+            // Check if permission was already granted previously
+            const hasPermission = localStorage.getItem('biotech_camera_granted') === 'true';
+
+            addMessage(`
+                <div>
+                    ${i18n[currentLang].askQR}
+                    <div class="mt-4" id="qr-container">
+                        <button id="${id}" onclick="startQRScanner('${id}')" class="${hasPermission ? 'hidden ' : ''}w-full bg-teal-50 border-2 border-dashed border-teal-300 text-teal-700 py-4 rounded-xl flex flex-col items-center justify-center hover:bg-teal-100 transition shadow-sm">
+                            <i class="fa-solid ${hasPermission ? 'fa-qrcode' : 'fa-camera'} text-3xl mb-2 animate-pulse-slow"></i>
+                            <span class="font-bold text-sm uppercase tracking-wider">${hasPermission ? i18n[currentLang].btnScan : i18n[currentLang].btnForceContinue}</span>
+                        </button>
+                        <div id="qr-reader" class="hidden mt-2"></div>
+                    </div>
+                </div>
+            `, 'bot');
+
+            // If permission is known to be granted, automatically trigger the scanner bypassing the button
+            if (hasPermission) {
+                setTimeout(() => {
+                    startQRScanner(id, true);
+                }, 300);
+            }
+        }
+
+        function startQRScanner(btnId, isAutoStart = false) {
+            const btnElement = document.getElementById(btnId);
+            if(btnElement) btnElement.classList.add('hidden');
+            
+            const qrReaderDiv = document.getElementById('qr-reader');
+            qrReaderDiv.classList.remove('hidden');
+
+            // Scroll immediately to show the loading scanner box
+            setTimeout(() => {
+                chatBody.scrollTo({ top: chatBody.scrollHeight, behavior: 'smooth' });
+            }, 50);
+
+            html5QrCode = new Html5Qrcode("qr-reader");
+            
+            // EXTREME PERFORMANCE CONFIGURATION ("Fastly, Longly, Rapidly")
+            const config = { 
+                fps: 60, // Maximize frame rate to catch the QR code instantly
+                useBarCodeDetectorIfSupported: true, // Activates Native Hardware Acceleration on supported mobile devices
+                formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ] // Keeps processing focused ONLY on QR codes
+            };
+
+            // html5-qrcode strictly requires the camera config object to have exactly one key.
+            const cameraConfig = { 
+                facingMode: "environment"
+            };
+
+            html5QrCode.start(cameraConfig, config, 
+                (decodedText) => {
+                    // Success callback
+                    html5QrCode.stop().then(() => {
+                        qrReaderDiv.classList.add('hidden');
+                        if (btnElement) {
+                            btnElement.classList.remove('hidden');
+                            btnElement.className = "w-full bg-green-50 border border-green-200 text-green-700 py-4 rounded-xl flex flex-col items-center justify-center opacity-80";
+                            btnElement.innerHTML = `<i class="fa-solid fa-check-circle text-3xl mb-1"></i><span class="font-bold text-sm uppercase tracking-wider">Scanned</span>`;
+                            btnElement.disabled = true;
+                        }
+                        
+                        processQRData(decodedText);
+                    });
+                },
+                (errorMessage) => {
+                    // Ongoing scan errors (ignore)
+                }
+            ).then(() => {
+                // Successfully triggered camera. Save permission state to prevent asking again!
+                localStorage.setItem('biotech_camera_granted', 'true');
+                
+                // Auto-scroll again after the camera view is fully rendered and takes up vertical space
+                setTimeout(() => {
+                    chatBody.scrollTo({ top: chatBody.scrollHeight, behavior: 'smooth' });
+                }, 400);
+            }).catch((err) => {
+                // If auto-start failed (due to strict iOS/Safari no-gesture policies), fallback to showing the manual click button
+                if (isAutoStart) {
+                    qrReaderDiv.classList.add('hidden');
+                    if (btnElement) {
+                        btnElement.classList.remove('hidden');
+                        btnElement.innerHTML = `<i class="fa-solid fa-qrcode text-3xl mb-2 animate-pulse-slow"></i><span class="font-bold text-sm uppercase tracking-wider">${i18n[currentLang].btnScan}</span>`;
+                    }
+                } else {
+                    // User explicitly denied permission or severe error occurred
+                    localStorage.removeItem('biotech_camera_granted');
+                    console.error("Camera error:", err);
+                    addMessage(`<span class="text-red-500">Camera access denied. Please check your browser permissions.</span>`, 'bot');
+                    qrReaderDiv.classList.add('hidden');
+                    if(btnElement) btnElement.classList.remove('hidden');
+                }
+            });
+        }
+
+        function processQRData(qrText) {
+            addMessage(`<i class="fa-solid fa-circle-notch fa-spin text-teal-600 mr-2"></i> ${i18n[currentLang].processing}`, 'bot');
             
             setTimeout(() => {
-                window.location.href = `https://biotechveyangoda.lk/report-preview.html?data=${encoded}`;
+                try {
+                    qrText = qrText.trim(); 
+                    
+                    // --- STRICT BIOTECH LOGIC MATCHING ---
+                    // Example Match: "Sample NO:NI18 2026-07-14 Miss theekshana"
+                    
+                    // Regex for Date (YYYY-MM-DD)
+                    const dateRegex = /\d{4}-\d{2}-\d{2}/;
+                    
+                    // Regex for Sample Number (Extracts letters/numbers after "Sample NO:" or standalone IDs like NI18, VG22)
+                    // Added a check to explicitly enforce the presence of "Sample NO" to restrict it heavily to your QRs
+                    const sampleRegex = /Sample\s*NO:\s*([A-Za-z]{2,3}\d+)/i;
+
+                    if (dateRegex.test(qrText) && sampleRegex.test(qrText)) {
+                        const dMatch = qrText.match(dateRegex);
+                        const sMatch = qrText.match(sampleRegex);
+
+                        formData.date = dMatch[0];
+                        formData.sample = sMatch[1].toUpperCase();
+
+                        // Get Patient Name (Everything safely extracted after the Date string)
+                        let textAfterDate = qrText.substring(qrText.indexOf(dMatch[0]) + dMatch[0].length).trim();
+                        
+                        // Clean up any stray symbols if they accidentally exist in the string
+                        textAfterDate = textAfterDate.replace(/^[|,\s]+|[|,\s]+$/g, '');
+
+                        if (textAfterDate.length > 0) {
+                            formData.patientName = textAfterDate;
+                        } else {
+                            formData.patientName = "Patient";
+                        }
+                        
+                        // Display Verification Results & Build Final Base64
+                        addMessage(`<i class="fa-solid fa-shield-check text-green-500 mr-2 text-lg"></i> <span class="font-bold text-green-600">${i18n[currentLang].ready}</span><br><br>
+                        <span class="text-xs text-slate-500">
+                        <b>Patient:</b> ${formData.patientName}<br>
+                        <b>Sample ID:</b> ${formData.sample}<br>
+                        <b>Date:</b> ${formData.date}
+                        </span>`, 'bot');
+                        
+                        generateBase64Link();
+                        
+                    } else {
+                        // Throws error immediately if pattern does not perfectly align with Biotech receipts
+                        throw new Error("Foreign QR Code Scanned.");
+                    }
+
+                } catch (e) {
+                    console.warn("Invalid QR blocked:", e.message);
+                    addMessage(`<span class="text-rose-500 font-medium">${i18n[currentLang].errorQR}</span>`, 'bot');
+                    // Give them another chance to scan a real Biotech QR without reloading
+                    setTimeout(step2_QRScan, 2000);
+                }
             }, 1000);
+        }
+
+        function generateBase64Link() {
+            // Save credentials to local storage for returning users
+            localStorage.setItem('biotech_secure_phone', formData.phone);
+            localStorage.setItem('biotech_secure_name', formData.patientName);
+
+            // TARGET FORMAT: Patient Name | Sample ID | Date
+            const rawData = `${formData.patientName}|${formData.sample}|${formData.date}`;
+            
+            // Encode dynamically and handle special spaces/symbols
+            const base64Encoded = btoa(unescape(encodeURIComponent(rawData)));
+            
+            // Redirect after 2.5 seconds to the preview portal
+            setTimeout(() => {
+                window.location.href = `https://biotechveyangoda.lk/labreport-preview.html?data=${base64Encoded}`;
+            }, 2500);
         }
 
         function addMessage(html, sender) {
@@ -701,7 +552,6 @@
             d.innerHTML = html;
             chatBody.appendChild(d);
             
-            // Smooth scroll to bottom
             setTimeout(() => {
                 chatBody.scrollTo({ top: chatBody.scrollHeight, behavior: 'smooth' });
             }, 50);
