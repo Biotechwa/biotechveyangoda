@@ -269,6 +269,20 @@
     <div class="bg-light-gradients"></div>
     <div class="bg-orb-3"></div>
 
+    <!-- CUSTOM MODAL COMPONENT (Replaces alert, prompt, confirm) -->
+    <div id="customModalBox" class="hidden fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 dark:bg-[#020617]/80 backdrop-blur-sm fade-in">
+        <div class="bg-white dark:bg-[#1e293b] rounded-3xl shadow-2xl p-8 w-80 max-w-[90%] text-center border border-slate-200 dark:border-slate-700 transition-colors">
+            <div id="customModalIcon" class="mb-4 text-4xl"></div>
+            <h3 id="customModalTitle" class="text-slate-800 dark:text-white font-extrabold text-xl mb-2">Message</h3>
+            <p id="customModalText" class="text-slate-500 dark:text-slate-400 text-sm font-medium mb-6"></p>
+            <input type="password" id="customModalInput" class="hidden w-full mb-6 bg-slate-50 dark:bg-[#0f172a] border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-white px-4 py-3 rounded-xl outline-none text-center font-bold tracking-widest focus:border-teal-400 focus:ring-2 focus:ring-teal-400/20 transition-all" placeholder="Enter PIN" />
+            <div class="flex justify-center gap-3">
+                <button id="customModalCancel" class="hidden flex-1 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">Cancel</button>
+                <button id="customModalOk" class="flex-1 py-3 rounded-xl bg-teal-500 dark:bg-blue-600 text-white font-bold hover:bg-teal-600 dark:hover:bg-blue-700 transition-colors">OK</button>
+            </div>
+        </div>
+    </div>
+
     <!-- THEME TOGGLE BUTTON -->
     <button onclick="toggleTheme()" class="fixed top-4 lg:top-6 right-4 lg:right-6 z-50 w-10 h-10 rounded-full glass-panel flex items-center justify-center shadow-lg transition-transform hover:scale-110 border border-slate-200 dark:border-slate-700 cursor-pointer">
         <i id="themeToggleIcon" class="fa-solid fa-moon text-slate-500 text-lg transition-colors"></i>
@@ -467,7 +481,8 @@
                         </div>
                         <div class="w-2/3 input-group rounded-2xl p-2">
                             <label class="block text-[10px] text-slate-400 uppercase font-bold px-3 pt-1">Number</label>
-                            <input type="number" id="vgNum" placeholder="1005" class="w-full bg-transparent text-slate-700 dark:text-white font-mono text-lg p-2 outline-none placeholder-slate-300 dark:placeholder-slate-500 transition-colors" />
+                            <!-- Changed from type="number" to type="text" with inputmode="numeric" for precise formatting control -->
+                            <input type="text" inputmode="numeric" id="vgNum" placeholder="05" class="w-full bg-transparent text-slate-700 dark:text-white font-mono text-lg p-2 outline-none placeholder-slate-300 dark:placeholder-slate-500 transition-colors" />
                         </div>
                     </div>
 
@@ -641,6 +656,77 @@
         document.addEventListener("DOMContentLoaded", () => {
             updateThemeIcon(document.documentElement.classList.contains('dark'));
         });
+
+        // --- CUSTOM MODAL HANDLER (Replaces alerts, prompts, confirms) ---
+        function customMsgBox(options) {
+            const modal = document.getElementById('customModalBox');
+            const title = document.getElementById('customModalTitle');
+            const textEl = document.getElementById('customModalText');
+            const input = document.getElementById('customModalInput');
+            const btnCancel = document.getElementById('customModalCancel');
+            const btnOk = document.getElementById('customModalOk');
+            const icon = document.getElementById('customModalIcon');
+
+            title.innerText = options.title || "Notice";
+            textEl.innerText = options.text || "";
+
+            if (options.type === 'error') {
+                icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-rose-500 drop-shadow-[0_0_5px_rgba(244,63,94,0.4)]"></i>';
+            } else if (options.type === 'confirm' || options.type === 'prompt') {
+                icon.innerHTML = '<i class="fa-solid fa-circle-question text-amber-500 drop-shadow-[0_0_5px_rgba(245,158,11,0.4)]"></i>';
+            } else {
+                icon.innerHTML = '<i class="fa-solid fa-info-circle text-teal-500 dark:text-blue-500 drop-shadow-[0_0_5px_rgba(59,130,246,0.4)]"></i>';
+            }
+
+            if (options.type === 'prompt') {
+                input.classList.remove('hidden');
+                input.value = '';
+                input.focus();
+            } else {
+                input.classList.add('hidden');
+            }
+
+            if (options.type === 'confirm' || options.type === 'prompt') {
+                btnCancel.classList.remove('hidden');
+                btnCancel.classList.add('flex-1');
+            } else {
+                btnCancel.classList.add('hidden');
+                btnCancel.classList.remove('flex-1');
+            }
+
+            modal.classList.remove('hidden');
+
+            const cleanup = () => {
+                btnOk.onclick = null;
+                btnCancel.onclick = null;
+                modal.classList.add('hidden');
+            };
+
+            btnOk.onclick = () => {
+                let val = true;
+                if (options.type === 'prompt') val = input.value;
+                cleanup();
+                if (options.onConfirm) options.onConfirm(val);
+            };
+
+            btnCancel.onclick = () => {
+                cleanup();
+                if (options.onCancel) options.onCancel();
+            };
+        }
+
+        // Helper for async confirms
+        function askConfirm(title, text) {
+            return new Promise((resolve) => {
+                customMsgBox({
+                    type: 'confirm',
+                    title: title,
+                    text: text,
+                    onConfirm: () => resolve(true),
+                    onCancel: () => resolve(false)
+                });
+            });
+        }
     </script>
 
     <!-- FIREBASE MODULES -->
@@ -743,10 +829,22 @@
             listContainer.innerHTML = html;
         });
 
+        // Replaced Prompt & Alert with Custom Modal
         window.clearSentItemsFirebase = function() {
-            if (prompt("Enter Admin PIN:") === "129876") {
-                set(historyRef, null).catch((err) => alert(err));
-            }
+            customMsgBox({
+                type: 'prompt',
+                title: 'Admin Authorization',
+                text: 'Enter Admin PIN to permanently clear history:',
+                onConfirm: (val) => {
+                    if (val === "129876") {
+                        set(historyRef, null).catch((err) => {
+                            customMsgBox({ type: 'error', title: 'Error', text: err.message });
+                        });
+                    } else if (val) {
+                        customMsgBox({ type: 'error', title: 'Access Denied', text: 'Invalid PIN entered.' });
+                    }
+                }
+            });
         };
         
         document.getElementById('clearHistoryBtn').addEventListener('click', window.clearSentItemsFirebase);
@@ -808,11 +906,17 @@
 
         window.initiateCall = async function(targetBranch) {
             myBranchName = localStorage.getItem('myBranchIdentity');
-            if(!myBranchName) { alert("Please set your location first."); return; }
+            if(!myBranchName) {
+                customMsgBox({ type: 'error', title: 'Setup Required', text: 'Please set your location first.' });
+                return;
+            }
 
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            } catch(e) { alert("Microphone access denied!"); return; }
+            } catch(e) {
+                customMsgBox({ type: 'error', title: 'Permission Denied', text: 'Microphone access denied!' });
+                return; 
+            }
 
             peerConnection = new RTCPeerConnection(rtcConfig);
             localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
@@ -926,7 +1030,10 @@
         window.answerCall = async function() {
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            } catch(e) { alert("Mic Error"); return; }
+            } catch(e) {
+                customMsgBox({ type: 'error', title: 'Hardware Error', text: 'Microphone Error' });
+                return;
+            }
 
             const ringAudio = document.getElementById('ringtone');
             ringAudio.pause();
@@ -1062,6 +1169,15 @@
         let callTimerInterval;
         let isMuted = false;
         
+        // Custom Getter to ensure vgNum is always 2 digits internally when processing
+        function getFormattedVgNum() {
+            let val = document.getElementById('vgNum').value.trim();
+            if (val.length === 1 && val.match(/^[0-9]$/)) {
+                return val.padStart(2, '0');
+            }
+            return val;
+        }
+
         document.addEventListener("DOMContentLoaded", function() {
             const dateInput = document.getElementById('date');
             dateInput.valueAsDate = new Date();
@@ -1087,12 +1203,32 @@
                 handlePhoneInput(e.target.value);
             });
 
-            ['vgSelection', 'vgNum', 'date'].forEach(id => {
+            ['vgSelection', 'date'].forEach(id => {
                 document.getElementById(id).addEventListener('input', () => {
                     isPreviewMode = false;
                     document.getElementById('historyIndicator').classList.add('hidden');
                     updatePreviewFromInputs();
                 });
+            });
+
+            // SPECIFIC NUMBER LOGIC (Auto Pad single digits 1-9 to 01-09)
+            const vgNumEl = document.getElementById('vgNum');
+            
+            vgNumEl.addEventListener('input', function() {
+                // Ensure only numbers can be typed
+                this.value = this.value.replace(/[^0-9]/g, ''); 
+                isPreviewMode = false;
+                document.getElementById('historyIndicator').classList.add('hidden');
+                updatePreviewFromInputs();
+            });
+
+            vgNumEl.addEventListener('blur', function() {
+                let val = this.value.trim();
+                // If it is exactly 1 digit, automatically pad it
+                if (val.length === 1 && val.match(/^[0-9]$/)) {
+                    this.value = val.padStart(2, '0');
+                    updatePreviewFromInputs();
+                }
             });
             
             const savedId = localStorage.getItem('myBranchIdentity');
@@ -1201,7 +1337,8 @@
             if(isPreviewMode) return; 
             
             const vgSelection = document.getElementById('vgSelection').value;
-            const vgNum = document.getElementById('vgNum').value.trim();
+            // Use the getter that auto-pads if length is 1 for the preview output
+            const vgNum = getFormattedVgNum(); 
             const date = document.getElementById('date').value;
             
             renderPreview(vgSelection, vgNum, date, finalRawNumber);
@@ -1432,7 +1569,9 @@
         async function addToHistory(type) {
             if(!window.firebasePush || !window.historyPath) return;
 
-            const id = `${document.getElementById("vgSelection").value}${document.getElementById("vgNum").value}`;
+            // Ensure num is formatted safely using our helper before saving
+            const num = getFormattedVgNum();
+            const id = `${document.getElementById("vgSelection").value}${num}`;
             const date = document.getElementById('date').value;
             const phone = finalRawNumber;
             const now = new Date();
@@ -1473,7 +1612,8 @@
             if (finalRawNumber.length !== 9 || isPreviewMode) return;
 
             const vgSelection = document.getElementById('vgSelection').value;
-            const vgNum = document.getElementById('vgNum').value.trim();
+            const vgNum = getFormattedVgNum(); // Auto formats 1->01 safely here as well
+            
             const dateStr = document.getElementById('date').value;
             const patientId = `${vgSelection}${vgNum}`;
             
@@ -1530,7 +1670,10 @@
                     btn.classList.add('bg-green-500', 'dark:bg-emerald-600', 'text-white', 'border-transparent', 'dark:shadow-[0_0_15px_rgba(5,150,105,0.5)]');
                 } else {
                     const err = await response.json();
-                    const fallback = confirm(`Twilio API Error: ${err.message}\n\nDo you want to send via WhatsApp Web instead?`);
+                    
+                    // Usage of our new async custom modal replacement
+                    const fallback = await askConfirm("Twilio API Error", `Error: ${err.message}\n\nDo you want to send via WhatsApp Web instead?`);
+                    
                     if(fallback) {
                           const fullNumber = "94" + finalRawNumber;
                           const message = document.getElementById("messagePreview").value;
@@ -1543,7 +1686,8 @@
                     btn.classList.add('bg-red-500', 'dark:bg-rose-600', 'text-white', 'border-transparent');
                 }
             } catch (error) {
-                const fallback = confirm("Network/CORS Error: The browser blocked the API call.\n\nDo you want to send via WhatsApp Web instead?");
+                const fallback = await askConfirm("Network/CORS Error", "The browser blocked the API call.\n\nDo you want to send via WhatsApp Web instead?");
+                
                 if(fallback) {
                         const fullNumber = "94" + finalRawNumber;
                         const message = document.getElementById("messagePreview").value;
