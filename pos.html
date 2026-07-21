@@ -1,1242 +1,1444 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HNB POS Terminal Control Center</title>
-  
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Lucide Icons CDN -->
-  <script src="https://unpkg.com/lucide@latest"></script>
-
-  <style>
-    /* Custom Scrollbar Styles */
-    .custom-scrollbar::-webkit-scrollbar {
-      width: 6px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-track {
-      background: #0f172a;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-      background: #334155;
-      border-radius: 3px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-      background: #10b981;
-    }
-
-    /* Print Animation */
-    @keyframes printDown {
-      0% {
-        transform: translateY(-20px);
-        opacity: 0;
-      }
-      100% {
-        transform: translateY(0);
-        opacity: 1;
-      }
-    }
-    .animate-print-down {
-      animation: printDown 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-
-    /* Custom Calendar Icon Color Adjustment for Webkit */
-    input[type="date"]::-webkit-calendar-picker-indicator {
-      filter: invert(1) sepia(1) saturate(5) hue-rotate(175deg);
-      cursor: pointer;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HNB Terminal | Command Center</title>
     
-    /* Blurring effect for locked stats */
-    .blur-data {
-        filter: blur(4px);
-        user-select: none;
-    }
-  </style>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Configure Tailwind to use manual class-based dark mode
+        tailwind.config = { darkMode: 'class' }
+        
+        // Init theme immediately to prevent flashing. Default to dark mode.
+        if (localStorage.theme === 'light') {
+            document.documentElement.classList.remove('dark');
+        } else {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+    
+    <!-- FontAwesome for matching Biotech Theme Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Fonts & Theme CSS -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        
+        /* --- CSS VARIABLES FOR THEME RESPONSIVENESS --- */
+        :root {
+            /* Light Theme Defaults */
+            --bg-body: #f0f9ff;
+            --text-main: #334155;
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(255, 255, 255, 1);
+            --glass-shadow: 0 25px 50px -12px rgba(13, 148, 136, 0.1);
+            
+            --input-bg: #f8fafc;
+            --input-border: #e2e8f0;
+            --input-focus-border: #0d9488;
+            --input-focus-shadow: 0 0 0 4px rgba(20, 184, 166, 0.1);
+            
+            --toast-bg: rgba(255, 255, 255, 0.95);
+            --toast-border: rgba(20, 184, 166, 0.5);
+            --toast-shadow: 0 10px 25px rgba(20, 184, 166, 0.15);
+            --toast-icon: #0d9488;
+            --toast-text: #1e293b;
+        }
+
+        html.dark {
+            /* Gemini Dark Theme Defaults */
+            --bg-body: #05101a;
+            --text-main: #f8fafc;
+            --glass-bg: rgba(15, 23, 42, 0.65);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+            
+            --input-bg: rgba(30, 41, 59, 0.7);
+            --input-border: rgba(71, 85, 105, 0.5);
+            --input-focus-border: #3b82f6;
+            --input-focus-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+            
+            --toast-bg: rgba(15, 23, 42, 0.85);
+            --toast-border: rgba(139, 92, 246, 0.5);
+            --toast-shadow: 0 0 25px rgba(139, 92, 246, 0.25), inset 0 0 15px rgba(59, 130, 246, 0.15);
+            --toast-icon: #a78bfa;
+            --toast-text: #f8fafc;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main); 
+            overflow: hidden;
+            position: relative;
+            transition: background-color 0.5s ease;
+        }
+
+        /* --- LIGHT BACKGROUND GRADIENTS --- */
+        .bg-light-gradients {
+            position: absolute; inset: 0; z-index: -2; pointer-events: none;
+            background-image: radial-gradient(at 0% 0%, rgba(20, 184, 166, 0.15) 0px, transparent 50%),
+                              radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.15) 0px, transparent 50%);
+            background-size: cover; background-attachment: fixed;
+            transition: opacity 0.5s ease;
+        }
+        html.dark .bg-light-gradients { opacity: 0; }
+
+        /* --- GEMINI ILLUMINATION BACKGROUND (DARK ONLY) --- */
+        body::before, body::after, .bg-orb-3 {
+            content: ''; position: absolute; border-radius: 50%;
+            z-index: -1; pointer-events: none;
+            opacity: 0; transition: opacity 0.8s ease;
+        }
+        body::before {
+            width: 80vw; height: 80vh; filter: blur(120px);
+            background: radial-gradient(circle, rgba(22, 126, 159, 0.45) 0%, transparent 70%);
+            top: -20vh; left: -20vw; animation: float 12s infinite alternate ease-in-out;
+        }
+        body::after {
+            width: 80vw; height: 80vh; filter: blur(120px);
+            background: radial-gradient(circle, rgba(26, 106, 183, 0.4) 0%, transparent 70%);
+            bottom: -30vh; right: -10vw; animation: float 12s infinite alternate ease-in-out; animation-delay: -6s;
+        }
+        .bg-orb-3 {
+            width: 60vw; height: 60vh; filter: blur(100px);
+            background: radial-gradient(circle, rgba(16, 141, 119, 0.3) 0%, transparent 60%);
+            top: 40%; left: 30%; animation: float-reverse 15s infinite alternate ease-in-out;
+        }
+
+        html.dark body::before, html.dark body::after { opacity: 0.45; }
+        html.dark .bg-orb-3 { opacity: 0.3; }
+
+        @keyframes float { 0% { transform: translate(0, 0); } 100% { transform: translate(60px, 80px); } }
+        @keyframes float-reverse { 0% { transform: translate(0, 0); } 100% { transform: translate(-50px, -70px); } }
+
+        /* --- UI UTILITIES --- */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow);
+            transition: all 0.5s ease;
+        }
+
+        .input-group {
+            background: var(--input-bg); border: 1px solid var(--input-border);
+            transition: all 0.3s ease;
+        }
+        .input-group:focus-within {
+            border-color: var(--input-focus-border);
+            box-shadow: var(--input-focus-shadow);
+        }
+
+        .gradient-btn { background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%); }
+        .gradient-btn:hover { background: linear-gradient(135deg, #0f766e 0%, #115e59 100%); }
+        html.dark .gradient-btn { background: linear-gradient(135deg, #3b82f6 0%, #4f46e5 100%); border: 1px solid rgba(167, 139, 250, 0.4); box-shadow: 0 10px 20px -5px rgba(59, 130, 246, 0.4); }
+        html.dark .gradient-btn:hover { background: linear-gradient(135deg, #2563eb 0%, #4338ca 100%); box-shadow: 0 15px 25px -5px rgba(59, 130, 246, 0.5); }
+
+        /* Custom Scrollbar Styles */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #0d9488; }
+        html.dark .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        html.dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
+        html.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #3b82f6; }
+
+        /* Print Animation */
+        @keyframes printDown { 0% { transform: translateY(-20px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
+        .animate-print-down { animation: printDown 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+        html.dark input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
+        input[type="month"]::-webkit-calendar-picker-indicator { cursor: pointer; }
+        html.dark input[type="month"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+    </style>
 </head>
-<body class="min-h-screen bg-slate-900 text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-slate-900">
+<body class="flex flex-col h-screen w-full selection:bg-teal-500 selection:text-white dark:selection:bg-blue-500 dark:selection:text-white">
 
-  <!-- HEADER SECTION -->
-  <header class="bg-slate-950/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 px-6 py-4">
-    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-      <div class="flex items-center gap-3">
-        <div class="bg-blue-600/10 p-2.5 rounded-xl border border-blue-500/30">
-          <i data-lucide="credit-card" class="w-6 h-6 text-blue-400"></i>
+    <div class="bg-light-gradients"></div>
+    <div class="bg-orb-3"></div>
+
+    <!-- THEME TOGGLE BUTTON -->
+    <button onclick="toggleTheme()" class="fixed top-4 lg:top-6 right-4 lg:right-6 z-50 w-10 h-10 rounded-full glass-panel flex items-center justify-center shadow-lg transition-transform hover:scale-110 border border-slate-200 dark:border-slate-700 cursor-pointer">
+        <i id="themeToggleIcon" class="fa-solid fa-moon text-slate-500 text-lg transition-colors"></i>
+    </button>
+
+    <!-- HEADER SECTION -->
+    <header class="glass-panel sticky top-0 z-40 px-6 py-4 rounded-b-3xl shadow-sm mx-4 mt-2">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-4">
+                <div class="bg-teal-50 dark:bg-blue-900/30 w-12 h-12 rounded-full flex items-center justify-center border border-teal-100 dark:border-blue-500/30 text-teal-600 dark:text-blue-400 text-xl shadow-inner transition-colors">
+                    <i class="fa-solid fa-credit-card"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-xl font-bold tracking-tight text-slate-800 dark:text-white transition-colors">HNB Terminal Hub</h1>
+                        <span class="bg-blue-50 dark:bg-blue-500/20 text-blue-600 dark:text-blue-300 text-[10px] px-2.5 py-1 rounded-full font-extrabold tracking-wide border border-blue-100 dark:border-blue-500/30 uppercase transition-colors">
+                            Hatton National Bank
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium transition-colors">Real-time Settlement Registry & Authorized Reservation Gate</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <!-- DB Status Badge -->
+                <div id="db-status-badge" class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold border bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-500/30 animate-pulse transition-colors">
+                    <i class="fa-solid fa-wave-square"></i>
+                    <span id="db-status-text">CONNECTING TO CLOUD...</span>
+                </div>
+
+                <div class="text-[10px] text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/60 py-2 px-3 rounded-xl border border-slate-200 dark:border-slate-800 hidden sm:block font-bold tracking-widest uppercase transition-colors">
+                    App: <span id="app-id-display" class="font-mono text-slate-700 dark:text-slate-200 ml-1">...</span>
+                </div>
+            </div>
         </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <h1 class="text-xl font-bold tracking-tight text-white">HNB Terminal Hub</h1>
-            <span class="bg-blue-500/20 text-blue-300 text-xs px-2.5 py-0.5 rounded-full font-medium border border-blue-500/30">
-              Hatton National Bank Terminal
-            </span>
-          </div>
-          <p class="text-xs text-slate-400 mt-0.5">Real-time Settlement Registry & Authorized Reservation Gate</p>
-        </div>
-      </div>
+    </header>
 
-      <div class="flex items-center gap-4">
-        <!-- DB Status Badge -->
-        <div id="db-status-badge" class="flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold border bg-amber-950/40 text-amber-400 border-amber-500/30 animate-pulse">
-          <i data-lucide="activity" class="w-3.5 h-3.5"></i>
-          <span id="db-status-text">CONNECTING TO CLOUD...</span>
-        </div>
+    <!-- NOTIFICATION BAR -->
+    <div id="notification-container" class="fixed top-24 right-6 z-50 flex flex-col gap-2 max-w-md w-full pointer-events-none"></div>
 
-        <div class="text-xs text-slate-400 bg-slate-900/60 py-1.5 px-3 rounded-lg border border-slate-800 hidden sm:block">
-          App ID: <span id="app-id-display" class="font-mono text-slate-200">...</span>
-        </div>
-      </div>
-    </div>
-  </header>
+    <!-- DASHBOARD WRAPPER -->
+    <main class="flex-1 p-6 max-w-7xl w-full mx-auto flex flex-col overflow-y-auto custom-scrollbar relative z-10">
 
-  <!-- NOTIFICATION BAR -->
-  <div id="notification-container" class="fixed top-24 right-6 z-50 flex flex-col gap-2 max-w-md w-full pointer-events-none"></div>
+        <!-- KPI STATS CARDS -->
+        <div class="w-full mb-6">
+            <div class="flex flex-col md:flex-row justify-between items-end md:items-center mb-4 gap-4">
+                <h2 class="text-xs font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest transition-colors">Terminal Statistics</h2>
+                
+                <div class="flex flex-wrap gap-2">
+                    <!-- New Monthly Statement Button -->
+                    <button id="btn-open-statement" class="flex items-center gap-2 text-xs bg-purple-50 hover:bg-purple-100 dark:bg-purple-900/20 dark:hover:bg-purple-900/40 text-purple-600 dark:text-purple-400 py-2 px-4 rounded-xl border border-purple-200 dark:border-purple-700/50 transition-all font-bold shadow-sm">
+                        <i class="fa-solid fa-file-pdf"></i> Monthly Statement
+                    </button>
 
-  <!-- DASHBOARD WRAPPER -->
-  <main class="flex-1 p-6 max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <!-- Withdraw Button -->
+                    <button id="btn-open-withdraw" class="flex items-center gap-2 text-xs bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 py-2 px-4 rounded-xl border border-rose-200 dark:border-rose-500/30 transition-all shadow-sm font-bold">
+                        <i class="fa-solid fa-circle-down"></i> Withdraw Funds
+                    </button>
 
-    <!-- KPI STATS CARDS -->
-    <div class="lg:col-span-12">
-        <div class="flex justify-between items-center mb-3">
-            <h2 class="text-sm font-bold text-slate-300">Terminal Statistics</h2>
+                    <button id="btn-unlock-dashboard" class="flex items-center gap-2 text-xs bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 py-2 px-4 rounded-xl border border-slate-200 dark:border-slate-700 transition-all shadow-sm font-bold">
+                        <i class="fa-solid fa-lock text-amber-500"></i> Unlock View
+                    </button>
+                </div>
+            </div>
             
-            <div class="flex gap-2">
-                <!-- New Withdraw Button -->
-                <button id="btn-open-withdraw" class="flex items-center gap-1.5 text-xs bg-red-500/10 hover:bg-red-500/20 text-red-400 py-1.5 px-3 rounded-lg border border-red-500/30 transition-all shadow-sm font-bold">
-                    <i data-lucide="arrow-down-circle" class="w-3.5 h-3.5"></i> Withdraw Funds
-                </button>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Net Available Balance -->
+                <div class="glass-panel rounded-3xl p-6 relative overflow-hidden group hover:border-teal-300 dark:hover:border-blue-500/50 transition-all">
+                    <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest transition-colors">Net Available Balance</p>
+                    <p id="stat-gross-amount" class="text-3xl font-black text-slate-800 dark:text-white mt-2 font-mono transition-colors">LKR ***</p>
+                    <p class="text-[10px] text-teal-600 dark:text-blue-400 mt-2 flex items-center gap-1.5 font-bold transition-colors">
+                        <i class="fa-solid fa-calculator"></i> 97% of deposits minus withdrawals
+                    </p>
+                </div>
 
-                <button id="btn-unlock-dashboard" class="flex items-center gap-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 py-1.5 px-3 rounded-lg border border-slate-700 transition-all shadow-sm">
-                    <i data-lucide="lock" class="w-3.5 h-3.5 text-amber-400"></i> Unlock View
-                </button>
+                <!-- Total Batches -->
+                <div class="glass-panel rounded-3xl p-6 relative overflow-hidden group hover:border-slate-300 dark:hover:border-slate-600 transition-all">
+                    <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest transition-colors">Total Entries</p>
+                    <p id="stat-total-count" class="text-3xl font-black text-slate-800 dark:text-white mt-2 font-mono transition-colors">***</p>
+                    <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-2 flex items-center gap-1.5 font-medium transition-colors">
+                        <i class="fa-solid fa-layer-group"></i> Recorded database slips (All)
+                    </p>
+                </div>
+
+                <!-- Reserved (Locked) -->
+                <div class="glass-panel rounded-3xl p-6 relative overflow-hidden group hover:border-emerald-300 dark:hover:border-emerald-500/50 transition-all">
+                    <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest transition-colors">Payments Reserved</p>
+                    <p id="stat-reserved-count" class="text-3xl font-black text-emerald-600 dark:text-emerald-400 mt-2 font-mono transition-colors">***</p>
+                    <p class="text-[10px] text-emerald-600 dark:text-emerald-400 mt-2 flex items-center gap-1.5 font-bold transition-colors">
+                        <i class="fa-solid fa-shield-halved"></i> Authenticated via Admin
+                    </p>
+                </div>
+
+                <!-- Pending (Unlocked) -->
+                <div class="glass-panel rounded-3xl p-6 relative overflow-hidden group hover:border-amber-300 dark:hover:border-amber-500/50 transition-all">
+                    <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest transition-colors">Pending Verification</p>
+                    <p id="stat-pending-count" class="text-3xl font-black text-amber-600 dark:text-amber-400 mt-2 font-mono transition-colors">***</p>
+                    <p class="text-[10px] text-amber-600 dark:text-amber-400 mt-2 flex items-center gap-1.5 font-bold transition-colors">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Requires PW confirmation
+                    </p>
+                </div>
             </div>
         </div>
-        
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <!-- Net Available Balance (Updated) -->
-          <div class="bg-slate-950/50 rounded-2xl p-5 border border-slate-800 relative overflow-hidden group hover:border-blue-500/30 transition-all">
-            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Net Available Balance</p>
-            <!-- Defaulting to hidden state (***) for privacy -->
-            <p id="stat-gross-amount" class="text-3xl font-black text-white mt-2 font-mono">LKR ***</p>
-            <p class="text-[10px] text-blue-400 mt-2 flex items-center gap-1">
-              <i data-lucide="calculator" class="w-3.5 h-3.5"></i> 97% of deposits minus withdrawals
-            </p>
-          </div>
 
-          <!-- Total Batches -->
-          <div class="bg-slate-950/50 rounded-2xl p-5 border border-slate-800 relative overflow-hidden group hover:border-slate-700 transition-all">
-            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Entries</p>
-            <p id="stat-total-count" class="text-3xl font-black text-white mt-2 font-mono">***</p>
-            <p class="text-[10px] text-slate-400 mt-2 flex items-center gap-1">
-              <i data-lucide="layers" class="w-3.5 h-3.5"></i> Recorded database slips (All)
-            </p>
-          </div>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full pb-10">
+            <!-- LEFT COLUMN: INSTANT DATA ENTRY FORM -->
+            <div class="lg:col-span-5 flex flex-col gap-6">
+                <div class="glass-panel rounded-3xl p-8 shadow-xl relative overflow-hidden transition-colors">
+                    <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-teal-400 dark:from-blue-500 via-blue-500 dark:via-indigo-500 to-indigo-500 dark:to-purple-500"></div>
+                    
+                    <div class="flex items-center gap-3 mb-2 mt-2">
+                        <div class="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-500">
+                             <i class="fa-solid fa-circle-plus"></i>
+                        </div>
+                        <h2 class="text-lg font-extrabold text-slate-800 dark:text-white transition-colors">Instant Data Entry</h2>
+                    </div>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mb-6 font-medium transition-colors">
+                        Choose Merchant ID, select settlement date, and input gross amount. (System will auto-deduct 3% for balance).
+                    </p>
 
-          <!-- Reserved (Locked) -->
-          <div class="bg-slate-950/50 rounded-2xl p-5 border border-slate-800 relative overflow-hidden group hover:border-emerald-500/30 transition-all">
-            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Payments Reserved</p>
-            <p id="stat-reserved-count" class="text-3xl font-black text-emerald-400 mt-2 font-mono">***</p>
-            <p class="text-[10px] text-emerald-400 mt-2 flex items-center gap-1">
-              <i data-lucide="shield" class="w-3.5 h-3.5"></i> Authenticated via Admin
-            </p>
-          </div>
+                    <form id="settlement-form" class="space-y-5">
+                        
+                        <!-- Merchant ID Selection -->
+                        <div>
+                            <label class="block text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-2 transition-colors">Merchant ID Selection</label>
+                            <div class="grid grid-cols-2 gap-3">
+                                <button type="button" id="merchant-vg" class="py-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-1 bg-blue-50 border-blue-200 text-blue-600 dark:bg-blue-600/20 dark:border-blue-500 dark:text-blue-400" onclick="selectMerchant('VG')">
+                                    <span class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Merchant Group</span>
+                                    <span class="text-2xl font-black font-mono">VG</span>
+                                </button>
+                                <button type="button" id="merchant-bn" class="py-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-1 bg-white border-slate-200 text-slate-500 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700" onclick="selectMerchant('BN')">
+                                    <span class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Merchant Group</span>
+                                    <span class="text-2xl font-black font-mono">BN</span>
+                                </button>
+                            </div>
+                            <input type="hidden" id="selectedMerchantId" value="VG">
+                        </div>
 
-          <!-- Pending (Unlocked) -->
-          <div class="bg-slate-950/50 rounded-2xl p-5 border border-slate-800 relative overflow-hidden group hover:border-amber-500/30 transition-all">
-            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Pending Verification</p>
-            <p id="stat-pending-count" class="text-3xl font-black text-amber-400 mt-2 font-mono">***</p>
-            <p class="text-[10px] text-amber-400 mt-2 flex items-center gap-1">
-              <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> Requires PW confirmation
-            </p>
-          </div>
+                        <!-- Date Selector -->
+                        <div class="input-group rounded-2xl p-2 relative">
+                            <label class="block text-[10px] text-slate-400 uppercase tracking-widest font-extrabold px-3 pt-1">Settlement Date</label>
+                            <div class="relative flex items-center">
+                                <i class="fa-solid fa-calendar absolute left-4 text-teal-500 dark:text-blue-400"></i>
+                                <input type="date" id="settlementDate" class="w-full bg-transparent text-slate-700 dark:text-white font-medium pl-10 pr-4 py-2 outline-none dark:[color-scheme:dark] transition-colors" required>
+                            </div>
+                        </div>
+
+                        <!-- Amount Input -->
+                        <div class="input-group rounded-2xl p-2 relative border-teal-200 dark:border-blue-500/50 bg-teal-50/30 dark:bg-[#0f172a]/60">
+                            <label class="block text-[10px] text-emerald-600 dark:text-emerald-400 uppercase tracking-widest font-extrabold px-3 pt-1">Gross Settlement Amount *</label>
+                            <p class="text-[9px] text-slate-500 px-3 pb-1 font-medium">Note: System automatically calculates and displays the 97% Net Value.</p>
+                            <div class="relative flex items-center">
+                                <span class="absolute left-4 text-emerald-600 dark:text-emerald-400 text-sm font-extrabold font-mono">LKR</span>
+                                <input type="number" step="0.01" id="amount" placeholder="0.00" class="w-full bg-transparent text-slate-800 dark:text-emerald-300 font-mono text-xl font-black pl-14 pr-4 py-2 outline-none placeholder-slate-300 dark:placeholder-slate-600 transition-colors" required>
+                            </div>
+                        </div>
+
+                        <!-- Random Amount quick-filler -->
+                        <div class="flex justify-end">
+                            <button type="button" id="btn-mock-data" class="text-[10px] text-teal-600 dark:text-blue-400 hover:text-teal-700 dark:hover:text-blue-300 font-bold uppercase tracking-wider flex items-center gap-1.5 py-1 px-2 hover:bg-teal-50 dark:hover:bg-blue-500/10 rounded-lg transition-all">
+                                <i class="fa-solid fa-arrows-rotate"></i> Fill Random Amount
+                            </button>
+                        </div>
+
+                        <button type="submit" class="w-full gradient-btn text-white font-bold py-4 px-4 rounded-2xl transition-all duration-300 transform hover:-translate-y-1 flex items-center justify-center gap-2 text-sm shadow-xl">
+                            <i class="fa-solid fa-floppy-disk"></i> SAVE TO REGISTRY 
+                        </button>
+                    </form>
+                </div>
+
+                <!-- PRINT SLIP PREVIEW -->
+                <div class="glass-panel rounded-3xl border border-slate-200 dark:border-slate-800 p-8 shadow-xl relative overflow-hidden transition-colors">
+                    <div class="absolute right-6 top-6 text-slate-200 dark:text-slate-800 text-6xl opacity-50 transition-colors">
+                        <i class="fa-solid fa-print"></i>
+                    </div>
+                    <h3 class="text-sm font-extrabold text-slate-800 dark:text-white mb-1 flex items-center gap-2 transition-colors">
+                        <i class="fa-solid fa-print text-teal-500 dark:text-blue-400"></i> Interactive Receipt Simulation
+                    </h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mb-6 font-medium transition-colors">Click any listed batch log to simulate live terminal receipt printing.</p>
+
+                    <div id="receipt-placeholder" class="py-10 border-2 border-dashed border-slate-200 dark:border-slate-700 text-center text-xs text-slate-400 dark:text-slate-500 rounded-2xl bg-slate-50 dark:bg-slate-900/50 font-medium transition-colors">
+                        No document loaded.<br/>Select a logged transaction from the registry.
+                    </div>
+
+                    <div id="receipt-container" class="hidden">
+                        <!-- Dynamic Receipt Slip Inserted Here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: REAL-TIME LEDGER LOGS -->
+            <div class="lg:col-span-7 flex flex-col gap-6 h-full min-h-[600px]">
+                <div class="glass-panel rounded-3xl p-8 flex-1 flex flex-col shadow-xl transition-colors">
+                    
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                        <div>
+                            <h2 class="text-xl font-extrabold text-slate-800 dark:text-white flex items-center gap-2 transition-colors">
+                                <i class="fa-solid fa-wave-square text-emerald-500"></i>
+                                HNB Active Registry Logs
+                            </h2>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium transition-colors">All data persists live. Click locking controls to authorize payments using security PIN.</p>
+                            <p class="text-[10px] text-amber-600 dark:text-amber-500 mt-2 font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors bg-amber-50 dark:bg-amber-900/20 inline-block px-2 py-1 rounded-md border border-amber-100 dark:border-amber-800">
+                                <i class="fa-solid fa-circle-info"></i> Authenticated records older than 10 days are hidden for privacy.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- LIVE STREAM DATA -->
+                    <div id="logs-container" class="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
+                        <!-- Dynamic Items Streamed Here -->
+                        <div class="flex flex-col items-center justify-center py-20 text-slate-400 dark:text-slate-500 gap-4 transition-colors">
+                            <i class="fa-solid fa-arrows-rotate text-3xl text-teal-500 dark:text-blue-400 animate-spin"></i>
+                            <p class="text-xs font-bold tracking-widest uppercase">Synchronizing Stream...</p>
+                        </div>
+                    </div>
+
+                    <!-- FOOTER INFO -->
+                    <div class="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center text-[10px] font-extrabold uppercase tracking-widest text-slate-400 transition-colors">
+                        <p class="flex items-center gap-1"><i class="fa-solid fa-circle text-[8px] text-emerald-500 animate-pulse"></i> Stream active</p>
+                        <p id="total-logs-indicator" class="font-mono text-slate-500">Total: 0 records</p>
+                    </div>
+
+                </div>
+            </div>
         </div>
-    </div>
+    </main>
 
-    <!-- LEFT COLUMN: INSTANT DATA ENTRY FORM -->
-    <div class="lg:col-span-5 flex flex-col gap-6">
-      <div class="bg-slate-950 rounded-2xl border border-slate-800 p-6 shadow-xl">
-        <div class="flex items-center gap-2 mb-4">
-          <i data-lucide="plus-circle" class="w-5 h-5 text-blue-400"></i>
-          <h2 class="text-lg font-bold text-white">Instant Data Entry</h2>
-        </div>
-        <p class="text-xs text-slate-400 mb-6">
-          Choose Merchant ID, select settlement date, and input gross amount. (System will auto-deduct 3% for balance).
-        </p>
-
-        <form id="settlement-form" class="space-y-4">
-          
-          <!-- Merchant ID Selection (VG / BN Toggle) -->
-          <div>
-            <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Merchant ID Selection</label>
-            <div class="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                id="merchant-vg"
-                class="py-3 px-4 rounded-xl border font-bold text-sm transition-all flex flex-col items-center gap-1 bg-blue-600/20 text-blue-400 border-blue-500"
-                onclick="selectMerchant('VG')"
-              >
-                <span class="text-xs text-slate-400 font-medium">Merchant Group</span>
-                <span class="text-lg tracking-wider font-mono">VG</span>
-              </button>
-              <button
-                type="button"
-                id="merchant-bn"
-                class="py-3 px-4 rounded-xl border font-bold text-sm transition-all flex flex-col items-center gap-1 bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700"
-                onclick="selectMerchant('BN')"
-              >
-                <span class="text-xs text-slate-400 font-medium">Merchant Group</span>
-                <span class="text-lg tracking-wider font-mono">BN</span>
-              </button>
-            </div>
-            <!-- Hidden input to store selected Merchant ID -->
-            <input type="hidden" id="selectedMerchantId" value="VG">
-          </div>
-
-          <!-- Date Selector (Default: Today) -->
-          <div>
-            <label class="block text-xs font-bold text-slate-400 uppercase mb-1.5">Settlement Date</label>
-            <div class="relative">
-              <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-450">
-                <i data-lucide="calendar" class="w-4 h-4 text-blue-400"></i>
-              </div>
-              <input
-                type="date"
-                id="settlementDate"
-                class="w-full bg-slate-900 border border-slate-800 rounded-xl pl-12 pr-4 py-3 text-sm text-white font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                required
-              >
-            </div>
-          </div>
-
-          <!-- Amount Input - THE CORE MANUAL INPUT FIELD -->
-          <div>
-            <label class="block text-xs font-bold text-emerald-400 uppercase mb-1.5 tracking-wider">Gross Settlement Amount (LKR) *</label>
-            <p class="text-[10px] text-slate-400 mb-2">Note: System automatically calculates and displays the 97% Net Value on the active ledger.</p>
-            <div class="relative">
-              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-500 text-sm font-bold font-mono">LKR</span>
-              <input
-                type="number"
-                step="0.01"
-                id="amount"
-                placeholder="0.00"
-                class="w-full bg-slate-950 border border-slate-700 rounded-xl pl-14 pr-4 py-4 text-xl font-mono font-bold text-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all shadow-inner placeholder:text-slate-800"
-                required
-                autofocus
-              >
-            </div>
-          </div>
-
-          <!-- Random Amount quick-filler -->
-          <div class="flex justify-end">
-            <button
-              type="button"
-              id="btn-mock-data"
-              class="text-xs text-blue-400 hover:text-blue-300 font-semibold flex items-center gap-1 py-1 px-2 hover:bg-blue-500/10 rounded transition-all"
-            >
-              <i data-lucide="refresh-cw" class="w-3 h-3"></i> Fill Random Amount
+    <!-- UNIFIED PIN MODAL (Replaces separate PIN modals for better theme matching) -->
+    <div id="unified-pin-modal" class="hidden fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 dark:bg-[#020617]/80 backdrop-blur-sm fade-in">
+        <div class="bg-white dark:bg-[#1e293b] rounded-3xl shadow-2xl p-8 w-80 max-w-[90%] text-center border border-slate-200 dark:border-slate-700 transition-colors relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-400 to-orange-500" id="pin-modal-accent"></div>
+            
+            <button id="btn-close-pin-modal" class="absolute right-4 top-4 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center transition-all">
+                <i class="fa-solid fa-xmark"></i>
             </button>
-          </div>
 
-          <button
-            type="submit"
-            class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3.5 px-4 rounded-xl transition-all duration-300 shadow-lg shadow-blue-500/10 active:translate-y-0.5 flex items-center justify-center gap-2 text-sm"
-          >
-            <i data-lucide="save" class="w-4 h-4"></i> SAVE TO REGISTRY 
-          </button>
-        </form>
-      </div>
+            <div id="pin-modal-icon" class="mb-4 text-4xl mt-2">
+                <i class="fa-solid fa-lock text-amber-500 drop-shadow-[0_0_5px_rgba(245,158,11,0.4)]"></i>
+            </div>
+            <h3 id="pin-modal-title" class="text-slate-800 dark:text-white font-extrabold text-xl mb-1">Security Lock</h3>
+            <p id="pin-modal-desc" class="text-slate-500 dark:text-slate-400 text-xs font-medium mb-4">Enter passcode to proceed.</p>
+            
+            <!-- Extra Details container (for reservation) -->
+            <div id="pin-modal-extra" class="hidden bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800 mb-4 text-xs space-y-1 font-mono text-left"></div>
 
-      <!-- PRINT SLIP PREVIEW -->
-      <div class="bg-slate-950 rounded-2xl border border-slate-800 p-6 shadow-xl relative overflow-hidden">
-        <div class="absolute right-4 top-4 text-slate-800">
-          <i data-lucide="printer" class="w-12 h-12"></i>
-        </div>
-        <h3 class="text-sm font-bold text-white mb-2 flex items-center gap-2">
-          <i data-lucide="printer" class="w-4 h-4 text-blue-400"></i> Interactive Receipt Simulation
-        </h3>
-        <p class="text-xs text-slate-400 mb-4">Click any listed batch log on the right to simulate live terminal receipt printing.</p>
-
-        <div id="receipt-placeholder" class="py-6 border border-dashed border-slate-800 text-center text-xs text-slate-500 rounded-xl bg-slate-900/20">
-          No document loaded. Select a logged transaction from the database registry on the right.
-        </div>
-
-        <div id="receipt-container" class="hidden">
-          <!-- Dynamic Receipt Slip Inserted Here -->
-        </div>
-      </div>
-    </div>
-
-    <!-- RIGHT COLUMN: REAL-TIME LEDGER LOGS -->
-    <div class="lg:col-span-7 flex flex-col gap-6">
-      <div class="bg-slate-950 rounded-2xl border border-slate-800 p-6 flex-1 flex flex-col shadow-xl">
-        
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-          <div>
-            <h2 class="text-lg font-bold text-white flex items-center gap-2">
-              <i data-lucide="activity" class="w-5 h-5 text-emerald-400"></i>
-              HNB Active Registry Logs
-            </h2>
-            <p class="text-xs text-slate-400">All data persists live. Click locking controls to authorize payments using security PIN.</p>
-            <p class="text-[10px] text-amber-500 mt-1 font-semibold flex items-center gap-1">
-                <i data-lucide="info" class="w-3 h-3"></i> Authenticated records older than 10 days are hidden for privacy.
+            <input type="password" id="pin-modal-input" class="w-full mb-2 bg-slate-50 dark:bg-[#0f172a] border border-slate-200 dark:border-slate-600 text-slate-800 dark:text-white px-4 py-3 rounded-xl outline-none text-center text-xl font-black tracking-[0.3em] focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 transition-all" placeholder="••••••" maxLength="6" />
+            
+            <p id="pin-modal-error" class="text-[10px] text-rose-500 font-bold mt-1 mb-4 hidden flex items-center justify-center gap-1 h-4">
+                <i class="fa-solid fa-triangle-exclamation"></i> Code refused.
             </p>
-          </div>
-        </div>
 
-        <!-- LIVE STREAM DATA -->
-        <div id="logs-container" class="flex-1 overflow-y-auto max-h-[580px] space-y-3 pr-2 custom-scrollbar">
-          <!-- Dynamic Items Streamed Here -->
-          <div class="flex flex-col items-center justify-center py-20 text-slate-400 gap-3">
-            <i data-lucide="refresh-cw" class="w-8 h-8 text-blue-400 animate-spin"></i>
-            <p class="text-xs font-bold">Synchronizing real-time database stream...</p>
-          </div>
+            <button id="btn-confirm-pin" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-black hover:from-amber-600 hover:to-orange-700 transition-colors flex justify-center items-center gap-2 shadow-lg">
+                <i class="fa-solid fa-unlock"></i> Verify
+            </button>
         </div>
-
-        <!-- FOOTER INFO -->
-        <div class="mt-6 pt-4 border-t border-slate-800 flex justify-between items-center text-xs text-slate-500">
-          <p>Real-time stream operational</p>
-          <p id="total-logs-indicator" class="font-mono text-slate-400">Total: 0 records</p>
-        </div>
-
-      </div>
     </div>
 
-  </main>
-
-  <!-- DASHBOARD UNLOCK MODAL -->
-  <div id="dashboard-unlock-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 hidden">
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl relative">
-      <button id="btn-close-dashboard-modal" class="absolute right-4 top-4 text-slate-400 hover:text-white transition-all">
-        <i data-lucide="x" class="w-5 h-5"></i>
-      </button>
-
-      <div class="flex items-center gap-3 mb-4">
-        <div class="bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/30">
-          <i data-lucide="lock" class="w-6 h-6 text-amber-400 animate-pulse"></i>
-        </div>
-        <div>
-          <h3 class="text-base font-bold text-white">Privacy Lock</h3>
-          <p class="text-xs text-slate-400 font-medium">Verify admin access</p>
-        </div>
-      </div>
-
-      <p class="text-xs text-slate-400 mb-4">
-        Enter security code to reveal hidden dashboard totals and statistics.
-      </p>
-
-      <div class="space-y-4">
-        <div>
-          <input
-            type="password"
-            id="dashboard-passcode-input"
-            placeholder="••••••"
-            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-center text-xl font-bold font-mono tracking-widest text-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
-            maxLength="6"
-          >
-          <p id="dashboard-error-message" class="text-xs text-red-400 font-semibold mt-2 hidden flex items-center gap-1 justify-center">
-            <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> Code refused. Access denied.
-          </p>
-        </div>
-        <button
-          type="button"
-          id="btn-confirm-dashboard-unlock"
-          class="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-slate-950 font-black py-2.5 px-4 rounded-xl transition-all shadow-lg flex items-center justify-center gap-1.5 text-xs"
-        >
-          <i data-lucide="unlock" class="w-4 h-4"></i> Unlock Dashboard
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- PASSWORD VERIFICATION MODAL (For Reservations) -->
-  <div id="passcode-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 hidden">
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
-      <button id="btn-close-modal" class="absolute right-4 top-4 text-slate-400 hover:text-white transition-all">
-        <i data-lucide="x" class="w-5 h-5"></i>
-      </button>
-
-      <div class="flex items-center gap-3 mb-4">
-        <div class="bg-emerald-500/10 p-2.5 rounded-xl border border-emerald-500/30">
-          <i data-lucide="shield-check" class="w-6 h-6 text-emerald-400 animate-pulse"></i>
-        </div>
-        <div>
-          <h3 class="text-base font-bold text-white">Payment Reservation Security</h3>
-          <p class="text-xs text-slate-400 font-medium">Verify terminal transaction value</p>
-        </div>
-      </div>
-
-      <div id="modal-details-card" class="bg-slate-950/50 p-4 rounded-xl border border-slate-800 mb-4 text-xs space-y-1 font-mono">
-        <!-- Filled dynamically -->
-      </div>
-
-      <p class="text-xs text-slate-400 mb-4">
-        To lock, authorize, and set the status of this HNB POS transaction to <span class="text-emerald-400 font-bold">RESERVED</span>, input the security clearing code:
-      </p>
-
-      <div class="space-y-4">
-        <div>
-          <label class="block text-xs font-bold text-slate-400 uppercase mb-1.5">Clearance Code</label>
-          <input
-            type="password"
-            id="modal-passcode-input"
-            placeholder="••••••"
-            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-center text-xl font-bold font-mono tracking-widest text-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-            maxLength="6"
-          >
-          <p id="modal-error-message" class="text-xs text-red-400 font-semibold mt-2 hidden flex items-center gap-1 justify-center">
-            <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> Code refused. Access denied.
-          </p>
-        </div>
-
-        <div class="flex gap-3">
-          <button
-            type="button"
-            id="btn-cancel-modal"
-            class="flex-1 bg-slate-800 hover:bg-slate-750 text-slate-300 font-bold py-2.5 px-4 rounded-xl transition-all text-xs"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            id="btn-confirm-passcode"
-            class="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black py-2.5 px-4 rounded-xl transition-all shadow-lg flex items-center justify-center gap-1.5 text-xs"
-          >
-            <i data-lucide="check-circle" class="w-4 h-4"></i> Complete Verification
-          </button>
-        </div>
-
-        <p class="text-[10px] text-center text-slate-500">
-          Authorization events are logged instantly with associated network payload.
-        </p>
-      </div>
-    </div>
-  </div>
-
-  <!-- SECURE WITHDRAWAL MODAL (NEW) -->
-  <div id="withdrawal-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 hidden">
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
-      <button id="btn-close-withdraw-modal" class="absolute right-4 top-4 text-slate-400 hover:text-white transition-all">
-        <i data-lucide="x" class="w-5 h-5"></i>
-      </button>
-
-      <div class="flex items-center gap-3 mb-4">
-        <div class="bg-red-500/10 p-2.5 rounded-xl border border-red-500/30">
-          <i data-lucide="arrow-down-circle" class="w-6 h-6 text-red-400 animate-pulse"></i>
-        </div>
-        <div>
-          <h3 class="text-base font-bold text-white">Authorized Withdrawal</h3>
-          <p class="text-xs text-slate-400 font-medium">Requires Admin Privilege</p>
-        </div>
-      </div>
-
-      <p class="text-xs text-slate-400 mb-4">
-        Enter the withdrawal amount and the administrator security code to deduct from the total net balance.
-      </p>
-
-      <div class="space-y-4">
-        <div>
-          <label class="block text-xs font-bold text-red-400 uppercase mb-1.5 tracking-wider">Withdrawal Amount (LKR) *</label>
-          <div class="relative">
-            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-red-500 text-sm font-bold font-mono">LKR</span>
-            <input
-              type="number"
-              step="0.01"
-              id="withdraw-amount-input"
-              placeholder="0.00"
-              class="w-full bg-slate-950 border border-slate-700 rounded-xl pl-14 pr-4 py-4 text-xl font-mono font-bold text-red-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all shadow-inner placeholder:text-slate-800"
-            >
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-xs font-bold text-slate-400 uppercase mb-1.5">Clearance Code</label>
-          <input
-            type="password"
-            id="withdraw-passcode-input"
-            placeholder="••••••"
-            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-center text-xl font-bold font-mono tracking-widest text-slate-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
-            maxLength="6"
-          >
-          <p id="withdraw-error-message" class="text-xs text-red-400 font-semibold mt-2 hidden flex items-center gap-1 justify-center">
-            <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> Invalid amount or security code refused.
-          </p>
-        </div>
-
-        <div class="flex gap-3 pt-2">
-          <button
-            type="button"
-            id="btn-cancel-withdraw"
-            class="flex-1 bg-slate-800 hover:bg-slate-750 text-slate-300 font-bold py-2.5 px-4 rounded-xl transition-all text-xs"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            id="btn-confirm-withdraw-action"
-            class="flex-1 bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-500 hover:to-rose-600 text-white font-black py-2.5 px-4 rounded-xl transition-all shadow-lg flex items-center justify-center gap-1.5 text-xs"
-          >
-            <i data-lucide="arrow-down" class="w-4 h-4"></i> Execute Withdrawal
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- CUSTOM DELETE CONFIRMATION MODAL -->
-  <div id="delete-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 backdrop-blur-sm p-4 hidden">
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl relative">
-      <div class="flex items-center gap-3 mb-4">
-        <div class="bg-red-500/10 p-2.5 rounded-xl border border-red-500/30">
-          <i data-lucide="trash-2" class="w-6 h-6 text-red-400 animate-bounce"></i>
-        </div>
-        <div>
-          <h3 class="text-base font-bold text-white">Delete Log?</h3>
-          <p class="text-xs text-slate-400">This action is irreversible</p>
-        </div>
-      </div>
-      <p class="text-xs text-slate-400 mb-6">Are you sure you want to permanently delete this log record from the database? This will affect the calculated balance.</p>
-      <div class="flex gap-3">
-        <button
-          type="button"
-          id="btn-cancel-delete"
-          class="flex-1 bg-slate-800 hover:bg-slate-750 text-slate-300 font-bold py-2 px-4 rounded-xl transition-all text-xs"
-        >
-          No, Cancel
-        </button>
-        <button
-          type="button"
-          id="btn-confirm-delete"
-          class="flex-1 bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-4 rounded-xl transition-all shadow-lg text-xs"
-        >
-          Yes, Delete
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- FOOTER -->
-  <footer class="bg-slate-950 border-t border-slate-800/80 py-4 px-6 text-center text-xs text-slate-500 mt-auto">
-    <p>© 2026 Biotech Laboratory POS Settlement Control Hub. Secured By Biotech</p>
-  </footer>
-
-  <!-- ========================================================== -->
-  <!-- FIREBASE MODULE LOGIC AND USER-INTERFACE DRIVER -->
-  <!-- ========================================================== -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getDatabase, ref, push, set, update, remove, onValue } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
-
-    // 1. Setup Live Production Firebase Configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyAmTlVGY0K9dXGUf0I7L6DHwEIlPYmYoYI",
-      authDomain: "hnbd-62b18.firebaseapp.com",
-      databaseURL: "https://hnbd-62b18-default-rtdb.firebaseio.com",
-      projectId: "hnbd-62b18",
-      storageBucket: "hnbd-62b18.firebasestorage.app",
-      messagingSenderId: "922426900930",
-      appId: "1:922426900930:web:e8acaa16936adcee8d965b",
-      measurementId: "G-PM0C41VGY1"
-    };
-
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    
-    // Explicitly target your Realtime Database URL to skip DNS lookup times
-    const db = getDatabase(app, firebaseConfig.databaseURL);
-    
-    // Force App ID to reconnect to previous data
-    const appId = 'pos-settlement-system-default';
-    
-    // RULE 1 Guardrail: Realtime Database paths CANNOT contain dot "." characters.
-    const safeAppId = appId.replace(/[\.\#\$\[\]]/g, '_');
-
-    document.getElementById('app-id-display').innerText = safeAppId;
-
-    // Local state stores
-    let user = null;
-    let settlements = [];
-    let selectedItemId = null;
-    let pendingVerificationItem = null;
-    let pendingDeleteId = null;
-    let isDashboardUnlocked = false; // Controls display of totals
-
-    // Global selector trigger for Merchant IDs
-    window.selectMerchant = function(merchantId) {
-      document.getElementById('selectedMerchantId').value = merchantId;
-      
-      localStorage.setItem('savedMerchantBranch', merchantId);
-
-      const btnVg = document.getElementById('merchant-vg');
-      const btnBn = document.getElementById('merchant-bn');
-
-      if (merchantId === 'VG') {
-        btnVg.className = "py-3 px-4 rounded-xl border font-bold text-sm transition-all flex flex-col items-center gap-1 bg-blue-600/20 text-blue-400 border-blue-500";
-        btnBn.className = "py-3 px-4 rounded-xl border font-bold text-sm transition-all flex flex-col items-center gap-1 bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700";
-      } else {
-        btnBn.className = "py-3 px-4 rounded-xl border font-bold text-sm transition-all flex flex-col items-center gap-1 bg-blue-600/20 text-blue-400 border-blue-500";
-        btnVg.className = "py-3 px-4 rounded-xl border font-bold text-sm transition-all flex flex-col items-center gap-1 bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700";
-      }
-    }
-
-    // Setup Default Date Picker value to Today
-    function setupDefaultDatePicker() {
-      const today = new Date().toISOString().split('T')[0];
-      const el = document.getElementById('settlementDate');
-      if (el) el.value = today;
-    }
-
-    // Update status bar UI
-    function updateStatusBadge(isOnline, text) {
-      const badge = document.getElementById('db-status-badge');
-      if (badge) {
-        if (isOnline) {
-          badge.className = "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold border bg-emerald-950/40 text-emerald-400 border-emerald-500/30";
-        } else {
-          badge.className = "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold border bg-red-950/40 text-red-400 border-red-500/30";
-        }
-      }
-      const textEl = document.getElementById('db-status-text');
-      if (textEl) textEl.innerText = text;
-    }
-
-    // Trigger on-screen banner alerts
-    function showNotification(type, message) {
-      const container = document.getElementById('notification-container');
-      if (!container) return;
-      const element = document.createElement('div');
-      element.className = `p-4 rounded-xl shadow-2xl border flex items-center gap-3 transition-all transform duration-300 translate-y-2 opacity-0 pointer-events-auto ${
-        type === 'success' 
-          ? 'bg-emerald-900/90 text-emerald-100 border-emerald-500/50' 
-          : 'bg-red-950/90 text-red-100 border-red-500/50'
-      }`;
-      
-      const icon = type === 'success' ? 'check-circle' : 'alert-triangle';
-      element.innerHTML = `
-        <i data-lucide="${icon}" class="w-5 h-5 shrink-0 text-${type === 'success' ? 'emerald' : 'red'}-400"></i>
-        <p class="text-sm font-medium">${message}</p>
-      `;
-      
-      container.appendChild(element);
-      lucide.createIcons();
-      
-      setTimeout(() => {
-        element.classList.remove('translate-y-2', 'opacity-0');
-      }, 50);
-
-      setTimeout(() => {
-        element.classList.add('translate-y-2', 'opacity-0');
-        setTimeout(() => element.remove(), 300);
-      }, 6000);
-    }
-
-    // ATTENTION: Start syncing live logs IMMEDIATELY on load.
-    startSyncingRegistry();
-
-    // Trigger authentication background task
-    const initAuth = async () => {
-      try {
-        await signInAnonymously(auth);
-      } catch (err) {
-        console.warn("Auth initialization failed. Connecting via Open Rules instead:", err);
-        updateStatusBadge(true, "HNB DATABASE ONLINE (OPEN PORT)");
-      }
-    };
-    initAuth();
-
-    // Listen to Auth State
-    onAuthStateChanged(auth, (currentUser) => {
-      user = currentUser;
-      if (currentUser) {
-        updateStatusBadge(true, "HNB SECURED CONNECTION ONLINE");
-      }
-    });
-
-    // Real-Time Database listener
-    function startSyncingRegistry() {
-      const databasePath = `artifacts/${safeAppId}/public/data/settlements`;
-      const settlementsRef = ref(db, databasePath);
-
-      onValue(settlementsRef, 
-        (snapshot) => {
-          settlements = [];
-          if (snapshot.exists()) {
-            snapshot.forEach((childSnapshot) => {
-              settlements.push({ id: childSnapshot.key, ...childSnapshot.val() });
-            });
-          }
-
-          // Sort descending by custom settlement timestamp
-          settlements.sort((a, b) => {
-            const timeA = a.customTimestamp || a.createdAt || 0;
-            const timeB = b.customTimestamp || b.createdAt || 0;
-            return timeB - timeA;
-          });
-
-          // Render UI Elements
-          renderDashboard();
-        },
-        (error) => {
-          console.error("Realtime DB listener failure:", error);
-          showNotification('error', 'Cloud sync failure: ' + error.message);
-          updateStatusBadge(false, "DATABASE OFFLINE / CONNECT ERROR");
-        }
-      );
-    }
-
-    // Dynamic UI Redrawer
-    function renderDashboard() {
-      const logsContainer = document.getElementById('logs-container');
-      if (!logsContainer) return;
-      
-      // Calculate Stats based on ALL data (including > 10 days)
-      let netBalance = 0;
-      let reservedCount = 0;
-      let pendingCount = 0;
-
-      // MATH LOGIC: Apply 97% to Deposits, subtract 100% of Withdrawals
-      settlements.forEach(item => {
-        const amt = Number(item.amount || 0);
-        const type = item.type || 'DEPOSIT'; // Fallback for old data
-
-        if (type === 'WITHDRAWAL') {
-            netBalance -= amt;
-        } else {
-            // It is a deposit (settlement) -> Apply 3% deduction (multiply by 0.97)
-            netBalance += (amt * 0.97);
+    <!-- SECURE WITHDRAWAL MODAL -->
+    <div id="withdrawal-modal" class="hidden fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 dark:bg-[#020617]/80 backdrop-blur-sm fade-in">
+        <div class="bg-white dark:bg-[#1e293b] rounded-3xl shadow-2xl p-8 w-96 max-w-[90%] text-center border border-slate-200 dark:border-slate-700 transition-colors relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-rose-500 to-red-600"></div>
             
-            // Only count deposits in these status metrics
-            if (item.status === 'RESERVED') {
-              reservedCount++;
-            } else if (item.status === 'PENDING') {
-              pendingCount++;
-            }
-        }
-      });
+            <button id="btn-close-withdraw-modal" class="absolute right-4 top-4 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center transition-all">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
 
-      // Privacy Lock: Update Statistic labels based on unlock state
-      if (isDashboardUnlocked) {
-          document.getElementById('stat-gross-amount').innerText = `LKR ${netBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-          document.getElementById('stat-total-count').innerText = settlements.length;
-          document.getElementById('stat-reserved-count').innerText = reservedCount;
-          document.getElementById('stat-pending-count').innerText = pendingCount;
-          
-          document.getElementById('btn-unlock-dashboard').classList.add('hidden');
-      } else {
-          document.getElementById('stat-gross-amount').innerText = `LKR ***`;
-          document.getElementById('stat-total-count').innerText = `***`;
-          document.getElementById('stat-reserved-count').innerText = `***`;
-          document.getElementById('stat-pending-count').innerText = `***`;
-          
-          document.getElementById('btn-unlock-dashboard').classList.remove('hidden');
-      }
-
-      // Filter Logic: Remove RESERVED items older than 10 days from VISIBLE list (preview)
-      const TEN_DAYS_MS = 10 * 24 * 60 * 60 * 1000;
-      const now = Date.now();
-      
-      const visibleSettlements = settlements.filter(item => {
-          if (item.status === 'RESERVED') {
-              const itemTime = item.customTimestamp || item.createdAt || 0;
-              if (now - itemTime > TEN_DAYS_MS) {
-                  return false; // Hide from list
-              }
-          }
-          return true; // Show everything else
-      });
-
-      // Update footer indicator to show accurate count of visible vs total
-      document.getElementById('total-logs-indicator').innerText = isDashboardUnlocked 
-          ? `Showing ${visibleSettlements.length} of ${settlements.length} records`
-          : `Stream Active`;
-
-      if (visibleSettlements.length === 0) {
-        logsContainer.innerHTML = `
-          <div class="flex flex-col items-center justify-center py-20 text-slate-500 border border-dashed border-slate-800 rounded-2xl bg-slate-900/20">
-            <i data-lucide="alert-triangle" class="w-10 h-10 text-slate-600 mb-2"></i>
-            <p class="text-sm font-bold">No Visible Records</p>
-            <p class="text-xs text-slate-600 mt-1">Submit new logs or they may be hidden for privacy.</p>
-          </div>
-        `;
-        lucide.createIcons();
-        return;
-      }
-
-      // Generate HTML List using ONLY the visible filtered items
-      logsContainer.innerHTML = visibleSettlements.map(item => {
-        const isSelected = selectedItemId === item.id;
-        const isReserved = item.status === 'RESERVED';
-        const isWithdrawal = item.type === 'WITHDRAWAL';
-        
-        const displayDateString = item.customDate 
-          ? new Date(item.customDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
-          : (item.timestamp ? new Date(item.timestamp).toLocaleDateString() : 'Just recorded');
-        
-        // Define UI variables based on Withdrawal vs Deposit
-        const iconType = isWithdrawal ? 'arrow-down-circle' : (isReserved ? 'shield' : 'alert-circle');
-        
-        let iconColors = '';
-        if (isWithdrawal) iconColors = 'bg-red-500/10 border-red-500/20 text-red-400';
-        else if (isReserved) iconColors = 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400';
-        else iconColors = 'bg-amber-500/10 border-amber-500/20 text-amber-400';
-
-        const rowStyling = isSelected 
-                ? (isWithdrawal ? 'bg-slate-900 border-red-500 shadow-md shadow-red-500/5' : 'bg-slate-900 border-blue-500 shadow-md shadow-blue-500/5') 
-                : 'bg-slate-900/60 border-slate-800/80 hover:bg-slate-900 hover:border-slate-700';
-
-        const amountPrefix = isWithdrawal ? '- LKR' : '+ LKR';
-      const amountTextColor = isWithdrawal ? 'text-red-400' : 'text-blue-400';
-      
-      // Show the gross original amount in the list, but maybe indicate the 97% net for deposits
-      const amountNumber = parseFloat(item.amount).toLocaleString('en-US', { minimumFractionDigits: 2 });
-      const netAmountNumber = isWithdrawal ? amountNumber : (parseFloat(item.amount) * 0.97).toLocaleString('en-US', { minimumFractionDigits: 2 });
-
-      return `
-        <div 
-          class="p-4 rounded-xl border transition-all duration-200 cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-4 log-row-item ${rowStyling}"
-          data-id="${item.id}"
-        >
-          <div class="flex items-start gap-3">
-            <div class="p-2.5 rounded-lg border mt-0.5 ${iconColors}">
-              <i data-lucide="${iconType}" class="w-5 h-5"></i>
+            <div class="mb-4 text-4xl mt-2">
+                <i class="fa-solid fa-circle-down text-rose-500 drop-shadow-[0_0_5px_rgba(244,63,94,0.4)]"></i>
             </div>
-            <div>
-              <div class="flex items-center gap-2">
-                <span class="font-mono font-bold text-white text-base">
-                  ${isWithdrawal ? 'FUND WITHDRAWAL' : `HNB Merchant: ${item.merchantId}`}
-                </span>
-              </div>
-              <p class="text-xs text-slate-400 font-semibold mt-0.5">${isWithdrawal ? 'Admin Authorized Deduct' : item.bankName}</p>
-              <p class="text-[10px] text-slate-500 mt-1 flex items-center gap-1">
-                <span class="${isWithdrawal ? 'text-red-400' : 'text-blue-400'} font-semibold flex items-center gap-1">
-                  <i data-lucide="calendar" class="w-3 h-3 inline"></i> ${displayDateString}
-                </span>
-              </p>
+            <h3 class="text-slate-800 dark:text-white font-extrabold text-xl mb-1">Authorized Withdrawal</h3>
+            <p class="text-slate-500 dark:text-slate-400 text-xs font-medium mb-6">Enter withdrawal amount and admin PIN to deduct from the net balance.</p>
+
+            <div class="space-y-4 text-left">
+                <div>
+                    <label class="block text-[10px] font-extrabold text-rose-500 uppercase tracking-widest mb-1.5">Amount (LKR) *</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-rose-500 text-sm font-bold font-mono">LKR</span>
+                        <input type="number" step="0.01" id="withdraw-amount-input" placeholder="0.00" class="w-full bg-slate-50 dark:bg-[#0f172a] border border-slate-200 dark:border-slate-700 rounded-xl pl-14 pr-4 py-3 text-lg font-mono font-black text-rose-600 dark:text-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400 transition-all">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5">Security PIN</label>
+                    <input type="password" id="withdraw-passcode-input" placeholder="••••••" maxLength="6" class="w-full bg-slate-50 dark:bg-[#0f172a] border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-center text-xl font-black tracking-[0.3em] text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400 transition-all">
+                </div>
             </div>
-          </div>
-
-          <div class="flex items-center justify-between md:justify-end gap-4 border-t md:border-t-0 border-slate-800 pt-3 md:pt-0">
-            <div class="text-right">
-              ${!isWithdrawal ? `<p class="text-[10px] text-slate-500 font-medium line-through decoration-slate-600 mb-0.5">Gross: LKR ${amountNumber}</p>` : ''}
-              <p class="text-base font-mono font-bold ${amountTextColor}">
-                ${amountPrefix} ${netAmountNumber}
-              </p>
-              
-              ${
-                  isWithdrawal 
-                  ? `<span class="inline-flex items-center gap-1 text-[9px] bg-red-500/20 text-red-300 px-2 py-0.5 rounded-full font-bold border border-red-500/30 mt-1">
-                      <i data-lucide="check-circle" class="w-2.5 h-2.5"></i> COMPLETED
-                     </span>`
-                  : (
-                      isReserved 
-                      ? `<span class="inline-flex items-center gap-1 text-[9px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-bold border border-emerald-500/30 mt-1">
-                          <i data-lucide="check" class="w-2.5 h-2.5"></i> 97% RESERVED
-                         </span>`
-                      : `<button 
-                          class="btn-authorize inline-flex items-center gap-1 text-[10px] bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 px-2.5 py-1 rounded-full font-bold border border-amber-500/30 transition-all cursor-pointer mt-1"
-                          data-action-id="${item.id}"
-                         >
-                          <i data-lucide="lock" class="w-2.5 h-2.5"></i> AUTHORIZE 97%
-                         </button>`
-                    )
-              }
-            </div>
-
-            <button 
-              class="btn-delete p-2 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
-              data-delete-id="${item.id}"
-                title="Remove log"
-              >
-                <i data-lucide="trash-2" class="w-4 h-4"></i>
-              </button>
-            </div>
-          </div>
-        `;
-      }).join('');
-
-      lucide.createIcons();
-      attachRowEventListeners();
-    }
-
-    // Attach interactions dynamically inside generated items
-    function attachRowEventListeners() {
-      document.querySelectorAll('.log-row-item').forEach(el => {
-        el.addEventListener('click', () => {
-          const id = el.getAttribute('data-id');
-          selectedItemId = id;
-          renderDashboard();
-          showReceiptPreview(id);
-        });
-      });
-
-      document.querySelectorAll('.btn-authorize').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const id = btn.getAttribute('data-action-id');
-          initiatePasscodeVerification(id);
-        });
-      });
-
-      document.querySelectorAll('.btn-delete').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          pendingDeleteId = btn.getAttribute('data-delete-id');
-          document.getElementById('delete-modal').classList.remove('hidden');
-        });
-      });
-    }
-
-    // Guarded Event Listener binder to prevent "Cannot read properties of null" errors
-    const safeBind = (id, eventName, callback) => {
-      const element = document.getElementById(id);
-      if (element) {
-        element.addEventListener(eventName, callback);
-      } else {
-        console.warn(`Target DOM element ID "${id}" was not resolved in the active document state.`);
-      }
-    };
-
-    // Dashboard Unlock Logic
-    safeBind('btn-unlock-dashboard', 'click', () => {
-        document.getElementById('dashboard-passcode-input').value = '';
-        document.getElementById('dashboard-error-message').classList.add('hidden');
-        document.getElementById('dashboard-unlock-modal').classList.remove('hidden');
-    });
-    
-    safeBind('btn-close-dashboard-modal', 'click', () => {
-        document.getElementById('dashboard-unlock-modal').classList.add('hidden');
-    });
-
-    safeBind('btn-confirm-dashboard-unlock', 'click', () => {
-        const enteredPw = document.getElementById('dashboard-passcode-input').value;
-        if (enteredPw === '129876') {
-            isDashboardUnlocked = true;
-            document.getElementById('dashboard-unlock-modal').classList.add('hidden');
-            renderDashboard(); // Re-render to reveal totals
-            showNotification('success', 'Dashboard statistics unlocked.');
-        } else {
-            document.getElementById('dashboard-error-message').classList.remove('hidden');
-            showNotification('error', 'Security code invalid.');
-        }
-    });
-
-    // Secure Withdrawal Logic
-    safeBind('btn-open-withdraw', 'click', () => {
-        document.getElementById('withdraw-amount-input').value = '';
-        document.getElementById('withdraw-passcode-input').value = '';
-        document.getElementById('withdraw-error-message').classList.add('hidden');
-        document.getElementById('withdrawal-modal').classList.remove('hidden');
-    });
-
-    safeBind('btn-close-withdraw-modal', 'click', closeWithdrawalModal);
-    safeBind('btn-cancel-withdraw', 'click', closeWithdrawalModal);
-
-    function closeWithdrawalModal() {
-        document.getElementById('withdrawal-modal').classList.add('hidden');
-    }
-
-    safeBind('btn-confirm-withdraw-action', 'click', async () => {
-        const amount = parseFloat(document.getElementById('withdraw-amount-input').value);
-        const enteredPw = document.getElementById('withdraw-passcode-input').value;
-        const errorMsg = document.getElementById('withdraw-error-message');
-
-        if (isNaN(amount) || amount <= 0 || enteredPw !== '129876') {
-            errorMsg.classList.remove('hidden');
-            return;
-        }
-
-        try {
-            // Push new withdrawal record to Realtime DB
-            const settlementsRef = ref(db, `artifacts/${safeAppId}/public/data/settlements`);
-            const newRecordRef = push(settlementsRef);
             
-            const payload = {
-                type: 'WITHDRAWAL',
-                amount: amount, // Saved as raw amount, deducted mathematically in renderDashboard
-                status: 'COMPLETED', // Withdrawals are auto-completed since they require PW upfront
-                customDate: new Date().toISOString().split('T')[0],
-                customTimestamp: Date.now(),
-                createdAt: Date.now(),
-                timestamp: new Date().toISOString(),
-                operatorId: user ? user.uid : 'sys-offline'
-            };
+            <p id="withdraw-error-message" class="text-[10px] text-rose-500 font-bold mt-2 mb-4 hidden flex items-center justify-center gap-1 h-4">
+                <i class="fa-solid fa-triangle-exclamation"></i> Invalid amount or PIN.
+            </p>
 
-            await set(newRecordRef, payload);
-            
-            showNotification('success', `LKR ${amount.toLocaleString('en-US')} successfully withdrawn and deducted from total.`);
-            closeWithdrawalModal();
-            
-            // Auto-select the new withdrawal slip
-            selectedItemId = newRecordRef.key;
-            showReceiptPreview(newRecordRef.key);
-        } catch (err) {
-            console.error("Withdrawal Error:", err);
-            showNotification('error', 'Failed to process withdrawal: ' + err.message);
-        }
-    });
+            <button id="btn-confirm-withdraw-action" class="w-full mt-4 py-3.5 rounded-xl bg-gradient-to-r from-rose-500 to-red-600 text-white font-black hover:from-rose-600 hover:to-red-700 transition-colors flex justify-center items-center gap-2 shadow-lg shadow-rose-500/20">
+                <i class="fa-solid fa-check"></i> Execute Withdrawal
+            </button>
+        </div>
+    </div>
 
-    // Custom Delete modal button logic
-    safeBind('btn-cancel-delete', 'click', () => {
-      document.getElementById('delete-modal').classList.add('hidden');
-      pendingDeleteId = null;
-    });
-
-    safeBind('btn-confirm-delete', 'click', async () => {
-      if (!pendingDeleteId) return;
-      try {
-        const deleteRef = ref(db, `artifacts/${safeAppId}/public/data/settlements/${pendingDeleteId}`);
-        await remove(deleteRef);
-        showNotification('success', 'Log successfully deleted.');
-        if (selectedItemId === pendingDeleteId) {
-          selectedItemId = null;
-          document.getElementById('receipt-container').classList.add('hidden');
-          document.getElementById('receipt-placeholder').classList.remove('hidden');
-        }
-      } catch (err) {
-        showNotification('error', 'Error deleting document: ' + err.message);
-      } finally {
-        document.getElementById('delete-modal').classList.add('hidden');
-        pendingDeleteId = null;
-      }
-    });
-
-    // Show Printable Receipt mockups 
-    function showReceiptPreview(id) {
-      const selectedItem = settlements.find(item => item.id === id);
-      if (!selectedItem) return;
-
-      document.getElementById('receipt-placeholder').classList.add('hidden');
-      const container = document.getElementById('receipt-container');
-      container.classList.remove('hidden');
-
-      const isReserved = selectedItem.status === 'RESERVED';
-      const isWithdrawal = selectedItem.type === 'WITHDRAWAL';
-      
-      const displayDateString = selectedItem.customDate 
-        ? new Date(selectedItem.customDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
-        : (selectedItem.timestamp ? new Date(selectedItem.timestamp).toLocaleDateString() : 'PENDING SECURE TIME');
-
-      const borderTopColor = isWithdrawal ? 'border-red-500' : (isReserved ? 'border-emerald-500' : 'border-amber-500');
-
-      if (isWithdrawal) {
-          // Withdrawal specific receipt formatting
-          container.innerHTML = `
-            <div class="bg-white text-slate-950 p-5 rounded-lg shadow-lg font-mono text-[11px] leading-relaxed relative animate-print-down border-t-4 ${borderTopColor}">
-              <div class="absolute -top-1 left-0 right-0 flex justify-around">
-                <div class="w-2 h-2 bg-slate-950 rounded-full"></div>
-                <div class="w-2 h-2 bg-slate-950 rounded-full"></div>
-                <div class="w-2 h-2 bg-slate-950 rounded-full"></div>
-              </div>
-              <div class="text-center font-bold text-sm tracking-widest border-b border-dashed border-slate-400 pb-2 mb-2 text-red-600">
-                FUNDS WITHDRAWAL SLIP
-              </div>
-              <div class="space-y-1">
-                <div class="flex justify-between">
-                  <span>ACTION TYPE:</span>
-                  <span class="font-bold">ADMIN WITHDRAWAL</span>
+    <!-- MONTHLY STATEMENT MODAL (NEW) -->
+    <div id="statement-modal" class="hidden fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/80 dark:bg-[#020617]/90 backdrop-blur-md fade-in py-10 px-4 overflow-y-auto">
+        <!-- Inner wrapper to allow centering vertically but scroll if too tall -->
+        <div class="m-auto w-full max-w-2xl">
+            <div class="bg-white dark:bg-[#1e293b] rounded-[2rem] shadow-2xl border border-slate-200 dark:border-slate-700 transition-colors relative overflow-hidden flex flex-col">
+                
+                <!-- Statement Header -->
+                <div class="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-8 py-6 flex justify-between items-center sticky top-0 z-10">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 flex items-center justify-center text-2xl border border-purple-200 dark:border-purple-500/30">
+                            <i class="fa-solid fa-file-invoice-dollar"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-black text-slate-800 dark:text-white">Monthly Statement</h2>
+                            <p class="text-[10px] uppercase tracking-widest font-bold text-slate-500">HNB Secure Terminal Registry</p>
+                        </div>
+                    </div>
+                    <button id="btn-close-statement" class="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center transition-all shadow-inner">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
                 </div>
-                <div class="flex justify-between border-t border-dashed border-slate-400 pt-1 mt-1">
-                  <span>EXECUTION DATE:</span>
-                  <span class="font-bold text-red-600">${displayDateString}</span>
+
+                <!-- Statement Content -->
+                <div class="p-8">
+                    <!-- Controls -->
+                    <div class="flex flex-col sm:flex-row gap-4 items-end mb-8 bg-slate-50 dark:bg-[#0f172a] p-4 rounded-2xl border border-slate-200 dark:border-slate-700">
+                        <div class="w-full sm:flex-1">
+                            <label class="block text-[10px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5">Select Month</label>
+                            <div class="relative">
+                                <i class="fa-solid fa-calendar-days absolute left-4 top-1/2 -translate-y-1/2 text-purple-500"></i>
+                                <input type="month" id="statement-month-input" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl pl-12 pr-4 py-2.5 text-slate-800 dark:text-white font-bold font-mono outline-none focus:border-purple-500 transition-all dark:[color-scheme:dark]">
+                            </div>
+                        </div>
+                        <button id="btn-generate-statement" class="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 px-6 rounded-xl transition-all shadow-md flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-bolt"></i> Generate
+                        </button>
+                    </div>
+
+                    <!-- PDF Document Area (Mockup) -->
+                    <div id="statement-document" class="hidden">
+                        <div class="bg-white border-2 border-slate-200 p-8 rounded-xl shadow-sm text-slate-800 relative">
+                            <!-- Watermark -->
+                            <div class="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none">
+                                <i class="fa-solid fa-building-columns text-[15rem]"></i>
+                            </div>
+                            
+                            <!-- Doc Header -->
+                            <div class="border-b-2 border-slate-800 pb-4 mb-6 flex justify-between items-end relative z-10">
+                                <div>
+                                    <h1 class="text-2xl font-black uppercase tracking-tighter">Settlement Summary</h1>
+                                    <p class="text-xs font-bold text-slate-500 mt-1">HATTON NATIONAL BANK PLC</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Period</p>
+                                    <p id="stmt-period-label" class="text-lg font-mono font-bold text-purple-700">MMM YYYY</p>
+                                </div>
+                            </div>
+
+                            <!-- Summary Grid -->
+                            <div class="grid grid-cols-2 gap-4 mb-8 relative z-10">
+                                <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Transactions</p>
+                                    <p id="stmt-tx-count" class="text-xl font-black font-mono">0</p>
+                                </div>
+                                <div class="bg-emerald-50 p-4 rounded-lg border border-emerald-100">
+                                    <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-1">Gross Deposits</p>
+                                    <p id="stmt-gross-deposits" class="text-xl font-black font-mono text-emerald-700">LKR 0.00</p>
+                                </div>
+                                <div class="bg-amber-50 p-4 rounded-lg border border-amber-100">
+                                    <p class="text-[10px] font-bold text-amber-600 uppercase tracking-widest mb-1">Bank Commission (3%)</p>
+                                    <p id="stmt-commission" class="text-xl font-black font-mono text-amber-700">- LKR 0.00</p>
+                                </div>
+                                <div class="bg-rose-50 p-4 rounded-lg border border-rose-100">
+                                    <p class="text-[10px] font-bold text-rose-600 uppercase tracking-widest mb-1">Total Withdrawals</p>
+                                    <p id="stmt-withdrawals" class="text-xl font-black font-mono text-rose-700">- LKR 0.00</p>
+                                </div>
+                            </div>
+
+                            <!-- Grand Total -->
+                            <div class="bg-slate-900 text-white p-6 rounded-xl flex justify-between items-center mb-8 shadow-lg relative z-10">
+                                <div>
+                                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Closing Net Balance</p>
+                                    <p class="text-[10px] text-slate-500">Calculated for selected period</p>
+                                </div>
+                                <p id="stmt-net-balance" class="text-3xl font-black font-mono text-teal-400">LKR 0.00</p>
+                            </div>
+
+                            <!-- TX List -->
+                            <div class="relative z-10">
+                                <h3 class="text-xs font-extrabold text-slate-800 uppercase tracking-widest border-b border-slate-200 pb-2 mb-4">Transaction Ledger</h3>
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-left text-xs">
+                                        <thead>
+                                            <tr class="text-slate-400 font-bold border-b border-slate-100">
+                                                <th class="py-2 px-2 uppercase tracking-wider">Date</th>
+                                                <th class="py-2 px-2 uppercase tracking-wider">Ref / Type</th>
+                                                <th class="py-2 px-2 text-right uppercase tracking-wider">Gross</th>
+                                                <th class="py-2 px-2 text-right uppercase tracking-wider">Net Amount</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="stmt-ledger-body" class="font-mono divide-y divide-slate-50">
+                                            <!-- Dynamically populated -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div id="stmt-empty-state" class="hidden text-center py-8 text-slate-400 font-medium">
+                                    No records found for this period.
+                                </div>
+                            </div>
+                            
+                            <div class="mt-12 pt-4 border-t border-slate-200 text-center">
+                                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">End of Statement • Generated Securely</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Print btn -->
+                        <div class="flex justify-end mt-4">
+                            <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg text-xs transition-all flex items-center gap-2">
+                                <i class="fa-solid fa-print"></i> Print Document
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <div class="flex justify-between border-b border-dashed border-slate-400 pb-1 mb-1">
-                  <span>STATUS:</span>
-                  <span class="text-emerald-700 font-extrabold uppercase">COMPLETED</span>
-                </div>
-                <div class="text-center py-2 text-sm font-extrabold border-b border-dashed border-slate-400 text-red-600">
-                  DEDUCTION: - LKR ${parseFloat(selectedItem.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                </div>
-                <div class="text-center pt-3 text-[9px] text-slate-500 leading-tight">
-                  AUTHORIZED ADMIN ACTION
-                  <br />
-                  SECURE VAULT LOG
-                </div>
-              </div>
             </div>
-          `;
-      } else {
-          // Standard Deposit receipt formatting
-          container.innerHTML = `
-            <div class="bg-white text-slate-950 p-5 rounded-lg shadow-lg font-mono text-[11px] leading-relaxed relative animate-print-down border-t-4 ${borderTopColor}">
-              <div class="absolute -top-1 left-0 right-0 flex justify-around">
-                <div class="w-2 h-2 bg-slate-950 rounded-full"></div>
-                <div class="w-2 h-2 bg-slate-950 rounded-full"></div>
-                <div class="w-2 h-2 bg-slate-950 rounded-full"></div>
-              </div>
-              <div class="text-center font-bold text-sm tracking-widest border-b border-dashed border-slate-400 pb-2 mb-2">
-                HNB MERCHANT SETTLEMENT
-              </div>
-              <div class="space-y-1">
-                <div class="flex justify-between">
-                  <span>ACQUIRER:</span>
-                  <span class="font-bold">${selectedItem.bankName}</span>
-                </div>
-                <div class="flex justify-between">
-                  <span>MERCHANT ID:</span>
-                  <span class="font-bold text-blue-600">${selectedItem.merchantId}</span>
-                </div>
-                <div class="flex justify-between border-t border-dashed border-slate-400 pt-1 mt-1">
-                  <span>SETTLEMENT DATE:</span>
-                  <span class="font-bold text-blue-600">${displayDateString}</span>
-                </div>
-                <div class="flex justify-between border-b border-dashed border-slate-400 pb-1 mb-1">
-                  <span>STATUS:</span>
-                  <span class="${isReserved ? 'text-emerald-700' : 'text-amber-700'} font-extrabold uppercase">${selectedItem.status}</span>
-                </div>
-                <div class="text-center pt-3 pb-1 text-[10px] font-bold text-slate-500 line-through">
-                  GROSS AMOUNT: LKR ${parseFloat(selectedItem.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                </div>
-                <div class="text-center py-2 text-sm font-black text-blue-700 bg-blue-100/50 rounded border border-blue-300/50 mb-2">
-                  NET SETTLED (97%): LKR ${(parseFloat(selectedItem.amount) * 0.97).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                </div>
-                <div class="text-center pt-3 text-[9px] text-slate-500 leading-tight border-t border-dashed border-slate-400">
-                  HATTON NATIONAL BANK PLC
-                  <br />
-                  ${isReserved ? 'AUTHORIZED DIGITAL RECORD' : 'UNAUTHORIZED LOG • PENDING PW VERIFY'}
-                </div>
-              </div>
-            </div>
-          `;
-      }
-    }
+        </div>
+    </div>
 
-    // Modal Trigger verification logic for Deposit Reservation
-    function initiatePasscodeVerification(id) {
-      const selectedItem = settlements.find(item => item.id === id);
-      if (!selectedItem) return;
+    <!-- FOOTER -->
+    <footer class="glass-panel border-t-0 rounded-t-3xl mx-4 mb-2 py-4 px-6 text-center text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest transition-colors z-40 relative">
+        <p>© 2026 Biotech Laboratory POS Settlement Control Hub. Secured By Biotech</p>
+    </footer>
 
-      pendingVerificationItem = selectedItem;
-      const displayDateString = selectedItem.customDate 
-        ? new Date(selectedItem.customDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
-        : 'N/A';
-      
-      const detailsCard = document.getElementById('modal-details-card');
-      detailsCard.innerHTML = `
-        <p><span class="text-slate-500">Merchant Group:</span> ${selectedItem.merchantId}</p>
-        <p><span class="text-slate-500">Selected Date:</span> ${displayDateString}</p>
-        <p class="text-emerald-400 font-bold text-sm mt-1">LKR ${parseFloat(selectedItem.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
-      `;
+    <!-- ========================================================== -->
+    <!-- FIREBASE MODULE LOGIC AND USER-INTERFACE DRIVER -->
+    <!-- ========================================================== -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getDatabase, ref, push, set, update, remove, onValue } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
 
-      // Reset values
-      document.getElementById('modal-passcode-input').value = '';
-      document.getElementById('modal-error-message').classList.add('hidden');
-      
-      // Reveal Modal overlay
-      document.getElementById('passcode-modal').classList.remove('hidden');
-    }
-
-    // Complete Passcode verification for Reservation
-    async function executeVerification() {
-      const enteredPw = document.getElementById('modal-passcode-input').value;
-      const errorMsg = document.getElementById('modal-error-message');
-
-      if (enteredPw !== '129876') {
-        errorMsg.classList.remove('hidden');
-        showNotification('error', 'Security clearance code invalid. Re-check entry.');
-        return;
-      }
-
-      if (!pendingVerificationItem) return;
-
-      try {
-        // Safe Realtime DB reference update (using safeAppId)
-        const updateRef = ref(db, `artifacts/${safeAppId}/public/data/settlements/${pendingVerificationItem.id}`);
-        
-        await update(updateRef, {
-          status: 'RESERVED',
-          authorizedAt: new Date().toISOString()
-        });
-
-        showNotification('success', 'Payment status updated to RESERVED!');
-        document.getElementById('passcode-modal').classList.add('hidden');
-        
-        // Refresh UI state and display selection details
-        showReceiptPreview(pendingVerificationItem.id);
-        pendingVerificationItem = null;
-      } catch (err) {
-        showNotification('error', 'Failed updating database: ' + err.message);
-      }
-    }
-
-    // Register Form Entries directly (NO PASSWORD REQUIRED FOR DEPOSITS)
-    safeBind('settlement-form', 'submit', async (e) => {
-      e.preventDefault();
-
-      const merchantId = document.getElementById('selectedMerchantId').value;
-      const amount = parseFloat(document.getElementById('amount').value.trim());
-      const selectedDate = document.getElementById('settlementDate').value;
-
-      if (!merchantId || isNaN(amount) || !selectedDate) {
-        showNotification('error', 'Kindly complete all selection fields.');
-        return;
-      }
-
-      try {
-        // Safe Realtime Database push sequence (using safeAppId)
-        const settlementsRef = ref(db, `artifacts/${safeAppId}/public/data/settlements`);
-        const newRecordRef = push(settlementsRef);
-        
-        // We save the GROSS amount as requested, and handle the 3% deduction mathematically in the render loop.
-        const payload = {
-          type: 'DEPOSIT', // Explicitly mark as deposit
-          merchantId,
-          bankName: 'Hatton National Bank (HNB)',
-          amount: amount, 
-          status: 'PENDING', // Saved initially as Pending
-          customDate: selectedDate, // Store user-selected custom date string (YYYY-MM-DD)
-          customTimestamp: new Date(selectedDate).getTime(), // Used to organize order correctly
-          createdAt: Date.now(), // Realtime log insertion timestamp
-          timestamp: new Date().toISOString(),
-          operatorId: user ? user.uid : 'sys-offline'
+        // 1. Setup Live Production Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAmTlVGY0K9dXGUf0I7L6DHwEIlPYmYoYI",
+            authDomain: "hnbd-62b18.firebaseapp.com",
+            databaseURL: "https://hnbd-62b18-default-rtdb.firebaseio.com",
+            projectId: "hnbd-62b18",
+            storageBucket: "hnbd-62b18.firebasestorage.app",
+            messagingSenderId: "922426900930",
+            appId: "1:922426900930:web:e8acaa16936adcee8d965b",
+            measurementId: "G-PM0C41VGY1"
         };
 
-        // Attempt to write payload to Realtime Database
-        await set(newRecordRef, payload);
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
         
-        // Reset only the Amount input (keeping date selector and merchant selection pre-set)
-        document.getElementById('amount').value = '';
-
-        showNotification('success', `Terminal log registered! (97% applied to balance)`);
+        // Explicitly target Realtime Database URL
+        const db = getDatabase(app, firebaseConfig.databaseURL);
         
-        // Auto-select newly saved log
-        selectedItemId = newRecordRef.key;
-        showReceiptPreview(newRecordRef.key);
-      } catch (err) {
-        console.error("Database Write Error:", err);
-        showNotification('error', 'Database Write Error: ' + err.message);
-      }
-    });
+        // Force App ID to reconnect to previous data
+        const appId = 'pos-settlement-system-default';
+        const safeAppId = appId.replace(/[\.\#\$\[\]]/g, '_');
 
-    // Mock Generators
-    safeBind('btn-mock-data', 'click', () => {
-      // Choose random Merchant ID and generate values
-      const randomMerchant = Math.random() > 0.5 ? 'VG' : 'BN';
-      selectMerchant(randomMerchant);
+        document.getElementById('app-id-display').innerText = safeAppId;
 
-      // Random date generation within current/previous week
-      const d = new Date();
-      d.setDate(d.getDate() - Math.floor(Math.random() * 7));
-      document.getElementById('settlementDate').value = d.toISOString().split('T')[0];
+        // Local state stores
+        window.user = null;
+        window.settlements = [];
+        window.selectedItemId = null;
+        let pendingVerificationItem = null;
+        let pendingDeleteId = null;
+        let isDashboardUnlocked = false; 
 
-      document.getElementById('amount').value = (Math.random() * 150000 + 5000).toFixed(2);
-      showNotification('success', 'Prefilled mockup terminal slip values.');
-    });
+        // Universal PIN Modal state manager
+        let currentPinAction = null; 
 
-    // Close Modals
-    safeBind('btn-close-modal', 'click', closeModal);
-    safeBind('btn-cancel-modal', 'click', closeModal);
-    safeBind('btn-confirm-passcode', 'click', executeVerification);
+        // Global selector trigger for Merchant IDs
+        window.selectMerchant = function(merchantId) {
+            document.getElementById('selectedMerchantId').value = merchantId;
+            localStorage.setItem('savedMerchantBranch', merchantId);
 
-    function closeModal() {
-      document.getElementById('passcode-modal').classList.add('hidden');
-      pendingVerificationItem = null;
-    }
+            const btnVg = document.getElementById('merchant-vg');
+            const btnBn = document.getElementById('merchant-bn');
 
-    // Initial load setup for fields
-    setupDefaultDatePicker();
-    
-    const savedBranch = localStorage.getItem('savedMerchantBranch') || 'VG';
-    selectMerchant(savedBranch);
-  </script>
+            const activeClass = "py-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-1 bg-blue-50 border-blue-200 text-blue-600 dark:bg-blue-600/20 dark:border-blue-500 dark:text-blue-400";
+            const inactiveClass = "py-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-1 bg-white border-slate-200 text-slate-500 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700";
+
+            if (merchantId === 'VG') {
+                btnVg.className = activeClass;
+                btnBn.className = inactiveClass;
+            } else {
+                btnBn.className = activeClass;
+                btnVg.className = inactiveClass;
+            }
+        }
+
+        // Setup Default Date Picker value to Today
+        function setupDefaultDatePicker() {
+            const today = new Date().toISOString().split('T')[0];
+            const el = document.getElementById('settlementDate');
+            if (el) el.value = today;
+            
+            const monthEl = document.getElementById('statement-month-input');
+            if (monthEl) monthEl.value = today.substring(0, 7);
+        }
+
+        // Update status bar UI
+        function updateStatusBadge(isOnline, text) {
+            const badge = document.getElementById('db-status-badge');
+            if (badge) {
+                if (isOnline) {
+                    badge.className = "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold border bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30 transition-colors";
+                } else {
+                    badge.className = "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold border bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-500/30 animate-pulse transition-colors";
+                }
+            }
+            const textEl = document.getElementById('db-status-text');
+            if (textEl) textEl.innerText = text;
+        }
+
+        // Trigger on-screen banner alerts
+        function showNotification(type, message) {
+            const container = document.getElementById('notification-container');
+            if (!container) return;
+            const element = document.createElement('div');
+            
+            const baseClass = "p-4 rounded-2xl shadow-2xl border flex items-center gap-3 transition-all transform duration-300 translate-y-2 opacity-0 pointer-events-auto backdrop-blur-md font-medium text-sm";
+            const typeClass = type === 'success' 
+                ? 'bg-white/90 dark:bg-[#1e293b]/90 text-slate-800 dark:text-white border-teal-200 dark:border-teal-500/50' 
+                : 'bg-white/90 dark:bg-[#1e293b]/90 text-slate-800 dark:text-white border-rose-200 dark:border-rose-500/50';
+            
+            element.className = `${baseClass} ${typeClass}`;
+            
+            const icon = type === 'success' ? 'fa-circle-check text-teal-500 dark:text-teal-400 text-xl' : 'fa-triangle-exclamation text-rose-500 dark:text-rose-400 text-xl';
+            element.innerHTML = `
+                <i class="fa-solid ${icon}"></i>
+                <p>${message}</p>
+            `;
+            
+            container.appendChild(element);
+            
+            setTimeout(() => {
+                element.classList.remove('translate-y-2', 'opacity-0');
+            }, 50);
+
+            setTimeout(() => {
+                element.classList.add('translate-y-2', 'opacity-0');
+                setTimeout(() => element.remove(), 300);
+            }, 5000);
+        }
+
+        startSyncingRegistry();
+
+        // Trigger authentication background task
+        const initAuth = async () => {
+            try {
+                await signInAnonymously(auth);
+            } catch (err) {
+                console.warn("Auth initialization failed. Connecting via Open Rules instead:", err);
+                updateStatusBadge(true, "DATABASE ONLINE (OPEN PORT)");
+            }
+        };
+        initAuth();
+
+        onAuthStateChanged(auth, (currentUser) => {
+            window.user = currentUser;
+            if (currentUser) {
+                updateStatusBadge(true, "SECURED CONNECTION ONLINE");
+            }
+        });
+
+        // Real-Time Database listener
+        function startSyncingRegistry() {
+            const databasePath = `artifacts/${safeAppId}/public/data/settlements`;
+            const settlementsRef = ref(db, databasePath);
+
+            onValue(settlementsRef, 
+                (snapshot) => {
+                    window.settlements = [];
+                    if (snapshot.exists()) {
+                        snapshot.forEach((childSnapshot) => {
+                            window.settlements.push({ id: childSnapshot.key, ...childSnapshot.val() });
+                        });
+                    }
+
+                    window.settlements.sort((a, b) => {
+                        const timeA = a.customTimestamp || a.createdAt || 0;
+                        const timeB = b.customTimestamp || b.createdAt || 0;
+                        return timeB - timeA;
+                    });
+
+                    renderDashboard();
+                },
+                (error) => {
+                    showNotification('error', 'Cloud sync failure: ' + error.message);
+                    updateStatusBadge(false, "DATABASE OFFLINE / ERROR");
+                }
+            );
+        }
+
+        // Dynamic UI Redrawer
+        function renderDashboard() {
+            const logsContainer = document.getElementById('logs-container');
+            if (!logsContainer) return;
+            
+            let netBalance = 0;
+            let reservedCount = 0;
+            let pendingCount = 0;
+
+            window.settlements.forEach(item => {
+                const amt = Number(item.amount || 0);
+                const type = item.type || 'DEPOSIT';
+
+                if (type === 'WITHDRAWAL') {
+                    netBalance -= amt;
+                } else {
+                    netBalance += (amt * 0.97);
+                    if (item.status === 'RESERVED') {
+                        reservedCount++;
+                    } else if (item.status === 'PENDING') {
+                        pendingCount++;
+                    }
+                }
+            });
+
+            if (isDashboardUnlocked) {
+                document.getElementById('stat-gross-amount').innerText = `LKR ${netBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                document.getElementById('stat-total-count').innerText = window.settlements.length;
+                document.getElementById('stat-reserved-count').innerText = reservedCount;
+                document.getElementById('stat-pending-count').innerText = pendingCount;
+                document.getElementById('btn-unlock-dashboard').classList.add('hidden');
+            } else {
+                document.getElementById('stat-gross-amount').innerText = `LKR ***`;
+                document.getElementById('stat-total-count').innerText = `***`;
+                document.getElementById('stat-reserved-count').innerText = `***`;
+                document.getElementById('stat-pending-count').innerText = `***`;
+                document.getElementById('btn-unlock-dashboard').classList.remove('hidden');
+            }
+
+            const TEN_DAYS_MS = 10 * 24 * 60 * 60 * 1000;
+            const now = Date.now();
+            
+            const visibleSettlements = window.settlements.filter(item => {
+                if (item.status === 'RESERVED') {
+                    const itemTime = item.customTimestamp || item.createdAt || 0;
+                    if (now - itemTime > TEN_DAYS_MS) {
+                        return false; 
+                    }
+                }
+                return true; 
+            });
+
+            document.getElementById('total-logs-indicator').innerText = isDashboardUnlocked 
+                ? `Showing ${visibleSettlements.length} of ${window.settlements.length} records`
+                : `Stream Active`;
+
+            if (visibleSettlements.length === 0) {
+                logsContainer.innerHTML = `
+                    <div class="flex flex-col items-center justify-center py-20 text-slate-400 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl bg-slate-50 dark:bg-slate-900/30 transition-colors">
+                        <i class="fa-solid fa-triangle-exclamation text-4xl text-slate-300 dark:text-slate-600 mb-3"></i>
+                        <p class="text-sm font-bold text-slate-500 dark:text-slate-400">No Visible Records</p>
+                        <p class="text-xs mt-1 font-medium">Submit new logs or they may be hidden for privacy.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            logsContainer.innerHTML = visibleSettlements.map(item => {
+                const isSelected = window.selectedItemId === item.id;
+                const isReserved = item.status === 'RESERVED';
+                const isWithdrawal = item.type === 'WITHDRAWAL';
+                
+                const displayDateString = item.customDate 
+                    ? new Date(item.customDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+                    : (item.timestamp ? new Date(item.timestamp).toLocaleDateString() : 'Just recorded');
+                
+                const iconType = isWithdrawal ? 'fa-circle-down' : (isReserved ? 'fa-shield-halved' : 'fa-circle-exclamation');
+                
+                let iconColors = '';
+                if (isWithdrawal) iconColors = 'bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/20 text-rose-500 dark:text-rose-400';
+                else if (isReserved) iconColors = 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400';
+                else iconColors = 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20 text-amber-600 dark:text-amber-400';
+
+                const rowStyling = isSelected 
+                        ? (isWithdrawal ? 'bg-white dark:bg-[#1e293b] border-rose-400 shadow-lg' : 'bg-white dark:bg-[#1e293b] border-blue-500 shadow-lg') 
+                        : 'bg-slate-50/50 dark:bg-[#0f172a]/50 border-slate-200 dark:border-slate-800/80 hover:bg-white dark:hover:bg-[#1e293b] hover:border-slate-300 dark:hover:border-slate-700';
+
+                const amountPrefix = isWithdrawal ? '- LKR' : '+ LKR';
+                const amountTextColor = isWithdrawal ? 'text-rose-600 dark:text-rose-400' : 'text-blue-600 dark:text-blue-400';
+                
+                const amountNumber = parseFloat(item.amount).toLocaleString('en-US', { minimumFractionDigits: 2 });
+                const netAmountNumber = isWithdrawal ? amountNumber : (parseFloat(item.amount) * 0.97).toLocaleString('en-US', { minimumFractionDigits: 2 });
+
+                return `
+                <div class="p-5 rounded-2xl border transition-all duration-200 cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-4 log-row-item ${rowStyling}" data-id="${item.id}">
+                    <div class="flex items-start gap-4">
+                        <div class="w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 ${iconColors}">
+                            <i class="fa-solid ${iconType} text-lg"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="font-mono font-black text-slate-800 dark:text-white text-base transition-colors">
+                                    ${isWithdrawal ? 'FUND WITHDRAWAL' : `HNB Merchant: ${item.merchantId}`}
+                                </span>
+                            </div>
+                            <p class="text-xs text-slate-500 font-bold mt-0.5">${isWithdrawal ? 'Admin Authorized Deduct' : item.bankName}</p>
+                            <p class="text-[10px] mt-1.5 flex items-center gap-1.5 font-bold">
+                                <span class="${isWithdrawal ? 'text-rose-500 dark:text-rose-400' : 'text-blue-600 dark:text-blue-400'} flex items-center gap-1 bg-white dark:bg-slate-800 px-2 py-0.5 rounded shadow-sm border border-slate-100 dark:border-slate-700">
+                                    <i class="fa-solid fa-calendar"></i> ${displayDateString}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between md:justify-end gap-4 border-t md:border-t-0 border-slate-200 dark:border-slate-800 pt-3 md:pt-0 w-full md:w-auto">
+                        <div class="text-right flex-1 md:flex-none">
+                            ${!isWithdrawal ? `<p class="text-[10px] text-slate-400 font-bold line-through decoration-slate-400 mb-0.5">Gross: LKR ${amountNumber}</p>` : ''}
+                            <p class="text-lg font-mono font-black ${amountTextColor}">
+                                ${amountPrefix} ${netAmountNumber}
+                            </p>
+                            
+                            ${
+                                isWithdrawal 
+                                ? `<span class="inline-flex items-center gap-1 text-[9px] bg-rose-50 dark:bg-rose-500/20 text-rose-600 dark:text-rose-300 px-2.5 py-1 rounded-full font-bold border border-rose-200 dark:border-rose-500/30 mt-1 uppercase tracking-wider">
+                                    <i class="fa-solid fa-circle-check"></i> COMPLETED
+                                    </span>`
+                                : (
+                                    isReserved 
+                                    ? `<span class="inline-flex items-center gap-1 text-[9px] bg-emerald-50 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 px-2.5 py-1 rounded-full font-bold border border-emerald-200 dark:border-emerald-500/30 mt-1 uppercase tracking-wider">
+                                        <i class="fa-solid fa-check"></i> 97% RESERVED
+                                        </span>`
+                                    : `<button class="btn-authorize inline-flex items-center gap-1.5 text-[9px] bg-amber-50 hover:bg-amber-100 dark:bg-amber-500/20 dark:hover:bg-amber-500/30 text-amber-600 dark:text-amber-300 px-3 py-1 rounded-full font-extrabold border border-amber-200 dark:border-amber-500/30 transition-all cursor-pointer mt-1 uppercase tracking-wider shadow-sm" data-action-id="${item.id}">
+                                        <i class="fa-solid fa-lock"></i> AUTHORIZE 97%
+                                        </button>`
+                                )
+                            }
+                        </div>
+
+                        ${(!isReserved && !isWithdrawal) ? `
+                        <button class="btn-delete w-10 h-10 flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/20 rounded-xl transition-all border border-transparent hover:border-rose-200 dark:hover:border-rose-500/30" data-delete-id="${item.id}" title="Remove log">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                        ` : `<div class="w-10 h-10"></div>`}
+                    </div>
+                </div>
+                `;
+            }).join('');
+
+            attachRowEventListeners();
+        }
+
+        function attachRowEventListeners() {
+            document.querySelectorAll('.log-row-item').forEach(el => {
+                el.addEventListener('click', () => {
+                    const id = el.getAttribute('data-id');
+                    window.selectedItemId = id;
+                    renderDashboard();
+                    showReceiptPreview(id);
+                });
+            });
+
+            document.querySelectorAll('.btn-authorize').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const id = btn.getAttribute('data-action-id');
+                    initiatePasscodeVerification(id);
+                });
+            });
+
+            document.querySelectorAll('.btn-delete').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const id = btn.getAttribute('data-delete-id');
+                    initiateDeleteVerification(id);
+                });
+            });
+        }
+
+        const safeBind = (id, eventName, callback) => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.addEventListener(eventName, callback);
+            }
+        };
+
+        // --- UNIFIED PIN MODAL LOGIC ---
+        function openPinModal(actionType, config) {
+            currentPinAction = actionType;
+            
+            const titleEl = document.getElementById('pin-modal-title');
+            const descEl = document.getElementById('pin-modal-desc');
+            const iconEl = document.getElementById('pin-modal-icon');
+            const accent = document.getElementById('pin-modal-accent');
+            const input = document.getElementById('pin-modal-input');
+            const error = document.getElementById('pin-modal-error');
+            const extra = document.getElementById('pin-modal-extra');
+            const btn = document.getElementById('btn-confirm-pin');
+
+            input.value = '';
+            error.classList.add('hidden');
+            extra.classList.add('hidden');
+            
+            titleEl.innerText = config.title;
+            descEl.innerText = config.desc;
+            
+            if(config.color === 'amber') {
+                accent.className = 'absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-400 to-orange-500';
+                iconEl.innerHTML = `<i class="fa-solid fa-${config.icon} text-amber-500 drop-shadow-[0_0_5px_rgba(245,158,11,0.4)]"></i>`;
+                input.className = "w-full mb-2 bg-slate-50 dark:bg-[#0f172a] border border-slate-200 dark:border-slate-600 text-slate-800 dark:text-white px-4 py-3 rounded-xl outline-none text-center text-xl font-black tracking-[0.3em] focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 transition-all";
+                btn.className = "w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-black hover:from-amber-600 hover:to-orange-700 transition-colors flex justify-center items-center gap-2 shadow-lg";
+            } else if (config.color === 'emerald') {
+                accent.className = 'absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-teal-400 to-emerald-500';
+                iconEl.innerHTML = `<i class="fa-solid fa-${config.icon} text-emerald-500 drop-shadow-[0_0_5px_rgba(16,185,129,0.4)]"></i>`;
+                input.className = "w-full mb-2 bg-slate-50 dark:bg-[#0f172a] border border-slate-200 dark:border-slate-600 text-slate-800 dark:text-white px-4 py-3 rounded-xl outline-none text-center text-xl font-black tracking-[0.3em] focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 transition-all";
+                btn.className = "w-full py-3.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-600 text-white font-black hover:from-teal-600 hover:to-emerald-700 transition-colors flex justify-center items-center gap-2 shadow-lg";
+                
+                if (config.extraHtml) {
+                    extra.innerHTML = config.extraHtml;
+                    extra.classList.remove('hidden');
+                }
+            } else if (config.color === 'purple') {
+                accent.className = 'absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-indigo-600';
+                iconEl.innerHTML = `<i class="fa-solid fa-${config.icon} text-purple-500 drop-shadow-[0_0_5px_rgba(168,85,247,0.4)]"></i>`;
+                input.className = "w-full mb-2 bg-slate-50 dark:bg-[#0f172a] border border-slate-200 dark:border-slate-600 text-slate-800 dark:text-white px-4 py-3 rounded-xl outline-none text-center text-xl font-black tracking-[0.3em] focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 transition-all";
+                btn.className = "w-full py-3.5 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-black hover:from-purple-600 hover:to-indigo-700 transition-colors flex justify-center items-center gap-2 shadow-lg";
+            } else if (config.color === 'rose') {
+                accent.className = 'absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-rose-500 to-red-600';
+                iconEl.innerHTML = `<i class="fa-solid fa-${config.icon} text-rose-500 drop-shadow-[0_0_5px_rgba(244,63,94,0.4)]"></i>`;
+                input.className = "w-full mb-2 bg-slate-50 dark:bg-[#0f172a] border border-slate-200 dark:border-slate-600 text-slate-800 dark:text-white px-4 py-3 rounded-xl outline-none text-center text-xl font-black tracking-[0.3em] focus:border-rose-400 focus:ring-2 focus:ring-rose-400/20 transition-all";
+                btn.className = "w-full py-3.5 rounded-xl bg-gradient-to-r from-rose-500 to-red-600 text-white font-black hover:from-rose-600 hover:to-red-700 transition-colors flex justify-center items-center gap-2 shadow-lg";
+                if (config.extraHtml) {
+                    extra.innerHTML = config.extraHtml;
+                    extra.classList.remove('hidden');
+                }
+            }
+
+            document.getElementById('unified-pin-modal').classList.remove('hidden');
+            setTimeout(() => input.focus(), 100);
+        }
+
+        function closePinModal() {
+            document.getElementById('unified-pin-modal').classList.add('hidden');
+            currentPinAction = null;
+            pendingVerificationItem = null;
+        }
+
+        safeBind('btn-close-pin-modal', 'click', closePinModal);
+
+        safeBind('btn-confirm-pin', 'click', async () => {
+            const enteredPw = document.getElementById('pin-modal-input').value;
+            const errorMsg = document.getElementById('pin-modal-error');
+            
+            if (enteredPw !== '129876') {
+                errorMsg.classList.remove('hidden');
+                return;
+            }
+
+            if (currentPinAction === 'unlock_dashboard') {
+                isDashboardUnlocked = true;
+                closePinModal();
+                renderDashboard();
+                showNotification('success', 'Dashboard statistics unlocked.');
+            } 
+            else if (currentPinAction === 'authorize_payment') {
+                if (!pendingVerificationItem) return;
+                try {
+                    const updateRef = ref(db, `artifacts/${safeAppId}/public/data/settlements/${pendingVerificationItem.id}`);
+                    await update(updateRef, { status: 'RESERVED', authorizedAt: new Date().toISOString() });
+                    showNotification('success', 'Payment status updated to RESERVED!');
+                    closePinModal();
+                    showReceiptPreview(pendingVerificationItem.id);
+                } catch (err) {
+                    showNotification('error', 'Failed updating database: ' + err.message);
+                }
+            }
+            else if (currentPinAction === 'view_statement') {
+                closePinModal();
+                document.getElementById('statement-modal').classList.remove('hidden');
+            }
+            else if (currentPinAction === 'delete_log') {
+                if (!pendingDeleteId) return;
+                try {
+                    const deleteRef = ref(db, `artifacts/${safeAppId}/public/data/settlements/${pendingDeleteId}`);
+                    await remove(deleteRef);
+                    showNotification('success', 'Log successfully deleted.');
+                    if (window.selectedItemId === pendingDeleteId) {
+                        window.selectedItemId = null;
+                        document.getElementById('receipt-container').classList.add('hidden');
+                        document.getElementById('receipt-placeholder').classList.remove('hidden');
+                    }
+                    closePinModal();
+                } catch (err) {
+                    showNotification('error', 'Error deleting document: ' + err.message);
+                } finally {
+                    pendingDeleteId = null;
+                }
+            }
+        });
+
+        // Modals Open Triggers
+        safeBind('btn-unlock-dashboard', 'click', () => {
+            openPinModal('unlock_dashboard', {
+                title: 'Privacy Lock', desc: 'Enter code to reveal hidden dashboard statistics.', icon: 'lock', color: 'amber'
+            });
+        });
+
+        safeBind('btn-open-statement', 'click', () => {
+            openPinModal('view_statement', {
+                title: 'Monthly Statement', desc: 'Verify admin access to view private financial summaries.', icon: 'file-invoice-dollar', color: 'purple'
+            });
+        });
+
+        function initiatePasscodeVerification(id) {
+            const selectedItem = window.settlements.find(item => item.id === id);
+            if (!selectedItem) return;
+
+            pendingVerificationItem = selectedItem;
+            const displayDateString = selectedItem.customDate 
+                ? new Date(selectedItem.customDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+                : 'N/A';
+            
+            const extraHtml = `
+                <p><span class="text-slate-500 font-bold">Merchant:</span> <span class="text-slate-800 dark:text-white">${selectedItem.merchantId}</span></p>
+                <p><span class="text-slate-500 font-bold">Date:</span> <span class="text-slate-800 dark:text-white">${displayDateString}</span></p>
+                <p class="text-emerald-600 dark:text-emerald-400 font-black text-sm mt-2">LKR ${parseFloat(selectedItem.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+            `;
+
+            openPinModal('authorize_payment', {
+                title: 'Payment Reservation', desc: 'Verify terminal transaction value to authorize.', icon: 'shield-check', color: 'emerald', extraHtml
+            });
+        }
+
+        function initiateDeleteVerification(id) {
+            const selectedItem = window.settlements.find(item => item.id === id);
+            if (!selectedItem) return;
+
+            pendingDeleteId = id;
+            
+            const displayDateString = selectedItem.customDate 
+                ? new Date(selectedItem.customDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+                : 'N/A';
+            
+            const extraHtml = `
+                <p><span class="text-slate-500 font-bold">Merchant:</span> <span class="text-slate-800 dark:text-white">${selectedItem.merchantId}</span></p>
+                <p><span class="text-slate-500 font-bold">Date:</span> <span class="text-slate-800 dark:text-white">${displayDateString}</span></p>
+                <p class="text-rose-600 dark:text-rose-400 font-black text-sm mt-2">LKR ${parseFloat(selectedItem.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+            `;
+
+            openPinModal('delete_log', {
+                title: 'Delete Log?', desc: 'Enter admin PIN to permanently remove this record. Irreversible.', icon: 'trash-can', color: 'rose', extraHtml
+            });
+        }
+
+        // Secure Withdrawal Logic
+        safeBind('btn-open-withdraw', 'click', () => {
+            document.getElementById('withdraw-amount-input').value = '';
+            document.getElementById('withdraw-passcode-input').value = '';
+            document.getElementById('withdraw-error-message').classList.add('hidden');
+            document.getElementById('withdrawal-modal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('withdraw-amount-input').focus(), 100);
+        });
+
+        safeBind('btn-close-withdraw-modal', 'click', closeWithdrawalModal);
+
+        function closeWithdrawalModal() {
+            document.getElementById('withdrawal-modal').classList.add('hidden');
+        }
+
+        safeBind('btn-confirm-withdraw-action', 'click', async () => {
+            const amount = parseFloat(document.getElementById('withdraw-amount-input').value);
+            const enteredPw = document.getElementById('withdraw-passcode-input').value;
+            const errorMsg = document.getElementById('withdraw-error-message');
+
+            if (isNaN(amount) || amount <= 0 || enteredPw !== '129876') {
+                errorMsg.classList.remove('hidden');
+                return;
+            }
+
+            try {
+                const settlementsRef = ref(db, `artifacts/${safeAppId}/public/data/settlements`);
+                const newRecordRef = push(settlementsRef);
+                
+                const payload = {
+                    type: 'WITHDRAWAL',
+                    amount: amount, 
+                    status: 'COMPLETED',
+                    customDate: new Date().toISOString().split('T')[0],
+                    customTimestamp: Date.now(),
+                    createdAt: Date.now(),
+                    timestamp: new Date().toISOString(),
+                    operatorId: window.user ? window.user.uid : 'sys-offline'
+                };
+
+                await set(newRecordRef, payload);
+                
+                showNotification('success', `LKR ${amount.toLocaleString('en-US')} successfully withdrawn.`);
+                closeWithdrawalModal();
+                
+                window.selectedItemId = newRecordRef.key;
+                showReceiptPreview(newRecordRef.key);
+            } catch (err) {
+                showNotification('error', 'Failed to process withdrawal: ' + err.message);
+            }
+        });
+
+        // Show Printable Receipt mockups 
+        function showReceiptPreview(id) {
+            const selectedItem = window.settlements.find(item => item.id === id);
+            if (!selectedItem) return;
+
+            document.getElementById('receipt-placeholder').classList.add('hidden');
+            const container = document.getElementById('receipt-container');
+            container.classList.remove('hidden');
+
+            const isReserved = selectedItem.status === 'RESERVED';
+            const isWithdrawal = selectedItem.type === 'WITHDRAWAL';
+            
+            const displayDateString = selectedItem.customDate 
+                ? new Date(selectedItem.customDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+                : (selectedItem.timestamp ? new Date(selectedItem.timestamp).toLocaleDateString() : 'PENDING SECURE TIME');
+
+            const borderTopColor = isWithdrawal ? 'border-rose-500' : (isReserved ? 'border-emerald-500' : 'border-amber-500');
+            const amountNum = parseFloat(selectedItem.amount).toLocaleString('en-US', { minimumFractionDigits: 2 });
+            const netAmountNum = (parseFloat(selectedItem.amount) * 0.97).toLocaleString('en-US', { minimumFractionDigits: 2 });
+
+            if (isWithdrawal) {
+                container.innerHTML = `
+                    <div class="bg-white text-slate-800 p-6 rounded-2xl shadow-xl font-mono text-[11px] leading-relaxed relative animate-print-down border-t-8 ${borderTopColor}">
+                        <div class="absolute -top-2 left-0 right-0 flex justify-around">
+                            <div class="w-3 h-3 bg-slate-200 dark:bg-slate-800 rounded-full shadow-inner"></div>
+                            <div class="w-3 h-3 bg-slate-200 dark:bg-slate-800 rounded-full shadow-inner"></div>
+                            <div class="w-3 h-3 bg-slate-200 dark:bg-slate-800 rounded-full shadow-inner"></div>
+                        </div>
+                        <div class="text-center font-black text-sm tracking-[0.2em] border-b-2 border-dashed border-slate-300 pb-3 mb-3 text-rose-600 mt-2">
+                            FUNDS WITHDRAWAL SLIP
+                        </div>
+                        <div class="space-y-1.5 text-xs font-semibold">
+                            <div class="flex justify-between">
+                                <span class="text-slate-500">ACTION TYPE:</span>
+                                <span class="font-black text-slate-900">ADMIN WITHDRAWAL</span>
+                            </div>
+                            <div class="flex justify-between border-t border-dashed border-slate-200 pt-1.5 mt-1.5">
+                                <span class="text-slate-500">EXECUTION DATE:</span>
+                                <span class="font-black text-rose-600">${displayDateString}</span>
+                            </div>
+                            <div class="flex justify-between border-b-2 border-dashed border-slate-300 pb-2 mb-2">
+                                <span class="text-slate-500">STATUS:</span>
+                                <span class="text-emerald-600 font-black uppercase">COMPLETED</span>
+                            </div>
+                            <div class="text-center py-3 text-lg font-black border-b-2 border-dashed border-slate-300 text-rose-600 bg-rose-50 rounded-lg mb-2">
+                                DEDUCTION: - LKR ${amountNum}
+                            </div>
+                            <div class="text-center pt-3 text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-tight">
+                                AUTHORIZED ADMIN ACTION<br />SECURE VAULT LOG
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <div class="bg-white text-slate-800 p-6 rounded-2xl shadow-xl font-mono text-[11px] leading-relaxed relative animate-print-down border-t-8 ${borderTopColor}">
+                        <div class="absolute -top-2 left-0 right-0 flex justify-around">
+                            <div class="w-3 h-3 bg-slate-200 dark:bg-slate-800 rounded-full shadow-inner"></div>
+                            <div class="w-3 h-3 bg-slate-200 dark:bg-slate-800 rounded-full shadow-inner"></div>
+                            <div class="w-3 h-3 bg-slate-200 dark:bg-slate-800 rounded-full shadow-inner"></div>
+                        </div>
+                        <div class="text-center font-black text-sm tracking-[0.2em] border-b-2 border-dashed border-slate-300 pb-3 mb-3 text-slate-800 mt-2">
+                            HNB MERCHANT SETTLEMENT
+                        </div>
+                        <div class="space-y-1.5 text-xs font-semibold">
+                            <div class="flex justify-between">
+                                <span class="text-slate-500">ACQUIRER:</span>
+                                <span class="font-black text-slate-900">${selectedItem.bankName}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-500">MERCHANT ID:</span>
+                                <span class="font-black text-blue-600">${selectedItem.merchantId}</span>
+                            </div>
+                            <div class="flex justify-between border-t border-dashed border-slate-200 pt-1.5 mt-1.5">
+                                <span class="text-slate-500">SETTLEMENT DATE:</span>
+                                <span class="font-black text-blue-600">${displayDateString}</span>
+                            </div>
+                            <div class="flex justify-between border-b-2 border-dashed border-slate-300 pb-2 mb-2">
+                                <span class="text-slate-500">STATUS:</span>
+                                <span class="${isReserved ? 'text-emerald-600' : 'text-amber-600'} font-black uppercase">${selectedItem.status}</span>
+                            </div>
+                            <div class="text-center pt-3 pb-1 text-[10px] font-bold text-slate-400 line-through">
+                                GROSS AMOUNT: LKR ${amountNum}
+                            </div>
+                            <div class="text-center py-3 text-lg font-black text-blue-700 bg-blue-50 border border-blue-100 rounded-xl mb-2">
+                                NET SETTLED (97%): LKR ${netAmountNum}
+                            </div>
+                            <div class="text-center pt-3 text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-tight border-t-2 border-dashed border-slate-300">
+                                HATTON NATIONAL BANK PLC<br />
+                                ${isReserved ? 'AUTHORIZED DIGITAL RECORD' : 'UNAUTHORIZED LOG • PENDING PW VERIFY'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Register Form Entries directly
+        safeBind('settlement-form', 'submit', async (e) => {
+            e.preventDefault();
+
+            const merchantId = document.getElementById('selectedMerchantId').value;
+            const amount = parseFloat(document.getElementById('amount').value.trim());
+            const selectedDate = document.getElementById('settlementDate').value;
+
+            if (!merchantId || isNaN(amount) || !selectedDate) {
+                showNotification('error', 'Kindly complete all selection fields.');
+                return;
+            }
+
+            const btn = e.target.querySelector('button[type="submit"]');
+            const origHtml = btn.innerHTML;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> SAVING...`;
+            btn.disabled = true;
+
+            try {
+                const settlementsRef = ref(db, `artifacts/${safeAppId}/public/data/settlements`);
+                const newRecordRef = push(settlementsRef);
+                
+                const payload = {
+                    type: 'DEPOSIT', 
+                    merchantId,
+                    bankName: 'Hatton National Bank (HNB)',
+                    amount: amount, 
+                    status: 'PENDING', 
+                    customDate: selectedDate, 
+                    customTimestamp: new Date(selectedDate).getTime(), 
+                    createdAt: Date.now(), 
+                    timestamp: new Date().toISOString(),
+                    operatorId: window.user ? window.user.uid : 'sys-offline'
+                };
+
+                await set(newRecordRef, payload);
+                
+                document.getElementById('amount').value = '';
+                showNotification('success', `Terminal log registered! (97% applied to balance)`);
+                
+                window.selectedItemId = newRecordRef.key;
+                showReceiptPreview(newRecordRef.key);
+            } catch (err) {
+                console.error("Database Write Error:", err);
+                showNotification('error', 'Database Write Error: ' + err.message);
+            } finally {
+                btn.innerHTML = origHtml;
+                btn.disabled = false;
+            }
+        });
+
+        // Mock Generators
+        safeBind('btn-mock-data', 'click', () => {
+            const randomMerchant = Math.random() > 0.5 ? 'VG' : 'BN';
+            selectMerchant(randomMerchant);
+
+            const d = new Date();
+            d.setDate(d.getDate() - Math.floor(Math.random() * 7));
+            document.getElementById('settlementDate').value = d.toISOString().split('T')[0];
+
+            document.getElementById('amount').value = (Math.random() * 150000 + 5000).toFixed(2);
+            showNotification('success', 'Prefilled mockup terminal slip values.');
+        });
+
+        // --- MONTHLY STATEMENT LOGIC ---
+        safeBind('btn-close-statement', 'click', () => {
+            document.getElementById('statement-modal').classList.add('hidden');
+            document.getElementById('statement-document').classList.add('hidden');
+        });
+
+        safeBind('btn-generate-statement', 'click', () => {
+            const monthStr = document.getElementById('statement-month-input').value; // format: YYYY-MM
+            if (!monthStr) {
+                showNotification('error', 'Please select a valid month.');
+                return;
+            }
+
+            // Create Date obj to get proper month name
+            const [year, monthNum] = monthStr.split('-');
+            const monthDate = new Date(year, parseInt(monthNum) - 1);
+            const monthLabel = monthDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+            
+            document.getElementById('stmt-period-label').innerText = monthLabel;
+
+            let totalGross = 0;
+            let totalWithdrawals = 0;
+            let txCount = 0;
+            let ledgerHtml = '';
+
+            // Ensure window.settlements exists and loop
+            const items = window.settlements || [];
+            
+            // Sort ascending for the ledger PDF view (oldest to newest in the month)
+            const sortedItems = [...items].sort((a,b) => {
+                return (a.customTimestamp || 0) - (b.customTimestamp || 0);
+            });
+
+            sortedItems.forEach(item => {
+                const dateStr = item.customDate || (item.timestamp ? item.timestamp.substring(0,10) : "");
+                if (dateStr.startsWith(monthStr)) {
+                    txCount++;
+                    const isWithdrawal = item.type === 'WITHDRAWAL';
+                    const amt = parseFloat(item.amount) || 0;
+
+                    let netAmt = 0;
+                    if (isWithdrawal) {
+                        totalWithdrawals += amt;
+                        netAmt = amt;
+                    } else {
+                        totalGross += amt;
+                        netAmt = amt * 0.97;
+                    }
+
+                    const displayDate = new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
+                    const refType = isWithdrawal ? 'FUND WITHDRAWAL' : `DEPOSIT (${item.merchantId})`;
+                    const grossDisplay = isWithdrawal ? '-' : `LKR ${amt.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+                    const netDisplay = isWithdrawal 
+                        ? `<span class="text-rose-600">- LKR ${netAmt.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>` 
+                        : `<span class="text-emerald-600">LKR ${netAmt.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>`;
+
+                    ledgerHtml += `
+                        <tr class="border-b border-slate-50 hover:bg-slate-50 transition-colors">
+                            <td class="py-2.5 px-2 text-slate-500">${displayDate}</td>
+                            <td class="py-2.5 px-2 font-bold ${isWithdrawal ? 'text-rose-600' : 'text-slate-800'}">${refType}</td>
+                            <td class="py-2.5 px-2 text-right text-slate-400 line-through decoration-slate-300">${grossDisplay}</td>
+                            <td class="py-2.5 px-2 text-right font-bold">${netDisplay}</td>
+                        </tr>
+                    `;
+                }
+            });
+
+            const totalCommission = totalGross * 0.03;
+            const finalNetBalance = (totalGross * 0.97) - totalWithdrawals;
+
+            // Populate UI Elements
+            document.getElementById('stmt-tx-count').innerText = txCount;
+            document.getElementById('stmt-gross-deposits').innerText = `LKR ${totalGross.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            document.getElementById('stmt-commission').innerText = `- LKR ${totalCommission.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            document.getElementById('stmt-withdrawals').innerText = `- LKR ${totalWithdrawals.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            document.getElementById('stmt-net-balance').innerText = `LKR ${finalNetBalance.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+
+            const ledgerBody = document.getElementById('stmt-ledger-body');
+            const emptyState = document.getElementById('stmt-empty-state');
+
+            if (txCount > 0) {
+                ledgerBody.innerHTML = ledgerHtml;
+                ledgerBody.parentElement.classList.remove('hidden');
+                emptyState.classList.add('hidden');
+            } else {
+                ledgerBody.parentElement.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+            }
+
+            // Reveal document
+            document.getElementById('statement-document').classList.remove('hidden');
+            document.getElementById('statement-document').scrollIntoView({behavior: 'smooth', block: 'start'});
+        });
+
+        // Ensure variables are exported globally
+        window.toggleTheme = function() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.theme = isDark ? 'dark' : 'light';
+            const icon = document.getElementById('themeToggleIcon');
+            if(isDark) {
+                icon.className = 'fa-regular fa-sun text-slate-300 text-lg transition-colors';
+            } else {
+                icon.className = 'fa-solid fa-moon text-slate-500 text-lg transition-colors';
+            }
+        };
+
+        // Initial set of icon
+        document.addEventListener("DOMContentLoaded", () => {
+            const isDark = document.documentElement.classList.contains('dark');
+            const icon = document.getElementById('themeToggleIcon');
+            if(isDark) {
+                icon.className = 'fa-regular fa-sun text-slate-300 text-lg transition-colors';
+            } else {
+                icon.className = 'fa-solid fa-moon text-slate-500 text-lg transition-colors';
+            }
+            setupDefaultDatePicker();
+        });
+
+    </script>
 </body>
 </html>
