@@ -1460,7 +1460,8 @@
                 loader.style.display = 'flex';
                 loader.style.opacity = '1';
                 
-                if(wrapper) wrapper.scrollTop = 0;
+                // Ensure wrapper is at the top when starting
+                // if(wrapper) wrapper.scrollTop = 0; // Commented out to prevent scrolling issues
                 
                 iframe.src = autoClickUrl;
                 
