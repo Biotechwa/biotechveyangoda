@@ -230,6 +230,7 @@
             border-bottom: 1px solid var(--wa-header-border); cursor: default;
             transition: all 0.5s ease;
         }
+        
         .wa-bubble {
             background: var(--wa-bubble); padding: 12px; border-radius: 12px; border-top-right-radius: 0;
             box-shadow: 0 1px 1px rgba(0,0,0,0.1); font-size: 13px; line-height: 1.5; color: var(--wa-text);
@@ -1467,9 +1468,11 @@
                     loader.style.opacity = '0';
                     setTimeout(() => loader.style.display = 'none', 300);
                     
+                    /* Auto scroll preview phone turned off
                     setTimeout(() => {
                         if(wrapper) wrapper.scrollTo({ top: 320, behavior: 'smooth' });
                     }, 400);
+                    */
 
                     let attempts = 0;
                     let actionInterval = setInterval(() => {
@@ -1477,8 +1480,10 @@
                             if (iframe.contentWindow && iframe.contentWindow.document) {
                                 const doc = iframe.contentWindow.document;
                                 
+                                /* Auto scroll preview phone turned off
                                 iframe.contentWindow.scrollTo({ top: 350, behavior: 'smooth' });
                                 if(doc.documentElement) doc.documentElement.scrollTop = 350;
+                                */
                                 
                                 const btns = doc.querySelectorAll('a, button, [role="button"], input[type="button"]');
                                 for(let btn of btns) {
