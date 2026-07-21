@@ -98,19 +98,27 @@
     <div class="lg:col-span-12">
         <div class="flex justify-between items-center mb-3">
             <h2 class="text-sm font-bold text-slate-300">Terminal Statistics</h2>
-            <button id="btn-unlock-dashboard" class="flex items-center gap-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 py-1.5 px-3 rounded-lg border border-slate-700 transition-all shadow-sm">
-                <i data-lucide="lock" class="w-3.5 h-3.5 text-amber-400"></i> Unlock View
-            </button>
+            
+            <div class="flex gap-2">
+                <!-- New Withdraw Button -->
+                <button id="btn-open-withdraw" class="flex items-center gap-1.5 text-xs bg-red-500/10 hover:bg-red-500/20 text-red-400 py-1.5 px-3 rounded-lg border border-red-500/30 transition-all shadow-sm font-bold">
+                    <i data-lucide="arrow-down-circle" class="w-3.5 h-3.5"></i> Withdraw Funds
+                </button>
+
+                <button id="btn-unlock-dashboard" class="flex items-center gap-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 py-1.5 px-3 rounded-lg border border-slate-700 transition-all shadow-sm">
+                    <i data-lucide="lock" class="w-3.5 h-3.5 text-amber-400"></i> Unlock View
+                </button>
+            </div>
         </div>
         
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <!-- Gross Total -->
+          <!-- Net Available Balance (Updated) -->
           <div class="bg-slate-950/50 rounded-2xl p-5 border border-slate-800 relative overflow-hidden group hover:border-blue-500/30 transition-all">
-            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">HNB Gross Settlement</p>
+            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Net Available Balance</p>
             <!-- Defaulting to hidden state (***) for privacy -->
             <p id="stat-gross-amount" class="text-3xl font-black text-white mt-2 font-mono">LKR ***</p>
-            <p class="text-xs text-blue-400 mt-2 flex items-center gap-1">
-              <i data-lucide="trending-up" class="w-3.5 h-3.5"></i> Live synced aggregate volume
+            <p class="text-[10px] text-blue-400 mt-2 flex items-center gap-1">
+              <i data-lucide="calculator" class="w-3.5 h-3.5"></i> 97% of deposits minus withdrawals
             </p>
           </div>
 
@@ -118,8 +126,8 @@
           <div class="bg-slate-950/50 rounded-2xl p-5 border border-slate-800 relative overflow-hidden group hover:border-slate-700 transition-all">
             <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Entries</p>
             <p id="stat-total-count" class="text-3xl font-black text-white mt-2 font-mono">***</p>
-            <p class="text-xs text-slate-400 mt-2 flex items-center gap-1">
-              <i data-lucide="layers" class="w-3.5 h-3.5"></i> Recorded database slips
+            <p class="text-[10px] text-slate-400 mt-2 flex items-center gap-1">
+              <i data-lucide="layers" class="w-3.5 h-3.5"></i> Recorded database slips (All)
             </p>
           </div>
 
@@ -127,7 +135,7 @@
           <div class="bg-slate-950/50 rounded-2xl p-5 border border-slate-800 relative overflow-hidden group hover:border-emerald-500/30 transition-all">
             <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Payments Reserved</p>
             <p id="stat-reserved-count" class="text-3xl font-black text-emerald-400 mt-2 font-mono">***</p>
-            <p class="text-xs text-emerald-400 mt-2 flex items-center gap-1">
+            <p class="text-[10px] text-emerald-400 mt-2 flex items-center gap-1">
               <i data-lucide="shield" class="w-3.5 h-3.5"></i> Authenticated via Admin
             </p>
           </div>
@@ -136,7 +144,7 @@
           <div class="bg-slate-950/50 rounded-2xl p-5 border border-slate-800 relative overflow-hidden group hover:border-amber-500/30 transition-all">
             <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Pending Verification</p>
             <p id="stat-pending-count" class="text-3xl font-black text-amber-400 mt-2 font-mono">***</p>
-            <p class="text-xs text-amber-400 mt-2 flex items-center gap-1">
+            <p class="text-[10px] text-amber-400 mt-2 flex items-center gap-1">
               <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> Requires PW confirmation
             </p>
           </div>
@@ -151,7 +159,7 @@
           <h2 class="text-lg font-bold text-white">Instant Data Entry</h2>
         </div>
         <p class="text-xs text-slate-400 mb-6">
-          Choose Merchant ID, select settlement date, and input amount to save instantly.
+          Choose Merchant ID, select settlement date, and input gross amount. (System will auto-deduct 3% for balance).
         </p>
 
         <form id="settlement-form" class="space-y-4">
@@ -201,7 +209,8 @@
 
           <!-- Amount Input - THE CORE MANUAL INPUT FIELD -->
           <div>
-            <label class="block text-xs font-bold text-emerald-400 uppercase mb-1.5 tracking-wider">Settlement Amount (LKR) *</label>
+            <label class="block text-xs font-bold text-emerald-400 uppercase mb-1.5 tracking-wider">Gross Settlement Amount (LKR) *</label>
+            <p class="text-[10px] text-slate-400 mb-2">Note: System automatically calculates and displays the 97% Net Value on the active ledger.</p>
             <div class="relative">
               <span class="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-500 text-sm font-bold font-mono">LKR</span>
               <input
@@ -338,7 +347,7 @@
     </div>
   </div>
 
-  <!-- PASSWORD VERIFICATION MODAL -->
+  <!-- PASSWORD VERIFICATION MODAL (For Reservations) -->
   <div id="passcode-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 hidden">
     <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
       <button id="btn-close-modal" class="absolute right-4 top-4 text-slate-400 hover:text-white transition-all">
@@ -402,6 +411,76 @@
     </div>
   </div>
 
+  <!-- SECURE WITHDRAWAL MODAL (NEW) -->
+  <div id="withdrawal-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+      <button id="btn-close-withdraw-modal" class="absolute right-4 top-4 text-slate-400 hover:text-white transition-all">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <div class="flex items-center gap-3 mb-4">
+        <div class="bg-red-500/10 p-2.5 rounded-xl border border-red-500/30">
+          <i data-lucide="arrow-down-circle" class="w-6 h-6 text-red-400 animate-pulse"></i>
+        </div>
+        <div>
+          <h3 class="text-base font-bold text-white">Authorized Withdrawal</h3>
+          <p class="text-xs text-slate-400 font-medium">Requires Admin Privilege</p>
+        </div>
+      </div>
+
+      <p class="text-xs text-slate-400 mb-4">
+        Enter the withdrawal amount and the administrator security code to deduct from the total net balance.
+      </p>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-red-400 uppercase mb-1.5 tracking-wider">Withdrawal Amount (LKR) *</label>
+          <div class="relative">
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-red-500 text-sm font-bold font-mono">LKR</span>
+            <input
+              type="number"
+              step="0.01"
+              id="withdraw-amount-input"
+              placeholder="0.00"
+              class="w-full bg-slate-950 border border-slate-700 rounded-xl pl-14 pr-4 py-4 text-xl font-mono font-bold text-red-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all shadow-inner placeholder:text-slate-800"
+            >
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-400 uppercase mb-1.5">Clearance Code</label>
+          <input
+            type="password"
+            id="withdraw-passcode-input"
+            placeholder="••••••"
+            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-center text-xl font-bold font-mono tracking-widest text-slate-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+            maxLength="6"
+          >
+          <p id="withdraw-error-message" class="text-xs text-red-400 font-semibold mt-2 hidden flex items-center gap-1 justify-center">
+            <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> Invalid amount or security code refused.
+          </p>
+        </div>
+
+        <div class="flex gap-3 pt-2">
+          <button
+            type="button"
+            id="btn-cancel-withdraw"
+            class="flex-1 bg-slate-800 hover:bg-slate-750 text-slate-300 font-bold py-2.5 px-4 rounded-xl transition-all text-xs"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            id="btn-confirm-withdraw-action"
+            class="flex-1 bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-500 hover:to-rose-600 text-white font-black py-2.5 px-4 rounded-xl transition-all shadow-lg flex items-center justify-center gap-1.5 text-xs"
+          >
+            <i data-lucide="arrow-down" class="w-4 h-4"></i> Execute Withdrawal
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- CUSTOM DELETE CONFIRMATION MODAL -->
   <div id="delete-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 backdrop-blur-sm p-4 hidden">
     <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl relative">
@@ -410,11 +489,11 @@
           <i data-lucide="trash-2" class="w-6 h-6 text-red-400 animate-bounce"></i>
         </div>
         <div>
-          <h3 class="text-base font-bold text-white">Delete Transaction?</h3>
+          <h3 class="text-base font-bold text-white">Delete Log?</h3>
           <p class="text-xs text-slate-400">This action is irreversible</p>
         </div>
       </div>
-      <p class="text-xs text-slate-400 mb-6">Are you sure you want to permanently delete this HNB POS transaction log record from the database?</p>
+      <p class="text-xs text-slate-400 mb-6">Are you sure you want to permanently delete this log record from the database? This will affect the calculated balance.</p>
       <div class="flex gap-3">
         <button
           type="button"
@@ -611,22 +690,33 @@
       if (!logsContainer) return;
       
       // Calculate Stats based on ALL data (including > 10 days)
-      let grossAmt = 0;
+      let netBalance = 0;
       let reservedCount = 0;
       let pendingCount = 0;
 
+      // MATH LOGIC: Apply 97% to Deposits, subtract 100% of Withdrawals
       settlements.forEach(item => {
-        grossAmt += Number(item.amount || 0);
-        if (item.status === 'RESERVED') {
-          reservedCount++;
+        const amt = Number(item.amount || 0);
+        const type = item.type || 'DEPOSIT'; // Fallback for old data
+
+        if (type === 'WITHDRAWAL') {
+            netBalance -= amt;
         } else {
-          pendingCount++;
+            // It is a deposit (settlement) -> Apply 3% deduction (multiply by 0.97)
+            netBalance += (amt * 0.97);
+            
+            // Only count deposits in these status metrics
+            if (item.status === 'RESERVED') {
+              reservedCount++;
+            } else if (item.status === 'PENDING') {
+              pendingCount++;
+            }
         }
       });
 
       // Privacy Lock: Update Statistic labels based on unlock state
       if (isDashboardUnlocked) {
-          document.getElementById('stat-gross-amount').innerText = `LKR ${grossAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+          document.getElementById('stat-gross-amount').innerText = `LKR ${netBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
           document.getElementById('stat-total-count').innerText = settlements.length;
           document.getElementById('stat-reserved-count').innerText = reservedCount;
           document.getElementById('stat-pending-count').innerText = pendingCount;
@@ -676,64 +766,86 @@
       logsContainer.innerHTML = visibleSettlements.map(item => {
         const isSelected = selectedItemId === item.id;
         const isReserved = item.status === 'RESERVED';
+        const isWithdrawal = item.type === 'WITHDRAWAL';
+        
         const displayDateString = item.customDate 
           ? new Date(item.customDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
           : (item.timestamp ? new Date(item.timestamp).toLocaleDateString() : 'Just recorded');
         
-        return `
-          <div 
-            class="p-4 rounded-xl border transition-all duration-200 cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-4 log-row-item ${
-              isSelected 
-                ? 'bg-slate-900 border-blue-500 shadow-md shadow-blue-500/5' 
-                : 'bg-slate-900/60 border-slate-800/80 hover:bg-slate-900 hover:border-slate-700'
-            }"
-            data-id="${item.id}"
-          >
-            <div class="flex items-start gap-3">
-              <div class="p-2.5 rounded-lg border text-blue-400 mt-0.5 ${
-                isReserved 
-                  ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
-                  : 'bg-amber-500/10 border-amber-500/20 text-amber-400'
-              }">
-                <i data-lucide="${isReserved ? 'shield' : 'alert-circle'}" class="w-5 h-5"></i>
+        // Define UI variables based on Withdrawal vs Deposit
+        const iconType = isWithdrawal ? 'arrow-down-circle' : (isReserved ? 'shield' : 'alert-circle');
+        
+        let iconColors = '';
+        if (isWithdrawal) iconColors = 'bg-red-500/10 border-red-500/20 text-red-400';
+        else if (isReserved) iconColors = 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400';
+        else iconColors = 'bg-amber-500/10 border-amber-500/20 text-amber-400';
+
+        const rowStyling = isSelected 
+                ? (isWithdrawal ? 'bg-slate-900 border-red-500 shadow-md shadow-red-500/5' : 'bg-slate-900 border-blue-500 shadow-md shadow-blue-500/5') 
+                : 'bg-slate-900/60 border-slate-800/80 hover:bg-slate-900 hover:border-slate-700';
+
+        const amountPrefix = isWithdrawal ? '- LKR' : '+ LKR';
+      const amountTextColor = isWithdrawal ? 'text-red-400' : 'text-blue-400';
+      
+      // Show the gross original amount in the list, but maybe indicate the 97% net for deposits
+      const amountNumber = parseFloat(item.amount).toLocaleString('en-US', { minimumFractionDigits: 2 });
+      const netAmountNumber = isWithdrawal ? amountNumber : (parseFloat(item.amount) * 0.97).toLocaleString('en-US', { minimumFractionDigits: 2 });
+
+      return `
+        <div 
+          class="p-4 rounded-xl border transition-all duration-200 cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-4 log-row-item ${rowStyling}"
+          data-id="${item.id}"
+        >
+          <div class="flex items-start gap-3">
+            <div class="p-2.5 rounded-lg border mt-0.5 ${iconColors}">
+              <i data-lucide="${iconType}" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="font-mono font-bold text-white text-base">
+                  ${isWithdrawal ? 'FUND WITHDRAWAL' : `HNB Merchant: ${item.merchantId}`}
+                </span>
               </div>
-              <div>
-                <div class="flex items-center gap-2">
-                  <span class="font-mono font-bold text-white text-base">HNB Merchant: ${item.merchantId}</span>
-                </div>
-                <p class="text-xs text-slate-400 font-semibold mt-0.5">${item.bankName}</p>
-                <p class="text-[10px] text-slate-500 mt-1 flex items-center gap-1">
-                  <span class="text-blue-400 font-semibold flex items-center gap-1">
-                    <i data-lucide="calendar" class="w-3 h-3 inline"></i> ${displayDateString}
-                  </span>
-                </p>
-              </div>
+              <p class="text-xs text-slate-400 font-semibold mt-0.5">${isWithdrawal ? 'Admin Authorized Deduct' : item.bankName}</p>
+              <p class="text-[10px] text-slate-500 mt-1 flex items-center gap-1">
+                <span class="${isWithdrawal ? 'text-red-400' : 'text-blue-400'} font-semibold flex items-center gap-1">
+                  <i data-lucide="calendar" class="w-3 h-3 inline"></i> ${displayDateString}
+                </span>
+              </p>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between md:justify-end gap-4 border-t md:border-t-0 border-slate-800 pt-3 md:pt-0">
+            <div class="text-right">
+              ${!isWithdrawal ? `<p class="text-[10px] text-slate-500 font-medium line-through decoration-slate-600 mb-0.5">Gross: LKR ${amountNumber}</p>` : ''}
+              <p class="text-base font-mono font-bold ${amountTextColor}">
+                ${amountPrefix} ${netAmountNumber}
+              </p>
+              
+              ${
+                  isWithdrawal 
+                  ? `<span class="inline-flex items-center gap-1 text-[9px] bg-red-500/20 text-red-300 px-2 py-0.5 rounded-full font-bold border border-red-500/30 mt-1">
+                      <i data-lucide="check-circle" class="w-2.5 h-2.5"></i> COMPLETED
+                     </span>`
+                  : (
+                      isReserved 
+                      ? `<span class="inline-flex items-center gap-1 text-[9px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-bold border border-emerald-500/30 mt-1">
+                          <i data-lucide="check" class="w-2.5 h-2.5"></i> 97% RESERVED
+                         </span>`
+                      : `<button 
+                          class="btn-authorize inline-flex items-center gap-1 text-[10px] bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 px-2.5 py-1 rounded-full font-bold border border-amber-500/30 transition-all cursor-pointer mt-1"
+                          data-action-id="${item.id}"
+                         >
+                          <i data-lucide="lock" class="w-2.5 h-2.5"></i> AUTHORIZE 97%
+                         </button>`
+                    )
+              }
             </div>
 
-            <div class="flex items-center justify-between md:justify-end gap-4 border-t md:border-t-0 border-slate-800 pt-3 md:pt-0">
-              <div class="text-right">
-                <p class="text-base font-mono font-bold text-blue-400">
-                  LKR ${parseFloat(item.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                </p>
-                
-                ${
-                  isReserved 
-                    ? `<span class="inline-flex items-center gap-1 text-[9px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-bold border border-emerald-500/30">
-                        <i data-lucide="check" class="w-2.5 h-2.5"></i> RESERVED
-                       </span>`
-                    : `<button 
-                        class="btn-authorize inline-flex items-center gap-1 text-[10px] bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 px-2.5 py-1 rounded-full font-bold border border-amber-500/30 transition-all cursor-pointer"
-                        data-action-id="${item.id}"
-                       >
-                        <i data-lucide="lock" class="w-2.5 h-2.5"></i> AUTHORIZE NOW
-                       </button>`
-                }
-              </div>
-
-              <button 
-                class="btn-delete p-2 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
-                data-delete-id="${item.id}"
-                title="Remove transaction log"
+            <button 
+              class="btn-delete p-2 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
+              data-delete-id="${item.id}"
+                title="Remove log"
               >
                 <i data-lucide="trash-2" class="w-4 h-4"></i>
               </button>
@@ -808,6 +920,61 @@
         }
     });
 
+    // Secure Withdrawal Logic
+    safeBind('btn-open-withdraw', 'click', () => {
+        document.getElementById('withdraw-amount-input').value = '';
+        document.getElementById('withdraw-passcode-input').value = '';
+        document.getElementById('withdraw-error-message').classList.add('hidden');
+        document.getElementById('withdrawal-modal').classList.remove('hidden');
+    });
+
+    safeBind('btn-close-withdraw-modal', 'click', closeWithdrawalModal);
+    safeBind('btn-cancel-withdraw', 'click', closeWithdrawalModal);
+
+    function closeWithdrawalModal() {
+        document.getElementById('withdrawal-modal').classList.add('hidden');
+    }
+
+    safeBind('btn-confirm-withdraw-action', 'click', async () => {
+        const amount = parseFloat(document.getElementById('withdraw-amount-input').value);
+        const enteredPw = document.getElementById('withdraw-passcode-input').value;
+        const errorMsg = document.getElementById('withdraw-error-message');
+
+        if (isNaN(amount) || amount <= 0 || enteredPw !== '129876') {
+            errorMsg.classList.remove('hidden');
+            return;
+        }
+
+        try {
+            // Push new withdrawal record to Realtime DB
+            const settlementsRef = ref(db, `artifacts/${safeAppId}/public/data/settlements`);
+            const newRecordRef = push(settlementsRef);
+            
+            const payload = {
+                type: 'WITHDRAWAL',
+                amount: amount, // Saved as raw amount, deducted mathematically in renderDashboard
+                status: 'COMPLETED', // Withdrawals are auto-completed since they require PW upfront
+                customDate: new Date().toISOString().split('T')[0],
+                customTimestamp: Date.now(),
+                createdAt: Date.now(),
+                timestamp: new Date().toISOString(),
+                operatorId: user ? user.uid : 'sys-offline'
+            };
+
+            await set(newRecordRef, payload);
+            
+            showNotification('success', `LKR ${amount.toLocaleString('en-US')} successfully withdrawn and deducted from total.`);
+            closeWithdrawalModal();
+            
+            // Auto-select the new withdrawal slip
+            selectedItemId = newRecordRef.key;
+            showReceiptPreview(newRecordRef.key);
+        } catch (err) {
+            console.error("Withdrawal Error:", err);
+            showNotification('error', 'Failed to process withdrawal: ' + err.message);
+        }
+    });
+
     // Custom Delete modal button logic
     safeBind('btn-cancel-delete', 'click', () => {
       document.getElementById('delete-modal').classList.add('hidden');
@@ -819,7 +986,7 @@
       try {
         const deleteRef = ref(db, `artifacts/${safeAppId}/public/data/settlements/${pendingDeleteId}`);
         await remove(deleteRef);
-        showNotification('success', 'Transaction log successfully deleted.');
+        showNotification('success', 'Log successfully deleted.');
         if (selectedItemId === pendingDeleteId) {
           selectedItemId = null;
           document.getElementById('receipt-container').classList.add('hidden');
@@ -843,51 +1010,97 @@
       container.classList.remove('hidden');
 
       const isReserved = selectedItem.status === 'RESERVED';
+      const isWithdrawal = selectedItem.type === 'WITHDRAWAL';
+      
       const displayDateString = selectedItem.customDate 
         ? new Date(selectedItem.customDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
         : (selectedItem.timestamp ? new Date(selectedItem.timestamp).toLocaleDateString() : 'PENDING SECURE TIME');
 
-      container.innerHTML = `
-        <div class="bg-white text-slate-950 p-5 rounded-lg shadow-lg font-mono text-[11px] leading-relaxed relative animate-print-down border-t-4 ${isReserved ? 'border-emerald-500' : 'border-amber-500'}">
-          <div class="absolute -top-1 left-0 right-0 flex justify-around">
-            <div class="w-2 h-2 bg-slate-950 rounded-full"></div>
-            <div class="w-2 h-2 bg-slate-950 rounded-full"></div>
-            <div class="w-2 h-2 bg-slate-950 rounded-full"></div>
-          </div>
-          <div class="text-center font-bold text-sm tracking-widest border-b border-dashed border-slate-400 pb-2 mb-2">
-            HNB MERCHANT SETTLEMENT
-          </div>
-          <div class="space-y-1">
-            <div class="flex justify-between">
-              <span>ACQUIRER:</span>
-              <span class="font-bold">${selectedItem.bankName}</span>
+      const borderTopColor = isWithdrawal ? 'border-red-500' : (isReserved ? 'border-emerald-500' : 'border-amber-500');
+
+      if (isWithdrawal) {
+          // Withdrawal specific receipt formatting
+          container.innerHTML = `
+            <div class="bg-white text-slate-950 p-5 rounded-lg shadow-lg font-mono text-[11px] leading-relaxed relative animate-print-down border-t-4 ${borderTopColor}">
+              <div class="absolute -top-1 left-0 right-0 flex justify-around">
+                <div class="w-2 h-2 bg-slate-950 rounded-full"></div>
+                <div class="w-2 h-2 bg-slate-950 rounded-full"></div>
+                <div class="w-2 h-2 bg-slate-950 rounded-full"></div>
+              </div>
+              <div class="text-center font-bold text-sm tracking-widest border-b border-dashed border-slate-400 pb-2 mb-2 text-red-600">
+                FUNDS WITHDRAWAL SLIP
+              </div>
+              <div class="space-y-1">
+                <div class="flex justify-between">
+                  <span>ACTION TYPE:</span>
+                  <span class="font-bold">ADMIN WITHDRAWAL</span>
+                </div>
+                <div class="flex justify-between border-t border-dashed border-slate-400 pt-1 mt-1">
+                  <span>EXECUTION DATE:</span>
+                  <span class="font-bold text-red-600">${displayDateString}</span>
+                </div>
+                <div class="flex justify-between border-b border-dashed border-slate-400 pb-1 mb-1">
+                  <span>STATUS:</span>
+                  <span class="text-emerald-700 font-extrabold uppercase">COMPLETED</span>
+                </div>
+                <div class="text-center py-2 text-sm font-extrabold border-b border-dashed border-slate-400 text-red-600">
+                  DEDUCTION: - LKR ${parseFloat(selectedItem.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                </div>
+                <div class="text-center pt-3 text-[9px] text-slate-500 leading-tight">
+                  AUTHORIZED ADMIN ACTION
+                  <br />
+                  SECURE VAULT LOG
+                </div>
+              </div>
             </div>
-            <div class="flex justify-between">
-              <span>MERCHANT ID:</span>
-              <span class="font-bold text-blue-600">${selectedItem.merchantId}</span>
+          `;
+      } else {
+          // Standard Deposit receipt formatting
+          container.innerHTML = `
+            <div class="bg-white text-slate-950 p-5 rounded-lg shadow-lg font-mono text-[11px] leading-relaxed relative animate-print-down border-t-4 ${borderTopColor}">
+              <div class="absolute -top-1 left-0 right-0 flex justify-around">
+                <div class="w-2 h-2 bg-slate-950 rounded-full"></div>
+                <div class="w-2 h-2 bg-slate-950 rounded-full"></div>
+                <div class="w-2 h-2 bg-slate-950 rounded-full"></div>
+              </div>
+              <div class="text-center font-bold text-sm tracking-widest border-b border-dashed border-slate-400 pb-2 mb-2">
+                HNB MERCHANT SETTLEMENT
+              </div>
+              <div class="space-y-1">
+                <div class="flex justify-between">
+                  <span>ACQUIRER:</span>
+                  <span class="font-bold">${selectedItem.bankName}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>MERCHANT ID:</span>
+                  <span class="font-bold text-blue-600">${selectedItem.merchantId}</span>
+                </div>
+                <div class="flex justify-between border-t border-dashed border-slate-400 pt-1 mt-1">
+                  <span>SETTLEMENT DATE:</span>
+                  <span class="font-bold text-blue-600">${displayDateString}</span>
+                </div>
+                <div class="flex justify-between border-b border-dashed border-slate-400 pb-1 mb-1">
+                  <span>STATUS:</span>
+                  <span class="${isReserved ? 'text-emerald-700' : 'text-amber-700'} font-extrabold uppercase">${selectedItem.status}</span>
+                </div>
+                <div class="text-center pt-3 pb-1 text-[10px] font-bold text-slate-500 line-through">
+                  GROSS AMOUNT: LKR ${parseFloat(selectedItem.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                </div>
+                <div class="text-center py-2 text-sm font-black text-blue-700 bg-blue-100/50 rounded border border-blue-300/50 mb-2">
+                  NET SETTLED (97%): LKR ${(parseFloat(selectedItem.amount) * 0.97).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                </div>
+                <div class="text-center pt-3 text-[9px] text-slate-500 leading-tight border-t border-dashed border-slate-400">
+                  HATTON NATIONAL BANK PLC
+                  <br />
+                  ${isReserved ? 'AUTHORIZED DIGITAL RECORD' : 'UNAUTHORIZED LOG • PENDING PW VERIFY'}
+                </div>
+              </div>
             </div>
-            <div class="flex justify-between border-t border-dashed border-slate-400 pt-1 mt-1">
-              <span>SETTLEMENT DATE:</span>
-              <span class="font-bold text-blue-600">${displayDateString}</span>
-            </div>
-            <div class="flex justify-between border-b border-dashed border-slate-400 pb-1 mb-1">
-              <span>STATUS:</span>
-              <span class="${isReserved ? 'text-emerald-700' : 'text-amber-700'} font-extrabold uppercase">${selectedItem.status}</span>
-            </div>
-            <div class="text-center py-2 text-sm font-extrabold border-b border-dashed border-slate-400">
-              TOTAL: LKR ${parseFloat(selectedItem.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-            </div>
-            <div class="text-center pt-3 text-[9px] text-slate-500 leading-tight">
-              HATTON NATIONAL BANK PLC
-              <br />
-              ${isReserved ? 'AUTHORIZED DIGITAL RECORD' : 'UNAUTHORIZED LOG • PENDING PW VERIFY'}
-            </div>
-          </div>
-        </div>
-      `;
+          `;
+      }
     }
 
-    // Modal Trigger verification logic
+    // Modal Trigger verification logic for Deposit Reservation
     function initiatePasscodeVerification(id) {
       const selectedItem = settlements.find(item => item.id === id);
       if (!selectedItem) return;
@@ -912,7 +1125,7 @@
       document.getElementById('passcode-modal').classList.remove('hidden');
     }
 
-    // Complete Passcode verification
+    // Complete Passcode verification for Reservation
     async function executeVerification() {
       const enteredPw = document.getElementById('modal-passcode-input').value;
       const errorMsg = document.getElementById('modal-error-message');
@@ -945,7 +1158,7 @@
       }
     }
 
-    // Register Form Entries directly (NO PASSWORD REQUIRED)
+    // Register Form Entries directly (NO PASSWORD REQUIRED FOR DEPOSITS)
     safeBind('settlement-form', 'submit', async (e) => {
       e.preventDefault();
 
@@ -963,10 +1176,12 @@
         const settlementsRef = ref(db, `artifacts/${safeAppId}/public/data/settlements`);
         const newRecordRef = push(settlementsRef);
         
+        // We save the GROSS amount as requested, and handle the 3% deduction mathematically in the render loop.
         const payload = {
+          type: 'DEPOSIT', // Explicitly mark as deposit
           merchantId,
           bankName: 'Hatton National Bank (HNB)',
-          amount,
+          amount: amount, 
           status: 'PENDING', // Saved initially as Pending
           customDate: selectedDate, // Store user-selected custom date string (YYYY-MM-DD)
           customTimestamp: new Date(selectedDate).getTime(), // Used to organize order correctly
@@ -981,7 +1196,7 @@
         // Reset only the Amount input (keeping date selector and merchant selection pre-set)
         document.getElementById('amount').value = '';
 
-        showNotification('success', 'Terminal log registered to cloud database! Confirm reservation below.');
+        showNotification('success', `Terminal log registered! (97% applied to balance)`);
         
         // Auto-select newly saved log
         selectedItemId = newRecordRef.key;
