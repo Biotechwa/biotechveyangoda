@@ -1413,6 +1413,8 @@
                     openBrowserView(link);
                     
                     const currentPatientId = `${prefix}${num}`;
+                    // Auto scroll turned off per user request
+                    /*
                     if(window.innerWidth < 1024 && window.lastScrolledPatient !== currentPatientId) {
                         window.lastScrolledPatient = currentPatientId;
                         const previewSection = document.getElementById('previewSection');
@@ -1420,6 +1422,7 @@
                             previewSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
                         }
                     }
+                    */
                 }, 100); 
 
                 return link;
@@ -1561,9 +1564,12 @@
             
             updatePreviewFromInputs();
             
+            // Auto scroll turned off per user request
+            /*
             if(window.innerWidth < 1024) {
                  document.getElementById('vgNum').scrollIntoView({behavior: 'smooth'});
             }
+            */
         };
 
         async function addToHistory(type) {
