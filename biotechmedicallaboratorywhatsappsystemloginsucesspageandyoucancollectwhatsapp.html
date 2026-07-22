@@ -1170,11 +1170,19 @@
         let callTimerInterval;
         let isMuted = false;
         
-        // Custom Getter to ensure vgNum is always 2 digits internally when processing
+        // Custom Getter to ensure vgNum is formatted based on branch prefix
         function getFormattedVgNum() {
             let val = document.getElementById('vgNum').value.trim();
-            if (val.length === 1 && val.match(/^[0-9]$/)) {
-                return val.padStart(2, '0');
+            const prefix = document.getElementById('vgSelection').value;
+            
+            if (prefix === 'BN' || prefix === 'NI') {
+                if (val.length === 1 && val.match(/^[0-9]$/)) {
+                    return val.padStart(2, '0');
+                }
+            } else if (prefix === 'VG' || prefix === 'BR') {
+                if (val.length === 2 && val.startsWith('0')) {
+                    return val.substring(1);
+                }
             }
             return val;
         }
@@ -1208,11 +1216,30 @@
                 document.getElementById(id).addEventListener('input', () => {
                     isPreviewMode = false;
                     document.getElementById('historyIndicator').classList.add('hidden');
+                    
+                    // --- NEW LOGIC: Format number when prefix changes ---
+                    if (id === 'vgSelection') {
+                        const vgNumEl = document.getElementById('vgNum');
+                        let val = vgNumEl.value.trim();
+                        const prefix = document.getElementById('vgSelection').value;
+                        
+                        if (prefix === 'BN' || prefix === 'NI') {
+                            if (val.length === 1 && val.match(/^[0-9]$/)) {
+                                vgNumEl.value = val.padStart(2, '0');
+                            }
+                        } else if (prefix === 'VG' || prefix === 'BR') {
+                            if (val.length === 2 && val.startsWith('0')) {
+                                vgNumEl.value = val.substring(1);
+                            }
+                        }
+                    }
+                    // ----------------------------------------------------
+
                     updatePreviewFromInputs();
                 });
             });
 
-            // SPECIFIC NUMBER LOGIC (Auto Pad single digits 1-9 to 01-09)
+            // SPECIFIC NUMBER LOGIC (Conditional Auto Pad/Strip)
             const vgNumEl = document.getElementById('vgNum');
             
             vgNumEl.addEventListener('input', function() {
@@ -1225,9 +1252,24 @@
 
             vgNumEl.addEventListener('blur', function() {
                 let val = this.value.trim();
-                // If it is exactly 1 digit, automatically pad it
-                if (val.length === 1 && val.match(/^[0-9]$/)) {
-                    this.value = val.padStart(2, '0');
+                const prefix = document.getElementById('vgSelection').value;
+                let changed = false;
+
+                if (prefix === 'BN' || prefix === 'NI') {
+                    // If it is exactly 1 digit, automatically pad it
+                    if (val.length === 1 && val.match(/^[0-9]$/)) {
+                        this.value = val.padStart(2, '0');
+                        changed = true;
+                    }
+                } else if (prefix === 'VG' || prefix === 'BR') {
+                    // If it starts with 0 and is 2 digits, strip the 0
+                    if (val.length === 2 && val.startsWith('0')) {
+                        this.value = val.substring(1);
+                        changed = true;
+                    }
+                }
+                
+                if(changed) {
                     updatePreviewFromInputs();
                 }
             });
@@ -1625,7 +1667,7 @@
             if (finalRawNumber.length !== 9 || isPreviewMode) return;
 
             const vgSelection = document.getElementById('vgSelection').value;
-            const vgNum = getFormattedVgNum(); // Auto formats 1->01 safely here as well
+            const vgNum = getFormattedVgNum(); // Auto formats safely here as well
             
             const dateStr = document.getElementById('date').value;
             const patientId = `${vgSelection}${vgNum}`;
