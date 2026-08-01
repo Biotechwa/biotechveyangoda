@@ -7,10 +7,7 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        // Configure Tailwind to use manual class-based dark mode
         tailwind.config = { darkMode: 'class' }
-        
-        // Init theme immediately to prevent flashing. Default to dark mode.
         if (localStorage.theme === 'light') {
             document.documentElement.classList.remove('dark');
         } else {
@@ -18,16 +15,13 @@
         }
     </script>
     
-    <!-- FontAwesome & html2pdf -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
         
-        /* --- CSS VARIABLES FOR THEME RESPONSIVENESS --- */
         :root {
-            /* Light Theme Defaults */
             --bg-body: #f0f9ff;
             --text-main: #334155;
             --glass-bg: rgba(255, 255, 255, 0.85);
@@ -41,7 +35,6 @@
         }
 
         html.dark {
-            /* Gemini Dark Theme Defaults */
             --bg-body: #05101a;
             --text-main: #f8fafc;
             --glass-bg: rgba(15, 23, 42, 0.65);
@@ -63,7 +56,6 @@
             transition: background-color 0.5s ease;
         }
 
-        /* --- BACKGROUND GRADIENTS --- */
         .bg-light-gradients {
             position: absolute; inset: 0; z-index: -2; pointer-events: none;
             background-image: radial-gradient(at 0% 0%, rgba(20, 184, 166, 0.15) 0px, transparent 50%),
@@ -100,7 +92,6 @@
         @keyframes float { 0% { transform: translate(0, 0); } 100% { transform: translate(60px, 80px); } }
         @keyframes float-reverse { 0% { transform: translate(0, 0); } 100% { transform: translate(-50px, -70px); } }
 
-        /* --- UI UTILITIES --- */
         .glass-panel {
             background: var(--glass-bg);
             backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
@@ -133,7 +124,6 @@
         @keyframes printDown { 0% { transform: translateY(-20px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
         .animate-print-down { animation: printDown 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
-        /* Force 16px font size on inputs to prevent iOS Safari auto-zoom scaling issues */
         @media screen and (max-width: 768px) {
             input[type="date"], input[type="month"], input[type="number"], input[type="password"], input[type="text"] {
                 font-size: 16px !important;
@@ -150,12 +140,10 @@
     <div class="bg-light-gradients"></div>
     <div class="bg-orb-3"></div>
 
-    <!-- THEME TOGGLE BUTTON -->
     <button onclick="toggleTheme()" class="fixed top-4 lg:top-6 right-4 lg:right-6 z-50 w-10 h-10 rounded-full glass-panel flex items-center justify-center shadow-lg transition-transform hover:scale-110 border border-slate-200 dark:border-slate-700 cursor-pointer">
         <i id="themeToggleIcon" class="fa-solid fa-moon text-slate-500 text-lg transition-colors"></i>
     </button>
 
-    <!-- HEADER SECTION -->
     <header class="glass-panel sticky top-0 z-40 px-6 py-4 rounded-b-3xl shadow-sm mx-4 mt-2">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-4">
@@ -174,7 +162,6 @@
             </div>
 
             <div class="flex items-center gap-4 flex-wrap justify-end">
-                <!-- Presence Badge -->
                 <div id="presence-badge" class="hidden items-center gap-3 px-3 py-1.5 rounded-xl text-[11px] font-extrabold border bg-slate-50 dark:bg-slate-900/60 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 shadow-sm transition-all">
                     <div class="flex items-center gap-1.5" title="Total Devices Online">
                         <span class="relative flex h-2.5 w-2.5">
@@ -190,18 +177,11 @@
                     </div>
                 </div>
 
-                <!-- Add Passkey Button (Visible only to authenticated admins initially) -->
-                <button id="btn-register-passkey" class="hidden items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-extrabold border bg-indigo-50 dark:bg-indigo-900/60 text-indigo-600 dark:text-indigo-300 border-indigo-200 dark:border-indigo-700 shadow-sm transition-all hover:bg-indigo-100 dark:hover:bg-indigo-800" title="Register Device Passkey">
-                    <i class="fa-solid fa-fingerprint"></i> <span class="hidden sm:inline">Add Passkey</span>
-                </button>
-
-                <!-- Admin Active Session Timer (Clickable to logout) -->
                 <div id="admin-timer-badge" title="Click to manually log out admin session" class="hidden cursor-pointer hover:bg-purple-100 dark:hover:bg-purple-900/60 items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold border bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-500/30 transition-all shadow-sm transform active:scale-95">
                     <i class="fa-solid fa-user-shield animate-pulse"></i>
                     <span>ADMIN: <span id="admin-timer-text" class="font-mono ml-1">10:00</span></span>
                 </div>
 
-                <!-- DB Status Badge -->
                 <div id="db-status-badge" class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold border bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-500/30 animate-pulse transition-colors">
                     <i class="fa-solid fa-wave-square"></i>
                     <span id="db-status-text">CONNECTING TO CLOUD...</span>
@@ -214,28 +194,22 @@
         </div>
     </header>
 
-    <!-- NOTIFICATION BAR -->
     <div id="notification-container" class="fixed top-24 right-6 z-50 flex flex-col gap-2 max-w-md w-full pointer-events-none"></div>
 
-    <!-- DASHBOARD WRAPPER -->
     <main class="flex-1 p-6 max-w-7xl w-full mx-auto flex flex-col overflow-y-auto custom-scrollbar relative z-10">
-        <!-- KPI STATS CARDS -->
         <div class="w-full mb-6">
             <div class="flex flex-col md:flex-row justify-between items-end md:items-center mb-4 gap-4">
                 <h2 class="text-xs font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest transition-colors">Current Month Terminal Statistics</h2>
                 
                 <div class="flex flex-wrap gap-2">
-                    <!-- New Monthly Statement Button -->
                     <button id="btn-open-statement" class="flex items-center gap-2 text-xs bg-purple-50 hover:bg-purple-100 dark:bg-purple-900/20 dark:hover:bg-purple-900/40 text-purple-600 dark:text-purple-400 py-2 px-4 rounded-xl border border-purple-200 dark:border-purple-700/50 transition-all font-bold shadow-sm">
                         <i class="fa-solid fa-file-pdf"></i> Monthly Statement
                     </button>
 
-                    <!-- Bank Charges Button -->
                     <button id="btn-open-bank-charge" class="flex items-center gap-2 text-xs bg-orange-50 hover:bg-orange-100 dark:bg-orange-500/10 dark:hover:bg-orange-500/20 text-orange-600 dark:text-orange-400 py-2 px-4 rounded-xl border border-orange-200 dark:border-orange-500/30 transition-all shadow-sm font-bold">
                         <i class="fa-solid fa-building-columns"></i> Log Bank Charges
                     </button>
 
-                    <!-- Withdraw Button -->
                     <button id="btn-open-withdraw" class="flex items-center gap-2 text-xs bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 py-2 px-4 rounded-xl border border-rose-200 dark:border-rose-500/30 transition-all shadow-sm font-bold">
                         <i class="fa-solid fa-circle-down"></i> Withdraw Funds
                     </button>
@@ -247,7 +221,6 @@
             </div>
             
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <!-- Net Available Balance -->
                 <div class="glass-panel rounded-3xl p-6 relative overflow-hidden group hover:border-teal-300 dark:hover:border-blue-500/50 transition-all">
                     <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest transition-colors">Net Month Balance</p>
                     <p id="stat-gross-amount" class="text-3xl font-black text-slate-800 dark:text-white mt-2 font-mono transition-colors">LKR ***</p>
@@ -256,7 +229,6 @@
                     </p>
                 </div>
 
-                <!-- Total Batches -->
                 <div class="glass-panel rounded-3xl p-6 relative overflow-hidden group hover:border-slate-300 dark:hover:border-slate-600 transition-all">
                     <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest transition-colors">Month Entries</p>
                     <p id="stat-total-count" class="text-3xl font-black text-slate-800 dark:text-white mt-2 font-mono transition-colors">***</p>
@@ -265,7 +237,6 @@
                     </p>
                 </div>
 
-                <!-- Reserved (Locked) -->
                 <div class="glass-panel rounded-3xl p-6 relative overflow-hidden group hover:border-emerald-300 dark:hover:border-emerald-500/50 transition-all">
                     <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest transition-colors">Payments Reserved</p>
                     <p id="stat-reserved-count" class="text-3xl font-black text-emerald-600 dark:text-emerald-400 mt-2 font-mono transition-colors">***</p>
@@ -274,7 +245,6 @@
                     </p>
                 </div>
 
-                <!-- Pending (Unlocked) -->
                 <div class="glass-panel rounded-3xl p-6 relative overflow-hidden group hover:border-amber-300 dark:hover:border-amber-500/50 transition-all">
                     <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest transition-colors">Pending Verification</p>
                     <p id="stat-pending-count" class="text-3xl font-black text-amber-600 dark:text-amber-400 mt-2 font-mono transition-colors">***</p>
@@ -286,7 +256,6 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full pb-10">
-            <!-- LEFT COLUMN: INSTANT DATA ENTRY FORM -->
             <div class="lg:col-span-5 flex flex-col gap-6">
                 <div class="glass-panel rounded-3xl p-8 shadow-xl relative overflow-hidden transition-colors">
                     <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-teal-400 dark:from-blue-500 via-blue-500 dark:via-indigo-500 to-indigo-500 dark:to-purple-500"></div>
@@ -302,8 +271,6 @@
                     </p>
 
                     <form id="settlement-form" class="space-y-5">
-                        
-                        <!-- Merchant ID Selection -->
                         <div>
                             <label class="block text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-2 transition-colors">Merchant ID Selection</label>
                             <div class="grid grid-cols-2 gap-3">
@@ -319,7 +286,6 @@
                             <input type="hidden" id="selectedMerchantId" value="VG">
                         </div>
 
-                        <!-- Date Selector -->
                         <div class="input-group rounded-2xl p-2 relative">
                             <label class="block text-[10px] text-slate-400 uppercase tracking-widest font-extrabold px-3 pt-1">Settlement Date</label>
                             <div class="relative flex items-center">
@@ -328,7 +294,6 @@
                             </div>
                         </div>
 
-                        <!-- Amount Input -->
                         <div class="input-group rounded-2xl p-2 relative border-teal-200 dark:border-blue-500/50 bg-teal-50/30 dark:bg-[#0f172a]/60">
                             <label class="block text-[10px] text-emerald-600 dark:text-emerald-400 uppercase tracking-widest font-extrabold px-3 pt-1">Gross Settlement Amount *</label>
                             <p class="text-[9px] text-slate-500 px-3 pb-1 font-medium">Note: System automatically calculates and displays the 97% Net Value.</p>
@@ -338,7 +303,6 @@
                             </div>
                         </div>
 
-                        <!-- Random Amount quick-filler -->
                         <div class="flex justify-end">
                             <button type="button" id="btn-mock-data" class="text-[10px] text-teal-600 dark:text-blue-400 hover:text-teal-700 dark:hover:text-blue-300 font-bold uppercase tracking-wider flex items-center gap-1.5 py-1 px-2 hover:bg-teal-50 dark:hover:bg-blue-500/10 rounded-lg transition-all">
                                 <i class="fa-solid fa-arrows-rotate"></i> Fill Random Amount
@@ -351,7 +315,6 @@
                     </form>
                 </div>
 
-                <!-- PRINT SLIP PREVIEW -->
                 <div class="glass-panel rounded-3xl border border-slate-200 dark:border-slate-800 p-8 shadow-xl relative overflow-hidden transition-colors">
                     <div class="absolute right-6 top-6 text-slate-200 dark:text-slate-800 text-6xl opacity-50 transition-colors">
                         <i class="fa-solid fa-print"></i>
@@ -364,17 +327,12 @@
                     <div id="receipt-placeholder" class="py-10 border-2 border-dashed border-slate-200 dark:border-slate-700 text-center text-xs text-slate-400 dark:text-slate-500 rounded-2xl bg-slate-50 dark:bg-slate-900/50 font-medium transition-colors">
                         No document loaded.<br/>Select a logged transaction from the registry.
                     </div>
-
-                    <div id="receipt-container" class="hidden">
-                        <!-- Dynamic Receipt Slip Inserted Here -->
-                    </div>
+                    <div id="receipt-container" class="hidden"></div>
                 </div>
             </div>
 
-            <!-- RIGHT COLUMN: REAL-TIME LEDGER LOGS -->
             <div class="lg:col-span-7 flex flex-col gap-6 h-full min-h-[400px] lg:min-h-[600px]">
                 <div class="glass-panel rounded-3xl p-8 flex-1 flex flex-col shadow-xl transition-colors">
-                    
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                         <div>
                             <h2 class="text-xl font-extrabold text-slate-800 dark:text-white flex items-center gap-2 transition-colors">
@@ -388,27 +346,22 @@
                         </div>
                     </div>
 
-                    <!-- LIVE STREAM DATA -->
                     <div id="logs-container" class="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
-                        <!-- Dynamic Items Streamed Here -->
                         <div class="flex flex-col items-center justify-center py-20 text-slate-400 dark:text-slate-500 gap-4 transition-colors">
                             <i class="fa-solid fa-arrows-rotate text-3xl text-teal-500 dark:text-blue-400 animate-spin"></i>
                             <p class="text-xs font-bold tracking-widest uppercase">Synchronizing Stream...</p>
                         </div>
                     </div>
 
-                    <!-- FOOTER INFO -->
                     <div class="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center text-[10px] font-extrabold uppercase tracking-widest text-slate-400 transition-colors">
                         <p class="flex items-center gap-1"><i class="fa-solid fa-circle text-[8px] text-emerald-500 animate-pulse"></i> Stream active</p>
                         <p id="total-logs-indicator" class="font-mono text-slate-500">Total: 0 records</p>
                     </div>
-
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- UNIFIED PIN MODAL (Replaces separate PIN modals for better theme matching) -->
     <div id="unified-pin-modal" class="hidden fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 dark:bg-[#020617]/80 backdrop-blur-sm fade-in">
         <div class="bg-white dark:bg-[#1e293b] rounded-3xl shadow-2xl p-8 w-80 max-w-[90%] text-center border border-slate-200 dark:border-slate-700 transition-colors relative overflow-hidden">
             <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-400 to-orange-500" id="pin-modal-accent"></div>
@@ -423,7 +376,6 @@
             <h3 id="pin-modal-title" class="text-slate-800 dark:text-white font-extrabold text-xl mb-1">Security Lock</h3>
             <p id="pin-modal-desc" class="text-slate-500 dark:text-slate-400 text-xs font-medium mb-4">Enter passcode to proceed.</p>
             
-            <!-- Extra Details container (for reservation) -->
             <div id="pin-modal-extra" class="hidden bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800 mb-4 text-xs space-y-1 font-mono text-left"></div>
 
             <input type="password" id="pin-modal-input" class="w-full mb-2 bg-slate-50 dark:bg-[#0f172a] border border-slate-200 dark:border-slate-600 text-slate-800 dark:text-white px-4 py-3 rounded-xl outline-none text-center text-xl font-black tracking-[0.3em] focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 transition-all" placeholder="••••••" maxLength="6" />
@@ -435,21 +387,9 @@
             <button id="btn-confirm-pin" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-black hover:from-amber-600 hover:to-orange-700 transition-colors flex justify-center items-center gap-2 shadow-lg">
                 <i class="fa-solid fa-unlock"></i> Verify
             </button>
-            
-            <div id="pin-modal-passkey-container" class="hidden mt-3">
-                <div class="relative flex py-2 items-center">
-                    <div class="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
-                    <span class="flex-shrink-0 mx-4 text-slate-400 text-[10px] font-bold uppercase">Or</span>
-                    <div class="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
-                </div>
-                <button id="btn-use-passkey" class="w-full py-3.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex justify-center items-center gap-2 border border-slate-200 dark:border-slate-700 shadow-sm">
-                    <i class="fa-solid fa-fingerprint text-indigo-500"></i> Use Device Passkey
-                </button>
-            </div>
         </div>
     </div>
 
-    <!-- SECURE DEDUCTION MODAL (Handles both Withdrawals and Bank Charges) -->
     <div id="deduction-modal" class="hidden fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 dark:bg-[#020617]/80 backdrop-blur-sm fade-in">
         <div class="bg-white dark:bg-[#1e293b] rounded-3xl shadow-2xl p-8 w-96 max-w-[90%] text-center border border-slate-200 dark:border-slate-700 transition-colors relative overflow-hidden">
             <div id="deduct-modal-accent" class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-rose-500 to-red-600"></div>
@@ -465,7 +405,6 @@
             <p id="deduct-modal-desc" class="text-slate-500 dark:text-slate-400 text-xs font-medium mb-6">Enter amount to deduct from the net balance.</p>
 
             <div class="space-y-4 text-left">
-                <!-- Merchant selector only for Bank Charges -->
                 <div id="deduct-merchant-container" class="hidden">
                     <label class="block text-[10px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5">Apply to Merchant</label>
                     <div class="grid grid-cols-2 gap-2">
@@ -473,6 +412,14 @@
                         <button type="button" id="deduct-merchant-bn" class="py-2 rounded-lg border-2 transition-all bg-white border-slate-200 text-slate-500 dark:bg-slate-900 dark:border-slate-800 font-bold" onclick="selectDeductMerchant('BN')">BN</button>
                     </div>
                     <input type="hidden" id="deduct-merchant-id" value="VG">
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5">Action Date *</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-calendar absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="date" id="deduct-date-input" class="w-full bg-slate-50 dark:bg-[#0f172a] border border-slate-200 dark:border-slate-700 rounded-xl pl-12 pr-4 py-3 text-sm font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400 transition-all dark:[color-scheme:dark]" required>
+                    </div>
                 </div>
 
                 <div>
@@ -485,19 +432,14 @@
 
                 <div id="deduct-pin-container">
                     <label class="block text-[10px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5">Admin Security PIN</label>
-                    <div class="relative">
-                        <input type="password" id="deduct-passcode-input" placeholder="••••••" maxLength="6" class="w-full bg-slate-50 dark:bg-[#0f172a] border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-center text-xl font-black tracking-[0.3em] text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400 transition-all">
-                        <button id="btn-deduct-use-passkey" class="hidden absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg border border-indigo-200 dark:border-indigo-800 flex items-center justify-center hover:bg-indigo-100 dark:hover:bg-indigo-800/50 transition-colors" title="Use Passkey">
-                            <i class="fa-solid fa-fingerprint"></i>
-                        </button>
-                    </div>
+                    <input type="password" id="deduct-passcode-input" placeholder="••••••" maxLength="6" class="w-full bg-slate-50 dark:bg-[#0f172a] border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-center text-xl font-black tracking-[0.3em] text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400 transition-all">
                 </div>
                 
                 <input type="hidden" id="deduct-action-type" value="WITHDRAWAL">
             </div>
             
             <p id="deduct-error-message" class="text-[10px] text-rose-500 font-bold mt-2 mb-4 hidden flex items-center justify-center gap-1 h-4">
-                <i class="fa-solid fa-triangle-exclamation"></i> Invalid amount or PIN.
+                <i class="fa-solid fa-triangle-exclamation"></i> Invalid amount, date, or PIN.
             </p>
 
             <button id="btn-confirm-deduct-action" class="w-full mt-4 py-3.5 rounded-xl bg-gradient-to-r from-rose-500 to-red-600 text-white font-black hover:from-rose-600 hover:to-red-700 transition-colors flex justify-center items-center gap-2 shadow-lg shadow-rose-500/20">
@@ -506,12 +448,10 @@
         </div>
     </div>
 
-    <!-- MONTHLY STATEMENT MODAL -->
     <div id="statement-modal" class="hidden fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/80 dark:bg-[#020617]/90 backdrop-blur-md fade-in py-10 px-4 overflow-y-auto">
         <div class="m-auto w-full max-w-2xl">
             <div class="bg-white dark:bg-[#1e293b] rounded-[2rem] shadow-2xl border border-slate-200 dark:border-slate-700 transition-colors relative overflow-hidden flex flex-col">
                 
-                <!-- Statement Header -->
                 <div class="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-8 py-6 flex justify-between items-center sticky top-0 z-10">
                     <div class="flex items-center gap-4">
                         <div class="w-12 h-12 rounded-2xl bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 flex items-center justify-center text-2xl border border-purple-200 dark:border-purple-500/30">
@@ -527,9 +467,7 @@
                     </button>
                 </div>
 
-                <!-- Statement Content -->
                 <div class="p-8">
-                    <!-- Controls -->
                     <div class="flex flex-col sm:flex-row gap-4 items-end mb-8 bg-slate-50 dark:bg-[#0f172a] p-4 rounded-2xl border border-slate-200 dark:border-slate-700">
                         <div class="w-full sm:flex-1">
                             <label class="block text-[10px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5">Select Month</label>
@@ -543,16 +481,12 @@
                         </button>
                     </div>
 
-                    <!-- PDF Document Area -->
                     <div id="statement-document-wrapper" class="hidden">
-                        <!-- html2pdf target -->
                         <div id="statement-document" class="bg-white border-2 border-slate-200 p-8 rounded-xl shadow-sm text-slate-800 relative">
-                            <!-- Watermark -->
                             <div class="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none">
                                 <i class="fa-solid fa-building-columns text-[15rem]"></i>
                             </div>
                             
-                            <!-- Doc Header -->
                             <div class="border-b-2 border-slate-800 pb-4 mb-6 flex justify-between items-end relative z-10">
                                 <div>
                                     <h1 class="text-2xl font-black uppercase tracking-tighter text-slate-800">Settlement Summary</h1>
@@ -564,7 +498,6 @@
                                 </div>
                             </div>
 
-                            <!-- Summary Grid -->
                             <div class="grid grid-cols-2 gap-4 mb-8 relative z-10">
                                 <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
                                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Transactions</p>
@@ -584,7 +517,6 @@
                                 </div>
                             </div>
 
-                            <!-- Grand Total -->
                             <div class="bg-slate-900 text-white p-6 rounded-xl flex justify-between items-center mb-8 shadow-lg relative z-10">
                                 <div>
                                     <p class="text-xs font-bold text-slate-300 uppercase tracking-widest mb-1">Closing Net Balance</p>
@@ -593,7 +525,6 @@
                                 <p id="stmt-net-balance" class="text-3xl font-black font-mono text-teal-400">LKR 0.00</p>
                             </div>
 
-                            <!-- TX List -->
                             <div class="relative z-10">
                                 <h3 class="text-xs font-extrabold text-slate-800 uppercase tracking-widest border-b border-slate-200 pb-2 mb-4">Transaction Ledger</h3>
                                 <div class="overflow-x-auto">
@@ -607,7 +538,6 @@
                                             </tr>
                                         </thead>
                                         <tbody id="stmt-ledger-body" class="font-mono divide-y divide-slate-50 text-slate-800">
-                                            <!-- Dynamically populated -->
                                         </tbody>
                                     </table>
                                 </div>
@@ -621,7 +551,6 @@
                             </div>
                         </div>
                         
-                        <!-- Print btn -->
                         <div class="flex justify-end mt-4">
                             <button id="btn-download-pdf" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg text-xs transition-all flex items-center gap-2">
                                 <i class="fa-solid fa-file-arrow-down"></i> Download PDF
@@ -633,36 +562,35 @@
         </div>
     </div>
 
-    <!-- FOOTER -->
     <footer class="glass-panel border-t-0 rounded-t-3xl mx-4 mb-2 py-4 px-6 text-center text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest transition-colors z-40 relative">
         <p>© 2026 Biotech Laboratory POS Settlement Control Hub. Secured By Biotech</p>
     </footer>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getDatabase, ref, push, set, update, remove, onValue, onDisconnect } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const firebaseConfig = {
+        // Environment variables for seamless integration
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
             apiKey: "AIzaSyAmTlVGY0K9dXGUf0I7L6DHwEIlPYmYoYI",
             authDomain: "hnbd-62b18.firebaseapp.com",
-            databaseURL: "https://hnbd-62b18-default-rtdb.firebaseio.com",
             projectId: "hnbd-62b18",
             storageBucket: "hnbd-62b18.firebasestorage.app",
             messagingSenderId: "922426900930",
-            appId: "1:922426900930:web:e8acaa16936adcee8d965b",
-            measurementId: "G-PM0C41VGY1"
+            appId: "1:922426900930:web:e8acaa16936adcee8d965b"
         };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        const db = getDatabase(app, firebaseConfig.databaseURL);
+        const db = getFirestore(app);
         
-        const appId = 'pos-settlement-system-default';
-        const safeAppId = appId.replace(/[\.\#\$\[\]]/g, '_');
+        const rawAppId = typeof __app_id !== 'undefined' ? __app_id : 'pos-settlement-system-default';
+        const safeAppId = rawAppId.replace(/[\.\#\$\[\]]/g, '_');
 
         document.getElementById('app-id-display').innerText = safeAppId;
 
+        // Global State
         window.user = null;
         window.settlements = [];
         window.selectedItemId = null;
@@ -670,7 +598,10 @@
         let pendingDeleteId = null;
         let isDashboardUnlocked = false; 
         let currentPinAction = null; 
-        let userPresenceRef = null;
+        let presenceInterval = null;
+        let unsubPresence = null;
+        let unsubSettlements = null;
+        let isAuthReady = false;
 
         window.selectMerchant = function(merchantId) {
             document.getElementById('selectedMerchantId').value = merchantId;
@@ -740,7 +671,6 @@
                 : 'bg-white/90 dark:bg-[#1e293b]/90 text-slate-800 dark:text-white border-rose-200 dark:border-rose-500/50';
             
             element.className = `${baseClass} ${typeClass}`;
-            
             const icon = type === 'success' ? 'fa-circle-check text-teal-500 dark:text-teal-400 text-xl' : 'fa-triangle-exclamation text-rose-500 dark:text-rose-400 text-xl';
             element.innerHTML = `<i class="fa-solid ${icon}"></i><p>${message}</p>`;
             
@@ -772,31 +702,16 @@
         function grantAdminAccess() {
             localStorage.setItem('adminSessionExpiry', Date.now() + 10 * 60 * 1000); 
             startAdminTimer();
-            if (userPresenceRef) update(userPresenceRef, { isAdmin: true });
+            if (window.user) updateHeartbeat(); // Ping admin state
             showNotification('success', 'Admin privileges granted for 10 minutes.');
-            
-            if (!localStorage.getItem('devicePasskey') && window.PublicKeyCredential) {
-                const btn = document.getElementById('btn-register-passkey');
-                if(btn) {
-                    btn.classList.remove('hidden');
-                    btn.classList.add('flex');
-                }
-            }
         }
 
         function revokeAdminAccess() {
             localStorage.removeItem('adminSessionExpiry');
             document.getElementById('admin-timer-badge').classList.add('hidden');
             document.getElementById('admin-timer-badge').classList.remove('flex');
-            
-            const btnPasskey = document.getElementById('btn-register-passkey');
-            if(btnPasskey) {
-                btnPasskey.classList.add('hidden');
-                btnPasskey.classList.remove('flex');
-            }
-
             clearInterval(adminTimerInterval);
-            if (userPresenceRef) update(userPresenceRef, { isAdmin: false });
+            if (window.user) updateHeartbeat();
             
             if(isDashboardUnlocked) {
                 isDashboardUnlocked = false;
@@ -827,13 +742,6 @@
         if (hasAdminAccess()) {
             startAdminTimer();
             isDashboardUnlocked = true;
-            if (!localStorage.getItem('devicePasskey') && window.PublicKeyCredential) {
-                const btnPasskey = document.getElementById('btn-register-passkey');
-                if(btnPasskey) {
-                    btnPasskey.classList.remove('hidden');
-                    btnPasskey.classList.add('flex');
-                }
-            }
         }
         
         safeBind('admin-timer-badge', 'click', () => {
@@ -845,51 +753,65 @@
 
         const initAuth = async () => {
             try {
-                await signInAnonymously(auth);
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
             } catch (err) {
                 console.warn("Auth init failed:", err);
                 updateStatusBadge(true, "DATABASE ONLINE (OPEN PORT)");
+            } finally {
+                isAuthReady = true;
+                if (window.user) {
+                    updateStatusBadge(true, "SECURED CONNECTION ONLINE");
+                    setupPresence(window.user.uid);
+                    startSyncingRegistry();
+                }
             }
         };
-        initAuth();
 
-        onAuthStateChanged(auth, (currentUser) => {
-            window.user = currentUser;
-            if (currentUser) {
-                updateStatusBadge(true, "SECURED CONNECTION ONLINE");
-                setupPresence(currentUser.uid);
-            }
-        });
+        const updateHeartbeat = async () => {
+            if (!window.user) return;
+            const presenceRef = doc(db, 'artifacts', rawAppId, 'presence', window.user.uid);
+            try {
+                await setDoc(presenceRef, {
+                    online: true,
+                    isAdmin: hasAdminAccess(),
+                    lastActive: Date.now()
+                }, { merge: true });
+            } catch(e) {} // Silent fail on heartbeat
+        }
+
+        const cleanupPresence = async () => {
+            if (!window.user) return;
+            const presenceRef = doc(db, 'artifacts', rawAppId, 'presence', window.user.uid);
+            try { await deleteDoc(presenceRef); } catch(e) {}
+        }
 
         function setupPresence(uid) {
-            const connectedRef = ref(db, ".info/connected");
-            onValue(connectedRef, (snap) => {
-                if (snap.val() === true) {
-                    userPresenceRef = ref(db, `artifacts/${safeAppId}/public/presence/${uid}`);
-                    const presenceState = {
-                        online: true,
-                        isAdmin: hasAdminAccess(),
-                        lastActive: Date.now()
-                    };
-                    onDisconnect(userPresenceRef).remove().then(() => {
-                        set(userPresenceRef, presenceState);
-                    });
-                }
-            });
+            if (unsubPresence) unsubPresence();
+            if (presenceInterval) clearInterval(presenceInterval);
 
-            const allPresenceRef = ref(db, `artifacts/${safeAppId}/public/presence`);
-            onValue(allPresenceRef, (snap) => {
+            updateHeartbeat();
+            presenceInterval = setInterval(updateHeartbeat, 30000); // 30s heartbeat
+            
+            window.addEventListener('beforeunload', cleanupPresence);
+
+            const presenceColl = collection(db, 'artifacts', rawAppId, 'presence');
+            unsubPresence = onSnapshot(presenceColl, (snap) => {
                 let total = 0;
                 let admins = 0;
-                if (snap.exists()) {
-                    snap.forEach(child => {
-                        const val = child.val();
-                        if (val.online) {
-                            total++;
-                            if (val.isAdmin) admins++;
-                        }
-                    });
-                }
+                const now = Date.now();
+                snap.forEach(docSnap => {
+                    const val = docSnap.data();
+                    // Consider online if heartbeat was within last 60 seconds
+                    if (val.online && (now - (val.lastActive || 0) < 60000)) {
+                        total++;
+                        if (val.isAdmin) admins++;
+                    }
+                });
+                
                 const badge = document.getElementById('presence-badge');
                 const devEl = document.getElementById('presence-devices');
                 const admEl = document.getElementById('presence-admins');
@@ -902,21 +824,32 @@
                     badge.classList.add('hidden');
                     badge.classList.remove('flex');
                 }
+            }, (error) => {
+                console.warn("Presence sync error:", error);
             });
         }
 
-        function startSyncingRegistry() {
-            const databasePath = `artifacts/${safeAppId}/public/data/settlements`;
-            const settlementsRef = ref(db, databasePath);
+        onAuthStateChanged(auth, (currentUser) => {
+            window.user = currentUser;
+            if (currentUser && isAuthReady) {
+                updateStatusBadge(true, "SECURED CONNECTION ONLINE");
+                setupPresence(currentUser.uid);
+                startSyncingRegistry(); // Ensure authenticated before querying
+            }
+        });
 
-            onValue(settlementsRef, 
+        function startSyncingRegistry() {
+            if (!window.user) return;
+            if (unsubSettlements) unsubSettlements();
+
+            const settlementsRef = collection(db, 'artifacts', rawAppId, 'settlements');
+
+            unsubSettlements = onSnapshot(settlementsRef, 
                 (snapshot) => {
                     window.settlements = [];
-                    if (snapshot.exists()) {
-                        snapshot.forEach((childSnapshot) => {
-                            window.settlements.push({ id: childSnapshot.key, ...childSnapshot.val() });
-                        });
-                    }
+                    snapshot.forEach((docSnap) => {
+                        window.settlements.push({ id: docSnap.id, ...docSnap.data() });
+                    });
 
                     window.settlements.sort((a, b) => {
                         const timeA = a.customTimestamp || a.createdAt || 0;
@@ -927,13 +860,12 @@
                     renderDashboard();
                 },
                 (error) => {
+                    console.warn("Settlements sync error:", error);
                     showNotification('error', 'Cloud sync failure: ' + error.message);
                     updateStatusBadge(false, "DATABASE OFFLINE / ERROR");
                 }
             );
         }
-
-        startSyncingRegistry();
 
         function renderDashboard() {
             const logsContainer = document.getElementById('logs-container');
@@ -946,11 +878,9 @@
             let reservedCount = 0;
             let pendingCount = 0;
             
-            // Monthly filter for visible records
             const visibleSettlements = window.settlements.filter(item => {
                 const itemDateStr = item.customDate || (item.timestamp ? item.timestamp.substring(0, 10) : "");
                 
-                // For Dashboard calculations, only count this month's data
                 if (itemDateStr.startsWith(currentMonthStr)) {
                     const amt = Number(item.amount || 0);
                     if (item.type === 'WITHDRAWAL' || item.type === 'BANK_CHARGE') {
@@ -961,7 +891,6 @@
                         else if (item.status === 'PENDING') pendingCount++;
                     }
                     
-                    // 10 day hide logic for reserved entries inside current month
                     if (item.status === 'RESERVED') {
                         const itemTime = item.customTimestamp || item.createdAt || 0;
                         if (Date.now() - itemTime > (10 * 24 * 60 * 60 * 1000)) return false; 
@@ -1241,12 +1170,6 @@
                 if (config.extraHtml) { extra.innerHTML = config.extraHtml; extra.classList.remove('hidden'); }
             }
 
-            if (localStorage.getItem('devicePasskey') && window.PublicKeyCredential) {
-                document.getElementById('pin-modal-passkey-container').classList.remove('hidden');
-            } else {
-                document.getElementById('pin-modal-passkey-container').classList.add('hidden');
-            }
-
             document.getElementById('unified-pin-modal').classList.remove('hidden');
             setTimeout(() => input.focus(), 100);
         }
@@ -1259,7 +1182,6 @@
 
         safeBind('btn-close-pin-modal', 'click', closePinModal);
 
-        // Enter key listeners
         safeBind('pin-modal-input', 'keyup', (e) => {
             if (e.key === 'Enter') document.getElementById('btn-confirm-pin').click();
         });
@@ -1280,6 +1202,7 @@
             const enteredPw = document.getElementById('pin-modal-input').value;
             const errorMsg = document.getElementById('pin-modal-error');
             
+            // Note: Keep simple hardcoded demo PIN
             if (enteredPw !== '129876') {
                 errorMsg.classList.remove('hidden');
                 return;
@@ -1305,11 +1228,11 @@
             }
         });
 
-        // Fast-path execution for cached sessions
         async function executeAuthorization(id) {
             try {
-                const updateRef = ref(db, `artifacts/${safeAppId}/public/data/settlements/${id}`);
-                await update(updateRef, { status: 'RESERVED', authorizedAt: new Date().toISOString() });
+                if(!window.user) throw new Error("Requires secure connection");
+                const docRef = doc(db, 'artifacts', rawAppId, 'settlements', id);
+                await updateDoc(docRef, { status: 'RESERVED', authorizedAt: new Date().toISOString() });
                 showNotification('success', 'Payment status updated to RESERVED!');
                 closePinModal();
                 showReceiptPreview(id);
@@ -1320,8 +1243,9 @@
 
         async function executeDelete(id) {
             try {
-                const deleteRef = ref(db, `artifacts/${safeAppId}/public/data/settlements/${id}`);
-                await remove(deleteRef);
+                if(!window.user) throw new Error("Requires secure connection");
+                const docRef = doc(db, 'artifacts', rawAppId, 'settlements', id);
+                await deleteDoc(docRef);
                 showNotification('success', 'Log successfully deleted.');
                 if (window.selectedItemId === id) {
                     window.selectedItemId = null;
@@ -1411,17 +1335,14 @@
             document.getElementById('deduct-passcode-input').value = '';
             document.getElementById('deduct-action-type').value = type;
             
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('deduct-date-input').value = today;
+            
             const pinContainer = document.getElementById('deduct-pin-container');
             if (hasAdminAccess()) {
                 pinContainer.classList.add('hidden');
             } else {
                 pinContainer.classList.remove('hidden');
-                
-                if (localStorage.getItem('devicePasskey') && window.PublicKeyCredential) {
-                    document.getElementById('btn-deduct-use-passkey').classList.remove('hidden');
-                } else {
-                    document.getElementById('btn-deduct-use-passkey').classList.add('hidden');
-                }
             }
 
             const title = document.getElementById('deduct-modal-title');
@@ -1456,10 +1377,11 @@
         safeBind('btn-confirm-deduct-action', 'click', async () => {
             const amount = parseFloat(document.getElementById('deduct-amount-input').value);
             const enteredPw = document.getElementById('deduct-passcode-input').value;
+            const selectedDate = document.getElementById('deduct-date-input').value;
             const errorMsg = document.getElementById('deduct-error-message');
             const type = document.getElementById('deduct-action-type').value;
 
-            if (isNaN(amount) || amount <= 0) {
+            if (isNaN(amount) || amount <= 0 || !selectedDate) {
                 errorMsg.classList.remove('hidden'); return;
             }
             if (!hasAdminAccess() && enteredPw !== '129876') {
@@ -1469,9 +1391,9 @@
             if (!hasAdminAccess()) grantAdminAccess();
 
             try {
-                const settlementsRef = ref(db, `artifacts/${safeAppId}/public/data/settlements`);
-                const newRecordRef = push(settlementsRef);
+                if(!window.user) throw new Error("Requires secure connection");
                 
+                const settlementsRef = collection(db, 'artifacts', rawAppId, 'settlements');
                 const merchantId = type === 'BANK_CHARGE' ? document.getElementById('deduct-merchant-id').value : 'SYSTEM_ADMIN';
 
                 const payload = {
@@ -1479,20 +1401,20 @@
                     amount: amount, 
                     status: 'COMPLETED',
                     merchantId: merchantId,
-                    customDate: new Date().toISOString().split('T')[0],
-                    customTimestamp: Date.now(),
+                    customDate: selectedDate,
+                    customTimestamp: new Date(selectedDate).getTime(),
                     createdAt: Date.now(),
                     timestamp: new Date().toISOString(),
-                    operatorId: window.user ? window.user.uid : 'sys-offline'
+                    operatorId: window.user.uid
                 };
 
-                await set(newRecordRef, payload);
+                const newDocRef = await addDoc(settlementsRef, payload);
                 
                 showNotification('success', `LKR ${amount.toLocaleString('en-US')} ${type === 'BANK_CHARGE' ? 'bank charges logged' : 'withdrawn'}.`);
                 document.getElementById('deduction-modal').classList.add('hidden');
                 
-                window.selectedItemId = newRecordRef.key;
-                showReceiptPreview(newRecordRef.key);
+                window.selectedItemId = newDocRef.id;
+                showReceiptPreview(newDocRef.id);
             } catch (err) {
                 showNotification('error', 'Failed to process deduction: ' + err.message);
             }
@@ -1515,8 +1437,9 @@
             btn.disabled = true;
 
             try {
-                const settlementsRef = ref(db, `artifacts/${safeAppId}/public/data/settlements`);
-                const newRecordRef = push(settlementsRef);
+                if(!window.user) throw new Error("Requires secure connection");
+
+                const settlementsRef = collection(db, 'artifacts', rawAppId, 'settlements');
                 
                 const payload = {
                     type: 'DEPOSIT', 
@@ -1528,16 +1451,16 @@
                     customTimestamp: new Date(selectedDate).getTime(), 
                     createdAt: Date.now(), 
                     timestamp: new Date().toISOString(),
-                    operatorId: window.user ? window.user.uid : 'sys-offline'
+                    operatorId: window.user.uid
                 };
 
-                await set(newRecordRef, payload);
+                const newDocRef = await addDoc(settlementsRef, payload);
                 
                 document.getElementById('amount').value = '';
                 showNotification('success', `Terminal log registered! (97% applied to balance)`);
                 
-                window.selectedItemId = newRecordRef.key;
-                showReceiptPreview(newRecordRef.key);
+                window.selectedItemId = newDocRef.id;
+                showReceiptPreview(newDocRef.id);
             } catch (err) {
                 showNotification('error', 'Database Write Error: ' + err.message);
             } finally {
@@ -1654,105 +1577,6 @@
             document.getElementById('statement-document-wrapper').scrollIntoView({behavior: 'smooth', block: 'start'});
         });
 
-        // --- WEBAUTHN / DEVICE PASSKEY LOGIC ---
-        function bufferToBase64URL(buffer) {
-            const bytes = new Uint8Array(buffer);
-            let str = '';
-            for (let i = 0; i < bytes.byteLength; i++) str += String.fromCharCode(bytes[i]);
-            return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-        }
-
-        function base64URLToBuffer(base64) {
-            const base64str = base64.replace(/-/g, '+').replace(/_/g, '/');
-            const pad = base64str.length % 4;
-            const padded = pad ? base64str + '='.repeat(4 - pad) : base64str;
-            const binary = atob(padded);
-            const bytes = new Uint8Array(binary.length);
-            for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-            return bytes.buffer;
-        }
-
-        async function registerDevicePasskey() {
-            if (!window.PublicKeyCredential) {
-                showNotification('error', 'Passkeys are not supported on this device/browser.');
-                return;
-            }
-            try {
-                const publicKey = {
-                    challenge: crypto.getRandomValues(new Uint8Array(32)).buffer,
-                    rp: { name: "HNB Terminal Hub" },
-                    user: {
-                        id: crypto.getRandomValues(new Uint8Array(16)).buffer,
-                        name: "admin@hnb-terminal",
-                        displayName: "Terminal Admin"
-                    },
-                    pubKeyCredParams: [{ type: "public-key", alg: -7 }, { type: "public-key", alg: -257 }],
-                    authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" },
-                    timeout: 60000,
-                };
-                const credential = await navigator.credentials.create({ publicKey });
-                localStorage.setItem('devicePasskey', bufferToBase64URL(credential.rawId));
-                showNotification('success', 'Device successfully saved! You can now use biometric passkeys.');
-                
-                const btnPasskey = document.getElementById('btn-register-passkey');
-                if(btnPasskey) {
-                    btnPasskey.classList.add('hidden');
-                    btnPasskey.classList.remove('flex');
-                }
-            } catch (err) {
-                console.error("Passkey Registration Error:", err);
-                if (err.name === 'NotAllowedError') {
-                    showNotification('error', 'Blocked: Preview windows often block FaceID/Biometrics. Please test on a live HTTPS domain.');
-                } else {
-                    showNotification('error', 'Passkey registration cancelled or failed: ' + (err.message || err.name));
-                }
-            }
-        }
-
-        async function verifyWithPasskey() {
-            const credentialId = localStorage.getItem('devicePasskey');
-            if (!credentialId || !window.PublicKeyCredential) return false;
-            try {
-                const publicKey = {
-                    challenge: crypto.getRandomValues(new Uint8Array(32)).buffer,
-                    allowCredentials: [{
-                        id: base64URLToBuffer(credentialId),
-                        type: 'public-key'
-                    }],
-                    userVerification: "required",
-                    timeout: 60000
-                };
-                await navigator.credentials.get({ publicKey });
-                return true;
-            } catch (err) {
-                console.error("Passkey Verification Error:", err);
-                return false;
-            }
-        }
-
-        safeBind('btn-register-passkey', 'click', registerDevicePasskey);
-
-        safeBind('btn-use-passkey', 'click', async () => {
-            const verified = await verifyWithPasskey();
-            if (verified) {
-                document.getElementById('pin-modal-input').value = '129876'; 
-                document.getElementById('btn-confirm-pin').click(); 
-            } else {
-                showNotification('error', 'Passkey verification failed or cancelled.');
-            }
-        });
-
-        safeBind('btn-deduct-use-passkey', 'click', async () => {
-            const verified = await verifyWithPasskey();
-            if (verified) {
-                document.getElementById('deduct-passcode-input').value = '129876';
-                document.getElementById('btn-confirm-deduct-action').click();
-            } else {
-                showNotification('error', 'Passkey verification failed or cancelled.');
-            }
-        });
-
-        // PDF Generation Trigger
         safeBind('btn-download-pdf', 'click', () => {
             const element = document.getElementById('statement-document');
             const filenameStr = document.getElementById('stmt-period-label').innerText.replace(' ', '_');
@@ -1793,6 +1617,8 @@
             } else {
                 selectMerchant('VG'); 
             }
+            
+            initAuth(); // Boot app auth stream
         });
 
     </script>
