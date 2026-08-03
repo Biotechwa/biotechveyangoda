@@ -217,7 +217,7 @@
         <!-- KPI STATS CARDS -->
         <div class="w-full mb-6">
             <div class="flex flex-col md:flex-row justify-between items-end md:items-center mb-4 gap-4">
-                <h2 class="text-xs font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest transition-colors">Current Month Terminal Statistics</h2>
+                <h2 class="text-xs font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest transition-colors">Cumulative Terminal Statistics</h2>
                 
                 <div class="flex flex-wrap gap-2">
                     <!-- New Monthly Statement Button -->
@@ -244,7 +244,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <!-- Net Available Balance -->
                 <div class="glass-panel rounded-3xl p-6 relative overflow-hidden group hover:border-teal-300 dark:hover:border-blue-500/50 transition-all">
-                    <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest transition-colors">Net Month Balance</p>
+                    <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest transition-colors">Cumulative Net Balance</p>
                     <p id="stat-gross-amount" class="text-3xl font-black text-slate-800 dark:text-white mt-2 font-mono transition-colors">LKR ***</p>
                     <p class="text-[10px] text-teal-600 dark:text-blue-400 mt-2 flex items-center gap-1.5 font-bold transition-colors">
                         <i class="fa-solid fa-calculator"></i> 97% of deposits minus deductions
@@ -253,7 +253,7 @@
 
                 <!-- Total Batches -->
                 <div class="glass-panel rounded-3xl p-6 relative overflow-hidden group hover:border-slate-300 dark:hover:border-slate-600 transition-all">
-                    <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest transition-colors">Month Entries</p>
+                    <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest transition-colors">Total Entries</p>
                     <p id="stat-total-count" class="text-3xl font-black text-slate-800 dark:text-white mt-2 font-mono transition-colors">***</p>
                     <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-2 flex items-center gap-1.5 font-medium transition-colors">
                         <i class="fa-solid fa-layer-group"></i> Recorded database slips
@@ -374,9 +374,9 @@
                         <div>
                             <h2 class="text-xl font-extrabold text-slate-800 dark:text-white flex items-center gap-2 transition-colors">
                                 <i class="fa-solid fa-wave-square text-emerald-500"></i>
-                                Current Month Ledger logs
+                                Overall Ledger Logs
                             </h2>
-                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium transition-colors">All data persists live. Prior month data is archived in the Statement portal.</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium transition-colors">All data persists live. Cumulative totals reflect all prior records.</p>
                             <p class="text-[10px] text-amber-600 dark:text-amber-500 mt-2 font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors bg-amber-50 dark:bg-amber-900/20 inline-block px-2 py-1 rounded-md border border-amber-100 dark:border-amber-800">
                                 <i class="fa-solid fa-circle-info"></i> Authenticated records older than 10 days are hidden for privacy.
                             </p>
@@ -721,7 +721,7 @@
             element.className = `${baseClass} ${typeClass}`;
             
             const icon = type === 'success' ? 'fa-circle-check text-teal-500 dark:text-teal-400 text-xl' : 'fa-triangle-exclamation text-rose-500 dark:text-rose-400 text-xl';
-            element.innerHTML = `<i class="fa-solid ${icon}"></i><p>${message}</p>`;
+            element.innerHTML = `<i class="solid ${icon}"></i><p>${message}</p>`;
             
             container.appendChild(element);
             setTimeout(() => element.classList.remove('translate-y-2', 'opacity-0'), 50);
@@ -897,35 +897,28 @@
             if (!logsContainer) return;
             
             const now = new Date();
-            const currentMonthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
             
             let netBalance = 0;
             let reservedCount = 0;
             let pendingCount = 0;
             
-            // Monthly filter for visible records
+            // Allow all records irrespective of the month to sum up properly in total
             const visibleSettlements = window.settlements.filter(item => {
-                const itemDateStr = item.customDate || (item.timestamp ? item.timestamp.substring(0, 10) : "");
-                
-                // For Dashboard calculations, only count this month's data
-                if (itemDateStr.startsWith(currentMonthStr)) {
-                    const amt = Number(item.amount || 0);
-                    if (item.type === 'WITHDRAWAL' || item.type === 'BANK_CHARGE') {
-                        netBalance -= amt;
-                    } else {
-                        netBalance += (amt * 0.97);
-                        if (item.status === 'RESERVED') reservedCount++;
-                        else if (item.status === 'PENDING') pendingCount++;
-                    }
-                    
-                    // 10 day hide logic for reserved entries inside current month
-                    if (item.status === 'RESERVED') {
-                        const itemTime = item.customTimestamp || item.createdAt || 0;
-                        if (Date.now() - itemTime > (10 * 24 * 60 * 60 * 1000)) return false; 
-                    }
-                    return true;
+                const amt = Number(item.amount || 0);
+                if (item.type === 'WITHDRAWAL' || item.type === 'BANK_CHARGE') {
+                    netBalance -= amt;
+                } else {
+                    netBalance += (amt * 0.97);
+                    if (item.status === 'RESERVED') reservedCount++;
+                    else if (item.status === 'PENDING') pendingCount++;
                 }
-                return false; 
+                
+                // 10 day hide logic for reserved entries to ensure privacy
+                if (item.status === 'RESERVED') {
+                    const itemTime = item.customTimestamp || item.createdAt || 0;
+                    if (Date.now() - itemTime > (10 * 24 * 60 * 60 * 1000)) return false; 
+                }
+                return true;
             });
 
             if (isDashboardUnlocked) {
@@ -943,15 +936,15 @@
             }
 
             document.getElementById('total-logs-indicator').innerText = isDashboardUnlocked 
-                ? `Showing ${visibleSettlements.length} active current month records`
+                ? `Showing ${visibleSettlements.length} active records`
                 : `Stream Active`;
 
             if (visibleSettlements.length === 0) {
                 logsContainer.innerHTML = `
                     <div class="flex flex-col items-center justify-center py-20 text-slate-400 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl bg-slate-50 dark:bg-slate-900/30 transition-colors">
                         <i class="fa-solid fa-calendar-check text-4xl text-slate-300 dark:text-slate-600 mb-3"></i>
-                        <p class="text-sm font-bold text-slate-500 dark:text-slate-400">Fresh Slate for ${now.toLocaleString('default', { month: 'long' })}</p>
-                        <p class="text-xs mt-1 font-medium">No records logged for this month yet.</p>
+                        <p class="text-sm font-bold text-slate-500 dark:text-slate-400">No records logged yet</p>
+                        <p class="text-xs mt-1 font-medium">Terminal data is currently empty.</p>
                     </div>
                 `;
                 return;
