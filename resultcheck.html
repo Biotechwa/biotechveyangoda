@@ -240,6 +240,44 @@
     </div>
 
     <script>
+        /**
+         * =====================================================================
+         * 🚨 HOW TO SET UP GOOGLE SHEETS INTEGRATION 🚨
+         * =====================================================================
+         * 1. Go to Google Drive and create a new Google Sheet.
+         * 2. Name the sheet whatever you want. Set up 5 column headers in Row 1: 
+         *    Timestamp | Phone | Patient Name | Sample ID | Date
+         * 3. In the menu, click Extensions -> Apps Script.
+         * 4. Delete any code there and paste this exact code:
+         * 
+            function doPost(e) {
+              try {
+                var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+                var rowData = [];
+                rowData.push(e.parameter.timestamp);
+                rowData.push(e.parameter.phone);
+                rowData.push(e.parameter.patientName);
+                rowData.push(e.parameter.sample);
+                rowData.push(e.parameter.date);
+                sheet.appendRow(rowData);
+                return ContentService.createTextOutput("Success");
+              } catch(error) {
+                return ContentService.createTextOutput("Error: " + error.toString());
+              }
+            }
+         *
+         * 5. Click the "Deploy" button (top right) -> "New deployment".
+         * 6. Select type "Web app" (click the gear icon next to "Select type").
+         * 7. Execute as: "Me" (Your email).
+         * 8. Who has access: "Anyone" (Crucial step! Do not select 'Anyone with Google account').
+         * 9. Click Deploy (Approve any scary warning permissions by clicking Advanced -> Go to script).
+         * 10. Copy the "Web app URL" provided at the end.
+         * 11. Paste that URL into the variable below:
+         */
+        
+        // 👉 GOOGLE SCRIPT URL UPDATED BELOW:
+        const GOOGLE_SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw3cannmMmCmmSIWgqHM7S6vKYqcfiB2ztm0q2welKGpWYhX-w8HzY-LdC9tkAxeFer/exec'; 
+
         const chatBody = document.getElementById('chatBody');
         let currentLang = 'en';
         let formData = { phone: '', sample: '', date: '', patientName: '' };
@@ -412,9 +450,11 @@
 
             html5QrCode = new Html5Qrcode("qr-reader");
             
-            // EXTREME PERFORMANCE CONFIGURATION ("Fastly, Longly, Rapidly")
+            // EXTREME PERFORMANCE CONFIGURATION
             const config = { 
                 fps: 60, // Maximize frame rate to catch the QR code instantly
+                qrbox: { width: 250, height: 250 }, // CRITICAL SPEED BOOST: Restricts processing to just the center square
+                disableFlip: true, // SPEED BOOST: Skips checking for mirrored QR codes to save CPU cycles
                 useBarCodeDetectorIfSupported: true, // Activates Native Hardware Acceleration on supported mobile devices
                 formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ] // Keeps processing focused ONLY on QR codes
             };
@@ -529,10 +569,41 @@
             }, 1000);
         }
 
+        function saveToGoogleSheets() {
+            if (GOOGLE_SCRIPT_WEB_APP_URL === 'YOUR_GOOGLE_SCRIPT_URL_HERE') {
+                console.warn("Google Sheets save skipped: Web App URL is not set.");
+                return;
+            }
+
+            // Create form data to send to Apps Script
+            const postData = new FormData();
+            postData.append('timestamp', new Date().toLocaleString());
+            postData.append('phone', formData.phone);
+            postData.append('patientName', formData.patientName);
+            postData.append('sample', formData.sample);
+            postData.append('date', formData.date);
+
+            // Use fetch with no-cors. 
+            // Note: with no-cors, you won't get a readable success response, 
+            // but it successfully fires the data to the Google Script.
+            fetch(GOOGLE_SCRIPT_WEB_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors', 
+                body: postData
+            }).then(() => {
+                console.log("Data successfully fired to Google Sheets.");
+            }).catch(err => {
+                console.error("Failed to send data to Google Sheets:", err);
+            });
+        }
+
         function generateBase64Link() {
             // Save credentials to local storage for returning users
             localStorage.setItem('biotech_secure_phone', formData.phone);
             localStorage.setItem('biotech_secure_name', formData.patientName);
+
+            // --- TRIGGER GOOGLE SHEETS SAVE HERE ---
+            saveToGoogleSheets();
 
             // TARGET FORMAT: Patient Name | Sample ID | Date
             const rawData = `${formData.patientName}|${formData.sample}|${formData.date}`;
