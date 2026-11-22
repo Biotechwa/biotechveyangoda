@@ -836,7 +836,7 @@ iframe.w-100 {
 }
 .whatsapp-float {
   position: fixed;
-  right: max(18px, env(safe-area-inset-right));
+  right: max(18px, env(safe-area-inset-left));
   bottom: max(18px, env(safe-area-inset-bottom));
   width: 58px;
   height: 58px;
