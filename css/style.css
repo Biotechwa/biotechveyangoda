@@ -836,8 +836,8 @@ iframe.w-100 {
 }
 .whatsapp-float {
   position: fixed;
-  right: max(18px, env(safe-area-inset-left));
-  bottom: max(18px, env(safe-area-inset-bottom));
+  right: max(18px, env(safe-area-inset-left)) !important;
+  bottom: max(18px, env(safe-area-inset-bottom)) !important;
   width: 58px;
   height: 58px;
   background: rgba(37, 211, 102, 0.72);
@@ -1095,7 +1095,7 @@ iframe.w-100 {
 }
 .whatsapp-popup {
   position: fixed;
-  right: max(18px, env(safe-area-inset-right));
+  right: max(18px, env(safe-area-inset-left)) !important;
   bottom: calc(max(18px, env(safe-area-inset-bottom)) + 70px);
   width: 280px;
   padding: 16px;
