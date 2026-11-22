@@ -36,6 +36,106 @@
     <!-- Template Stylesheet -->
     <link href="css/style.css" rel="stylesheet">
 </head>
+    <script>
+(function () {
+  const toggle = document.getElementById('whatsappToggle');
+  const popup = document.getElementById('whatsappPopup');
+  const closeBtn = document.getElementById('whatsappClose');
+  if (!toggle || !popup) return;
+
+  const baseLeft = 18;
+  const baseBottom = 18;
+  const dragThreshold = 6;
+
+  let isPointerDown = false;
+  let hasDragged = false;
+  let startX = 0;
+  let startY = 0;
+  let startLeft = baseLeft;
+  let startBottom = baseBottom;
+
+  function setOpen(open) {
+    popup.classList.toggle('is-open', open);
+    toggle.setAttribute('aria-expanded', String(open));
+  }
+
+  function snapToBottomLeft() {
+    toggle.classList.remove('is-dragging');
+    toggle.style.left = `max(${baseLeft}px, env(safe-area-inset-left))`;
+    toggle.style.bottom = `max(${baseBottom}px, env(safe-area-inset-bottom))`;
+  }
+
+  toggle.addEventListener('pointerdown', function (e) {
+    if (e.button !== undefined && e.button !== 0) return;
+
+    const rect = toggle.getBoundingClientRect();
+    isPointerDown = true;
+    hasDragged = false;
+    startX = e.clientX;
+    startY = e.clientY;
+    startLeft = rect.left;
+    startBottom = window.innerHeight - rect.bottom;
+
+    toggle.setPointerCapture(e.pointerId);
+    toggle.classList.add('is-dragging');
+    toggle.style.left = `${startLeft}px`;
+    toggle.style.bottom = `${startBottom}px`;
+  });
+
+  toggle.addEventListener('pointermove', function (e) {
+    if (!isPointerDown) return;
+
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+
+    if (!hasDragged && Math.hypot(dx, dy) > dragThreshold) {
+      hasDragged = true;
+      setOpen(false);
+    }
+
+    if (!hasDragged) return;
+
+    const size = toggle.offsetWidth || 58;
+    const maxLeft = Math.max(8, window.innerWidth - size - 8);
+    const maxBottom = Math.max(8, window.innerHeight - size - 8);
+
+    const nextLeft = Math.min(Math.max(8, startLeft + dx), maxLeft);
+    const nextBottom = Math.min(Math.max(8, startBottom - dy), maxBottom);
+
+    toggle.style.left = `${nextLeft}px`;
+    toggle.style.bottom = `${nextBottom}px`;
+  });
+
+  function finishDrag() {
+    if (!isPointerDown) return;
+    isPointerDown = false;
+    snapToBottomLeft();
+  }
+
+  toggle.addEventListener('pointerup', function (e) {
+    const wasDrag = hasDragged;
+    finishDrag();
+    if (!wasDrag) {
+      e.stopPropagation();
+      setOpen(!popup.classList.contains('is-open'));
+    }
+  });
+
+  toggle.addEventListener('pointercancel', finishDrag);
+
+  if (closeBtn) {
+    closeBtn.addEventListener('click', function () {
+      setOpen(false);
+    });
+  }
+
+  document.addEventListener('click', function (e) {
+    if (!popup.contains(e.target) && !toggle.contains(e.target)) {
+      setOpen(false);
+    }
+  });
+})();
+</script>
 
 <body>
     <!-- Spinner Start -->
