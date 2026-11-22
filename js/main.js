@@ -1,3 +1,31 @@
+(function () {
+  const toggle = document.getElementById('whatsappToggle');
+  const popup = document.getElementById('whatsappPopup');
+  const closeBtn = document.getElementById('whatsappClose');
+  if (!toggle || !popup) return;
+
+  function setOpen(open) {
+    popup.classList.toggle('is-open', open);
+    toggle.setAttribute('aria-expanded', String(open));
+  }
+
+  toggle.addEventListener('click', function (e) {
+    e.stopPropagation();
+    setOpen(!popup.classList.contains('is-open'));
+  });
+
+  if (closeBtn) {
+    closeBtn.addEventListener('click', function () {
+      setOpen(false);
+    });
+  }
+
+  document.addEventListener('click', function (e) {
+    if (!popup.contains(e.target) && !toggle.contains(e.target)) {
+      setOpen(false);
+    }
+  });
+})();
 (function ($) {
     "use strict";
 
