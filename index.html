@@ -619,7 +619,34 @@
 
     <!-- Back to Top -->
     <a href="#" class="btn btn-lg btn-primary btn-lg-square rounded-circle back-to-top"><i class="bi bi-arrow-up"></i></a>
-        <a href="https://wa.me/94773524143?text=Hello%20Biotech%20Laboratory%2C%20I%20would%20like%20to%20make%20an%20inquiry."class="whatsapp-float"target="_blank"rel="noopener noreferrer"aria-label="Chat on WhatsApp"title="Chat with us on WhatsApp"><i class="fab fa-whatsapp"></i></a>
+    <div class="whatsapp-widget">
+  <div class="whatsapp-popup" id="whatsappPopup" role="dialog" aria-label="WhatsApp Chat">
+    <div class="whatsapp-popup-header">
+      <strong>Biotech Laboratory</strong>
+      <button type="button" class="whatsapp-popup-close" id="whatsappClose" aria-label="Close chat popup">&times;</button>
+    </div>
+    <p class="whatsapp-popup-body">Need test info, report updates, or an appointment? Message us on WhatsApp.</p>
+    <a
+      href="https://wa.me/94773524143?text=Hello%20Biotech%20Laboratory%2C%20I%20would%20like%20to%20make%20an%20inquiry."
+      class="whatsapp-popup-cta"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      <i class="fab fa-whatsapp"></i> Start Chat
+    </a>
+  </div>
+
+  <button
+    type="button"
+    class="whatsapp-float"
+    id="whatsappToggle"
+    aria-expanded="false"
+    aria-controls="whatsappPopup"
+    aria-label="Open WhatsApp chat"
+  >
+    <i class="fab fa-whatsapp"></i>
+  </button>
+</div>
     
 
 
