@@ -1,15 +1,15 @@
 /******* Customized Bootstrap — Biotech Laboratory Veyangoda ********/
-/* Drop-in replacement for scss/bootstrap.scss                       */
+/* Preserves Original Brand Colors with Glassmorphism Radius/Inputs  */
 
-$primary: #0e7490;
-$secondary: #475569;
-$light: #f4f8fb;
-$dark: #0b2545;
+$primary: #3368C6;
+$secondary: #8A91AC;
+$light: #F6FAFF;
+$dark: #031B4E;
 
-$font-family-base: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-$headings-font-family: 'Red Rose', Georgia, serif;
+$font-family-base: 'Roboto', sans-serif;
+$headings-font-family: 'Red Rose', cursive;
 
-$body-bg: #eef3f8;
+$body-bg: $light;
 $body-color: $secondary;
 $headings-color: $dark;
 $headings-font-weight: 600;
@@ -23,7 +23,7 @@ $border-radius-sm: 10px;
 $border-radius-lg: 18px;
 
 $input-bg: rgba(255, 255, 255, 0.82);
-$input-border-color: rgba(15, 23, 42, 0.14);
+$input-border-color: rgba(3, 27, 78, 0.14);
 $input-focus-border-color: $primary;
 
 $link-decoration: none;
